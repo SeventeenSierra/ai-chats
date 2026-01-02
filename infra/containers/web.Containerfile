@@ -9,7 +9,7 @@ WORKDIR /app
 
 # Install curl for health checks and pnpm
 RUN apt-get update && \
-    apt-get install -y --no-install-recommends curl && \
+    apt-get install -y --no-install-recommends curl=7.74.0-1.3+deb11u15 && \
     npm install -g pnpm@10.27.0 && \
     rm -rf /var/lib/apt/lists/*
 

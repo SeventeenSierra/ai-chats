@@ -1,10 +1,4 @@
-# SPDX-License-Identifier: AGPL-3.0-or-later
-# SPDX-FileCopyrightText: 2025 Seventeen Sierra LLC
-#
-# Trivy ignore file - exclude paths from secret scanning
-# See: https://trivy.dev/docs/configuration/filtering/
-
-# Seed data contains exported chat conversations that may include
-# pasted secrets, API keys, etc. from discussions - these are not
-# actual leaked credentials but chat content.
-seed-data/
+# Required for Postgres official image entrypoint (needs root to chown data)
+AVD-DS-0002
+# Orchestration (Compose/K8s) handles healthchecks
+AVD-DS-0026
