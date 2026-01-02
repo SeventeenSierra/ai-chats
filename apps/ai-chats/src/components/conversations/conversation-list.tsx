@@ -57,8 +57,9 @@ type ConversationListProps = {
 function ConversationListSkeleton() {
 	return (
 		<div className="p-2 space-y-2">
-			{[...Array(10)].map((_, i) => (
-				<div key={i} className="flex items-center gap-3 p-2">
+			{[...Array(5)].map((_, i) => (
+				// biome-ignore lint/suspicious/noArrayIndexKey: skeleton loader
+				<div key={i} className="flex items-center gap-4 p-2">
 					<Skeleton className="h-5 w-5 rounded-full" />
 					<div className="flex-1 space-y-2">
 						<Skeleton className="h-4 w-3/4" />

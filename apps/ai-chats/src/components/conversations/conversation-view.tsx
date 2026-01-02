@@ -442,6 +442,7 @@ export default function ConversationView({
 				{hasTranscript ? (
 					<div className="p-4">
 						{conversation.transcript?.map((turn, index) => (
+							// biome-ignore lint/suspicious/noArrayIndexKey: turn extends existing type without unique id
 							<TurnView key={index} turn={turn} />
 						))}
 					</div>

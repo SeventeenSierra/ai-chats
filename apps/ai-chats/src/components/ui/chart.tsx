@@ -75,6 +75,7 @@ const ChartStyle = ({ id, config }: { id: string; config: ChartConfig }) => {
 
 	return (
 		<style
+			// biome-ignore lint/security/noDangerouslySetInnerHtml: styles generated from config
 			dangerouslySetInnerHTML={{
 				__html: Object.entries(THEMES)
 					.map(
@@ -123,6 +124,7 @@ const ChartTooltipContent = React.forwardRef<
 			color,
 			nameKey,
 			labelKey,
+			// biome-ignore lint/suspicious/noExplicitAny: recharts tooltip props
 		}: any,
 		ref,
 	) => {
@@ -170,6 +172,7 @@ const ChartTooltipContent = React.forwardRef<
 			>
 				{!nestLabel ? tooltipLabel : null}
 				<div className="grid gap-1.5">
+					{/* biome-ignore lint/suspicious/noExplicitAny: recharts payload item */}
 					{(payload as any[]).map((item: any, index: number) => {
 						const key = `${nameKey || item.name || item.dataKey || 'value'}`
 						const itemConfig = getPayloadConfigFromPayload(config, item, key)
@@ -243,7 +246,9 @@ ChartTooltipContent.displayName = 'ChartTooltip'
 
 const ChartLegend = RechartsPrimitive.Legend
 
+// biome-ignore lint/suspicious/noExplicitAny: recharts typing
 const ChartLegendContent = React.forwardRef<HTMLDivElement, any>(
+	// biome-ignore lint/suspicious/noExplicitAny: recharts legend props
 	({ className, hideIcon = false, payload, verticalAlign = 'bottom', nameKey }: any, ref) => {
 		const { config } = useChart()
 
@@ -260,6 +265,7 @@ const ChartLegendContent = React.forwardRef<HTMLDivElement, any>(
 					className,
 				)}
 			>
+				{/* biome-ignore lint/suspicious/noExplicitAny: recharts legend payload */}
 				{(payload as any[]).map((item: any) => {
 					const key = `${nameKey || item.dataKey || 'value'}`
 					const itemConfig = getPayloadConfigFromPayload(config, item, key)

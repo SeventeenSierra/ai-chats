@@ -5,6 +5,7 @@
 
 import { usePathname } from 'next/navigation'
 import * as React from 'react'
+import { Badge } from '@/components/ui/badge'
 import { useIsMobile } from '@/hooks/use-mobile'
 import { cn } from '@/lib/utils'
 
@@ -66,7 +67,14 @@ export const Sidebar = ({ children }: { children: React.ReactNode }) => {
 				isOpen ? 'translate-x-0' : '-translate-x-full',
 			)}
 		>
-			{children}
+			<div className="flex flex-col h-full">
+				<div className="flex-1 overflow-hidden">{children}</div>
+				<div className="p-4 border-t flex justify-center bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+					<Badge variant="outline" className="text-xs font-normal text-muted-foreground">
+						Version 1.0.0
+					</Badge>
+				</div>
+			</div>
 		</aside>
 	)
 }

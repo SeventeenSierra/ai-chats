@@ -16,7 +16,6 @@ type PipelineStageCardProps = {
 export function PipelineStageCard({
 	title,
 	description,
-	status,
 	isDisabled = false,
 	children,
 }: PipelineStageCardProps) {

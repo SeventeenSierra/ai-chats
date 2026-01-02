@@ -121,6 +121,7 @@ const Carousel = React.forwardRef<
 				canScrollNext,
 			}}
 		>
+			{/* biome-ignore lint/a11y/useSemanticElements: section role requires accessible name, div is safer here */}
 			<div
 				ref={ref}
 				onKeyDownCapture={handleKeyDown}
@@ -162,6 +163,7 @@ const CarouselItem = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLD
 		const { orientation } = useCarousel()
 
 		return (
+			// biome-ignore lint/a11y/useSemanticElements: group role required for carousel slides but fieldset breaks layout
 			<div
 				ref={ref}
 				role="group"

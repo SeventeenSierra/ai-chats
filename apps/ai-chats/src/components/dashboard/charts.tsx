@@ -27,9 +27,15 @@ type ChartProps = {
 }
 
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8', '#82ca9d', '#ffc658']
+// Define a simpler interface for the tooltip props to avoid complex Recharts generics
+interface CustomTooltipProps {
+	active?: boolean
+	payload?: Array<{ value: number }>
+	label?: string
+}
 
-const CustomTooltip = ({ active, payload, label }: any) => {
-	if (active && payload && payload.length) {
+const CustomTooltip = ({ active, payload, label }: CustomTooltipProps) => {
+	if (active && payload && payload.length > 0) {
 		return (
 			<div className="rounded-lg border bg-background p-2 shadow-sm">
 				<p className="font-bold text-foreground">{label}</p>
@@ -42,7 +48,7 @@ const CustomTooltip = ({ active, payload, label }: any) => {
 	return null
 }
 
-export function ConversationCharts({ type, conversations, categories = [], loading }: ChartProps) {
+export function ConversationCharts({ type, conversations, loading }: ChartProps) {
 	const activityData = React.useMemo(() => {
 		const today = startOfDay(new Date())
 		const data = Array.from({ length: 7 })
@@ -125,7 +131,24 @@ export function ConversationCharts({ type, conversations, categories = [], loadi
 						cy="50%"
 						outerRadius={100}
 						labelLine={false}
-						label={({ cx, cy, midAngle, innerRadius, outerRadius, percent, index }: any) => {
+						label={(props: {
+							cx: number
+							cy: number
+							midAngle?: number
+							innerRadius?: number
+							outerRadius: number
+							percent?: number
+							index: number
+						}) => {
+							const {
+								cx,
+								cy,
+								midAngle = 0,
+								innerRadius = 0,
+								outerRadius,
+								percent = 0,
+								index,
+							} = props
 							const radius = innerRadius + (outerRadius - innerRadius) * 1.2
 							const x = cx + radius * Math.cos((-midAngle * Math.PI) / 180)
 							const y = cy + radius * Math.sin((-midAngle * Math.PI) / 180)
@@ -143,8 +166,8 @@ export function ConversationCharts({ type, conversations, categories = [], loadi
 							)
 						}}
 					>
-						{categoryData.map((_entry, index) => (
-							<Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+						{categoryData.map((entry, index) => (
+							<Cell key={entry.name} fill={COLORS[index % COLORS.length]} />
 						))}
 					</Pie>
 					<Tooltip content={<CustomTooltip />} />

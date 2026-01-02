@@ -69,6 +69,7 @@ function LoadingSkeleton() {
 			<Skeleton className="h-10 w-full" />
 			<div className="p-2 space-y-2">
 				{[...Array(10)].map((_, i) => (
+					// biome-ignore lint/suspicious/noArrayIndexKey: skeleton loader
 					<div key={i} className="flex items-center gap-3 p-2">
 						<Skeleton className="h-5 w-5 rounded-full" />
 						<div className="flex-1 space-y-2">
@@ -209,9 +210,10 @@ export function GroupedConversationList({
 							}
 
 							return (
+								// biome-ignore lint/suspicious/noArrayIndexKey: group index needed for accordion value stability
 								<AccordionItem
-									value={`group-${index}`}
-									key={index}
+									value={`group-${group.name}`}
+									key={group.name}
 									className={cn(
 										'border-b rounded-lg transition-colors',
 										dragOverCategory === group.name && 'bg-accent/50 ring-2 ring-accent',
