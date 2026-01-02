@@ -135,7 +135,9 @@ export default function ExplorerPage() {
 
 				// If a conversation was selected, find its updated version and set it
 				if (selectedConversation) {
-					const updatedSelected = data.conversations.find((c: { id: string }) => c.id === selectedConversation.id)
+					const updatedSelected = data.conversations.find(
+						(c: { id: string }) => c.id === selectedConversation.id,
+					)
 					if (updatedSelected) {
 						setSelectedConversation(updatedSelected as Conversation)
 					} else {

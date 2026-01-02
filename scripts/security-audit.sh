@@ -243,7 +243,7 @@ pause_between_scans "🐳 Hadolint (Dockerfile Linting)"
 echo "🐳 Running Hadolint (Dockerfile linting)..."
 if command -v hadolint >/dev/null 2>&1; then
   dockerfile_count=0
-  for dockerfile in $(find . -name "Dockerfile" -o -name "*.dockerfile" 2>/dev/null); do
+  for dockerfile in $(find . -name "Dockerfile" -o -name "*.dockerfile" -o -name "*.Containerfile" 2>/dev/null); do
     echo "  → Checking $dockerfile"
     hadolint "$dockerfile" || {
       echo "❌ Hadolint found issues in $dockerfile"

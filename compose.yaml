@@ -39,6 +39,9 @@ services:
           - web-app
 
   postgres:
+    build:
+      context: .
+      dockerfile: infra/containers/postgres.Containerfile
     image: postgres:16-alpine
     ports:
       - "${DB_PORT_EXTERNAL:-5433}:5432"
@@ -64,6 +67,9 @@ services:
           - db
 
   garage:
+    build:
+      context: .
+      dockerfile: infra/containers/garage.Containerfile
     image: dxflrs/garage:v1.0.1
     ports:
       - "3900:3900" # S3 API

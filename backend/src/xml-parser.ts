@@ -36,9 +36,21 @@ function decodeEntities(encodedString: string): string {
  * @returns An array of XML strings, each being a complete conversation.
  */
 export function splitConversationsXml(xmlString: string): string[] {
-	const conversationRegex = /<Conversation>[\s\S]*?<\/Conversation>/g
-	const matches = xmlString.match(conversationRegex)
-	return matches || []
+	const conversations: string[] = []
+	const startTag = '<Conversation>'
+	const endTag = '</Conversation>'
+	let startIndex = 0
+
+	while (true) {
+		const start = xmlString.indexOf(startTag, startIndex)
+		if (start === -1) break
+		const end = xmlString.indexOf(endTag, start)
+		if (end === -1) break
+		conversations.push(xmlString.slice(start, end + endTag.length))
+		startIndex = end + endTag.length
+	}
+
+	return conversations
 }
 
 /**
@@ -47,7 +59,7 @@ export function splitConversationsXml(xmlString: string): string[] {
  * @returns The conversation ID or null if not found.
  */
 export function getConversationId(conversationXml: string): string | null {
-	const idRegex = /<ConversationId>(.*?)<\/ConversationId>/
+	const idRegex = /<ConversationId>([^<]*)<\/ConversationId>/
 	const match = conversationXml.match(idRegex)
 	return match ? match[1] : null
 }
@@ -59,11 +71,16 @@ export function getConversationId(conversationXml: string): string | null {
  * @returns The conversation topic or null if not found.
  */
 export function getConversationTitle(conversationXml: string): string | null {
-	const titleRegex = /<ConversationTopic>([\s\S]*?)<\/ConversationTopic>/
-	const match = conversationXml.match(titleRegex)
+	const startTag = '<ConversationTopic>'
+	const endTag = '</ConversationTopic>'
+	const start = conversationXml.indexOf(startTag)
+	if (start === -1) return null
+	const end = conversationXml.indexOf(endTag, start)
+	if (end === -1) return null
 
-	if (match && match[1] && match[1].trim()) {
-		return decodeEntities(match[1].trim())
+	const content = conversationXml.slice(start + startTag.length, end).trim()
+	if (content) {
+		return decodeEntities(content)
 	}
 
 	return null
@@ -75,7 +92,7 @@ export function getConversationTitle(conversationXml: string): string | null {
  * @returns The ISO 8601 timestamp string or null if not found.
  */
 export function getConversationTimestamp(conversationXml: string): string | null {
-	const timestampRegex = /<Timestamp>(.*?)<\/Timestamp>/
+	const timestampRegex = /<Timestamp>([^<]*)<\/Timestamp>/
 	const match = conversationXml.match(timestampRegex)
 	return match ? match[1] : null
 }
@@ -98,12 +115,19 @@ export function hasRichContent(conversationXml: string): boolean {
  * @returns The first prompt text or null if not found.
  */
 export function getFirstPrompt(conversationXml: string): string | null {
-	const promptRegex = /<Prompt>\s*<Text>([\s\S]*?)<\/Text>\s*<\/Prompt>/
-	const match = conversationXml.match(promptRegex)
-	if (match && match[1]) {
-		return decodeEntities(match[1].trim())
-	}
-	return null
+	const promptStart = conversationXml.indexOf('<Prompt>')
+	if (promptStart === -1) return null
+	const promptEnd = conversationXml.indexOf('</Prompt>', promptStart)
+	if (promptEnd === -1) return null
+
+	const promptContent = conversationXml.slice(promptStart + 8, promptEnd)
+	const textStart = promptContent.indexOf('<Text>')
+	if (textStart === -1) return null
+	const textEnd = promptContent.indexOf('</Text>', textStart)
+	if (textEnd === -1) return null
+
+	const text = promptContent.slice(textStart + 6, textEnd).trim()
+	return text ? decodeEntities(text) : null
 }
 
 /**
@@ -113,41 +137,57 @@ export function getFirstPrompt(conversationXml: string): string | null {
  * @returns The combined first response text or null if not found.
  */
 export function getFirstResponse(conversationXml: string): string | null {
-	// First, find the entire content of the first PrimaryResponse.
-	const primaryResponseRegex =
-		/<ConversationTurn>[\s\S]*?<PrimaryResponse>([\s\S]*?)<\/PrimaryResponse>/
-	const primaryResponseMatch = conversationXml.match(primaryResponseRegex)
+	// Find the first ConversationTurn
+	const turnStart = conversationXml.indexOf('<ConversationTurn>')
+	if (turnStart === -1) return null
+	const turnEnd = conversationXml.indexOf('</ConversationTurn>', turnStart)
+	if (turnEnd === -1) return null
 
-	if (!primaryResponseMatch || !primaryResponseMatch[1]) {
-		return null
-	}
+	const turnContent = conversationXml.slice(turnStart, turnEnd)
 
-	const primaryResponseContent = primaryResponseMatch[1]
+	// Find PrimaryResponse within this turn
+	const responseStart = turnContent.indexOf('<PrimaryResponse>')
+	if (responseStart === -1) return null
+	const responseEnd = turnContent.indexOf('</PrimaryResponse>', responseStart)
+	if (responseEnd === -1) return null
+
+	const primaryResponseContent = turnContent.slice(responseStart + 17, responseEnd)
 
 	// Check for research confirmation URLs and return a standardized message if found.
-	const isRichContentResponse = /deep_research_confirmation_content|immersive_entry_chip/.test(
-		primaryResponseContent,
-	)
-	if (isRichContentResponse) {
+	if (
+		primaryResponseContent.includes('deep_research_confirmation_content') ||
+		primaryResponseContent.includes('immersive_entry_chip')
+	) {
 		return "The model's response included a research plan or interactive component, which is not available in this preview."
 	}
 
-	// If not a research confirmation, extract all content tags within that response block in order.
-	const contentRegex = /<(Text|ToolCode|ToolOutput)>([\s\S]*?)<\/\1>/g
-	let match
+	// Extract content parts using string-based approach
 	const parts: string[] = []
-
-	while ((match = contentRegex.exec(primaryResponseContent)) !== null) {
-		if (match[2]) {
-			const decodedContent = decodeEntities(match[2].trim())
-			// Add wrapping for tool code to mimic markdown code blocks for display
-			if (match[1] === 'ToolCode') {
-				parts.push('```\n' + decodedContent + '\n```')
-			} else {
-				parts.push(decodedContent)
+	const extractTagContent = (content: string, tagName: string): void => {
+		let searchStart = 0
+		const openTag = `<${tagName}>`
+		const closeTag = `</${tagName}>`
+		while (true) {
+			const start = content.indexOf(openTag, searchStart)
+			if (start === -1) break
+			const end = content.indexOf(closeTag, start)
+			if (end === -1) break
+			const tagContent = content.slice(start + openTag.length, end).trim()
+			if (tagContent) {
+				const decodedContent = decodeEntities(tagContent)
+				if (tagName === 'ToolCode') {
+					parts.push('```\n' + decodedContent + '\n```')
+				} else {
+					parts.push(decodedContent)
+				}
 			}
+			searchStart = end + closeTag.length
 		}
 	}
+
+	extractTagContent(primaryResponseContent, 'Text')
+	extractTagContent(primaryResponseContent, 'ToolCode')
+	extractTagContent(primaryResponseContent, 'ToolOutput')
 
 	return parts.length > 0 ? parts.join('\n\n') : null
 }
@@ -171,22 +211,34 @@ export function getTurnCount(conversationXml: string): number {
  */
 function extractPartsFromBlock(blockXml: string): ConversationTurnPart[] {
 	const parts: ConversationTurnPart[] = []
-	const contentRegex = /<(Text|ToolCode|ToolOutput)>([\s\S]*?)<\/\1>/g
-	let match
 
-	while ((match = contentRegex.exec(blockXml)) !== null) {
-		const type = match[1]
-		const content = decodeEntities(match[2].trim())
-
-		if (type === 'ToolCode') {
-			parts.push({ type: 'code', content })
-		} else if (type === 'ToolOutput') {
-			parts.push({ type: 'text', content: `Tool Output:\n${'```'}\n${content}\n${'```'}` })
-		} else {
-			// 'Text'
-			parts.push({ type: 'text', content })
+	const extractTag = (tagName: string): void => {
+		let searchStart = 0
+		const openTag = `<${tagName}>`
+		const closeTag = `</${tagName}>`
+		while (true) {
+			const start = blockXml.indexOf(openTag, searchStart)
+			if (start === -1) break
+			const end = blockXml.indexOf(closeTag, start)
+			if (end === -1) break
+			const content = decodeEntities(blockXml.slice(start + openTag.length, end).trim())
+			if (content) {
+				if (tagName === 'ToolCode') {
+					parts.push({ type: 'code', content })
+				} else if (tagName === 'ToolOutput') {
+					parts.push({ type: 'text', content: `Tool Output:\n\`\`\`\n${content}\n\`\`\`` })
+				} else {
+					parts.push({ type: 'text', content })
+				}
+			}
+			searchStart = end + closeTag.length
 		}
 	}
+
+	extractTag('Text')
+	extractTag('ToolCode')
+	extractTag('ToolOutput')
+
 	return parts
 }
 
@@ -198,41 +250,68 @@ function extractPartsFromBlock(blockXml: string): ConversationTurnPart[] {
  */
 export function parseConversationTranscript(conversationXml: string): ConversationTurn[] {
 	const turns: ConversationTurn[] = []
-	const conversationTurnsRegex = /<ConversationTurns>([\s\S]*?)<\/ConversationTurns>/
-	const turnsBlockMatch = conversationXml.match(conversationTurnsRegex)
 
-	if (!turnsBlockMatch) {
-		return []
-	}
+	// Find ConversationTurns block using indexOf
+	const turnsStart = conversationXml.indexOf('<ConversationTurns>')
+	if (turnsStart === -1) return []
+	const turnsEnd = conversationXml.indexOf('</ConversationTurns>', turnsStart)
+	if (turnsEnd === -1) return []
 
-	const turnsXml = turnsBlockMatch[1]
-	const turnRegex = /<ConversationTurn>([\s\S]*?)<\/ConversationTurn>/g
-	let turnMatch
+	const turnsXml = conversationXml.slice(turnsStart + 19, turnsEnd)
 
-	while ((turnMatch = turnRegex.exec(turnsXml)) !== null) {
-		const turnXml = turnMatch[1]
+	// Extract each ConversationTurn using indexOf loop
+	let searchStart = 0
+	const turnStartTag = '<ConversationTurn>'
+	const turnEndTag = '</ConversationTurn>'
+	const timestampStartTag = '<Timestamp>'
+	const timestampEndTag = '</Timestamp>'
+	const promptStartTag = '<Prompt>'
+	const promptEndTag = '</Prompt>'
+	const responseStartTag = '<PrimaryResponse>'
+	const responseEndTag = '</PrimaryResponse>'
 
-		const timestampRegex = /<Timestamp>(.*?)<\/Timestamp>/
-		const timestampMatch = turnXml.match(timestampRegex)
-		const timestamp = timestampMatch ? timestampMatch[1] : undefined
+	while (true) {
+		const turnStart = turnsXml.indexOf(turnStartTag, searchStart)
+		if (turnStart === -1) break
+		const turnEnd = turnsXml.indexOf(turnEndTag, turnStart)
+		if (turnEnd === -1) break
+
+		const turnXml = turnsXml.slice(turnStart + turnStartTag.length, turnEnd)
+		searchStart = turnEnd + turnEndTag.length
+
+		// Extract timestamp
+		let timestamp: string | undefined
+		const tsStart = turnXml.indexOf(timestampStartTag)
+		if (tsStart !== -1) {
+			const tsEnd = turnXml.indexOf(timestampEndTag, tsStart)
+			if (tsEnd !== -1) {
+				timestamp = turnXml.slice(tsStart + timestampStartTag.length, tsEnd)
+			}
+		}
 
 		// 1. Process the user's prompt
-		const promptRegex = /<Prompt>([\s\S]*?)<\/Prompt>/
-		const promptMatch = turnXml.match(promptRegex)
-		if (promptMatch && promptMatch[1]) {
-			const userParts = extractPartsFromBlock(promptMatch[1])
-			if (userParts.length > 0) {
-				turns.push({ author: 'user', parts: userParts, timestamp })
+		const promptStart = turnXml.indexOf(promptStartTag)
+		if (promptStart !== -1) {
+			const promptEnd = turnXml.indexOf(promptEndTag, promptStart)
+			if (promptEnd !== -1) {
+				const promptContent = turnXml.slice(promptStart + promptStartTag.length, promptEnd)
+				const userParts = extractPartsFromBlock(promptContent)
+				if (userParts.length > 0) {
+					turns.push({ author: 'user', parts: userParts, timestamp })
+				}
 			}
 		}
 
 		// 2. Process the model's response
-		const responseRegex = /<PrimaryResponse>([\s\S]*?)<\/PrimaryResponse>/
-		const responseMatch = turnXml.match(responseRegex)
-		if (responseMatch && responseMatch[1]) {
-			const modelParts = extractPartsFromBlock(responseMatch[1])
-			if (modelParts.length > 0) {
-				turns.push({ author: 'model', parts: modelParts, timestamp })
+		const responseStart = turnXml.indexOf(responseStartTag)
+		if (responseStart !== -1) {
+			const responseEnd = turnXml.indexOf(responseEndTag, responseStart)
+			if (responseEnd !== -1) {
+				const responseContent = turnXml.slice(responseStart + responseStartTag.length, responseEnd)
+				const modelParts = extractPartsFromBlock(responseContent)
+				if (modelParts.length > 0) {
+					turns.push({ author: 'model', parts: modelParts, timestamp })
+				}
 			}
 		}
 	}

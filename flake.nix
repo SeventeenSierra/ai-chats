@@ -41,6 +41,8 @@
             # Local Workflow Runners & Security
             act
             trivy
+            hadolint
+            syft
 
             # Python for pip-based tools (semgrep)
             python313

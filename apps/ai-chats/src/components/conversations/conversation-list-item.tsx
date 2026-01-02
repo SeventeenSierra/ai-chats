@@ -34,6 +34,8 @@ export function ConversationListItem({
 	}
 
 	return (
+		// biome-ignore lint/a11y/useKeyWithClickEvents: complex interactive list item with nested interactive elements
+		// biome-ignore lint/a11y/noStaticElementInteractions: see above
 		<div
 			className={cn(
 				'flex items-start gap-3 p-2 rounded-md cursor-pointer', // w-full removed

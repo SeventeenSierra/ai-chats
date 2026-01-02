@@ -4,10 +4,10 @@
 import { getCategories, getConversations } from '@ai-chat/backend'
 
 export async function GET() {
-    const [conversations, categories] = await Promise.all([getConversations(), getCategories()])
+	const [conversations, categories] = await Promise.all([getConversations(), getCategories()])
 
-    return Response.json({
-        conversations,
-        categories,
-    })
+	return Response.json({
+		conversations,
+		categories,
+	})
 }

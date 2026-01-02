@@ -99,6 +99,7 @@ export function RecentActivity({ conversations, loading }: RecentActivityProps) 
 		return (
 			<div className="space-y-4">
 				{[...Array(5)].map((_, i) => (
+					// biome-ignore lint/suspicious/noArrayIndexKey: skeleton loader
 					<div key={i} className="flex items-center gap-4">
 						<Skeleton className="h-8 w-8 rounded-full" />
 						<div className="flex-1 space-y-1">
