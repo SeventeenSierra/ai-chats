@@ -1,0 +1,52 @@
+{
+	"_comment": "SPDX-License-Identifier: AGPL-3.0-or-later",
+	"_copyright": "SPDX-FileCopyrightText: 2025 Seventeen Sierra LLC",
+	"$schema": "https://docs.renovatebot.com/renovate-schema.json",
+	"extends": ["config:recommended", ":semanticCommitTypeAll(chore)", "group:allNonMajor"],
+	"baseBranches": ["main", "develop"],
+	"labels": ["dependencies"],
+	"rangeStrategy": "bump",
+	"lockFileMaintenance": {
+		"enabled": true,
+		"schedule": ["before 6am on monday"]
+	},
+	"packageRules": [
+		{
+			"description": "Auto-merge critical security patches",
+			"matchUpdateTypes": ["patch"],
+			"vulnerabilityAlerts": {
+				"enabled": true
+			},
+			"automerge": true,
+			"automergeType": "pr",
+			"schedule": ["at any time"]
+		},
+		{
+			"groupName": "dev tooling",
+			"matchPackagePatterns": ["biome", "eslint", "prettier", "commitlint", "husky"],
+			"automerge": true
+		},
+		{
+			"groupName": "testing",
+			"matchPackagePatterns": ["vitest", "jest", "@testing-library", "playwright"],
+			"automerge": true
+		},
+		{
+			"groupName": "AI packages",
+			"matchPackagePatterns": ["@genkit-ai/*", "genkit"],
+			"automerge": false,
+			"labels": ["ai", "dependencies"]
+		},
+		{
+			"groupName": "React and Next.js",
+			"matchPackagePatterns": ["react", "react-dom", "next"],
+			"automerge": false,
+			"labels": ["frontend", "dependencies"]
+		}
+	],
+	"vulnerabilityAlerts": {
+		"enabled": true,
+		"labels": ["security"],
+		"automerge": true
+	}
+}

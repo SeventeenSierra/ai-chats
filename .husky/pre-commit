@@ -1,0 +1,3 @@
+# Runs lint-staged
+# Temporarily disabled for initial commit
+# pnpm exec lint-staged

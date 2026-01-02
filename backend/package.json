@@ -1,0 +1,35 @@
+{
+	"_comment": "SPDX-License-Identifier: AGPL-3.0-or-later",
+	"_copyright": "SPDX-FileCopyrightText: 2025 Seventeen Sierra LLC",
+	"name": "@ai-chat/backend",
+	"version": "0.1.0",
+	"private": true,
+	"description": "Database and storage utilities for AI Chat",
+	"license": "AGPL-3.0-or-later",
+	"type": "module",
+	"main": "./src/index.ts",
+	"types": "./src/index.ts",
+	"exports": {
+		".": "./src/index.ts",
+		"./database": "./src/database.ts",
+		"./storage": "./src/storage.ts",
+		"./queries": "./src/db-queries.ts",
+		"./xml-parser": "./src/xml-parser.ts"
+	},
+	"scripts": {
+		"typecheck": "tsc --noEmit"
+	},
+	"dependencies": {
+		"@ai-chat/shared": "workspace:*",
+		"@aws-sdk/client-s3": "^3.958.0",
+		"dotenv": "^17.2.3",
+		"jszip": "^3.10.1",
+		"pg": "^8.16.3",
+		"zod": "3.25.76"
+	},
+	"devDependencies": {
+		"@types/node": "^25.0.3",
+		"@types/pg": "^8.16.0",
+		"typescript": "^5.9.3"
+	}
+}

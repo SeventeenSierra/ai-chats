@@ -1,0 +1,53 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+# SPDX-FileCopyrightText: 2025 Seventeen Sierra LLC
+
+# Pre-commit configuration for Gemini Oracle
+
+repos:
+  # Security scanning
+  - repo: https://github.com/gitleaks/gitleaks
+    rev: v8.21.2
+    hooks:
+      - id: gitleaks
+        name: Detect secrets
+
+  # Code formatting and linting
+  - repo: https://github.com/biomejs/pre-commit
+    rev: v0.4.0
+    hooks:
+      - id: biome-check
+        name: Biome lint and format
+        additional_dependencies: ["@biomejs/biome@2.3.8"]
+        files: \.(js|jsx|ts|tsx|json|css)$
+
+  # Commit message validation
+  - repo: https://github.com/alessandrojcm/commitlint-pre-commit-hook
+    rev: v9.18.0
+    hooks:
+      - id: commitlint
+        name: Validate commit messages
+        stages: [commit-msg]
+        additional_dependencies: ["@commitlint/config-conventional"]
+
+  # YAML and JSON validation
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.6.0
+    hooks:
+      - id: check-yaml
+        name: Validate YAML files
+      - id: check-json
+        name: Validate JSON files
+      - id: end-of-file-fixer
+        name: Fix end of files
+      - id: trailing-whitespace
+        name: Remove trailing whitespace
+
+# CI configuration
+ci:
+  autofix_commit_msg: |
+    chore(config): auto fixes from pre-commit hooks
+
+    AI-Agent: pre-commit
+    Human-Involvement: automated
+  autofix_prs: true
+  autoupdate_branch: develop

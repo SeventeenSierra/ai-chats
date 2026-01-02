@@ -1,0 +1,12 @@
+{
+	"_comment": "SPDX-License-Identifier: AGPL-3.0-or-later",
+	"_copyright": "SPDX-FileCopyrightText: 2025 Seventeen Sierra LLC",
+	"name": "@ai-chat/infra",
+	"version": "0.1.0",
+	"private": true,
+	"description": "Infrastructure (Docker, database) for AI Chat",
+	"license": "AGPL-3.0-or-later",
+	"dependencies": {
+		"zod": "3.25.76"
+	}
+}

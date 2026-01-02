@@ -1,0 +1,10 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+# SPDX-FileCopyrightText: 2025 Seventeen Sierra LLC
+#
+# Trivy ignore file - exclude paths from secret scanning
+# See: https://trivy.dev/docs/configuration/filtering/
+
+# Seed data contains exported chat conversations that may include
+# pasted secrets, API keys, etc. from discussions - these are not
+# actual leaked credentials but chat content.
+seed-data/

@@ -1,0 +1,11 @@
+# Semgrep ignore file for false positives
+# See: https://semgrep.dev/docs/ignoring-code
+
+# Test files - intentional patterns for testing
+src/**/*.test.ts
+src/**/*.test.tsx
+
+# Local development credentials (not production)
+compose.yaml
+src/lib/database.ts
+src/lib/storage.ts

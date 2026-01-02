@@ -1,0 +1,45 @@
+{
+	"_comment": "SPDX-License-Identifier: AGPL-3.0-or-later",
+	"_copyright": "SPDX-FileCopyrightText: 2025 Seventeen Sierra LLC",
+	"name": "ai-chats-root",
+	"version": "0.1.0",
+	"private": true,
+	"description": "AI Chats - Monorepo Root",
+	"license": "AGPL-3.0-or-later",
+	"packageManager": "pnpm@10.27.0",
+	"engines": {
+		"node": ">=22"
+	},
+	"scripts": {
+		"dev": "pnpm -r --parallel run dev",
+		"build": "pnpm -r run build",
+		"lint": "pnpm -r run lint",
+		"typecheck": "pnpm -r run typecheck",
+		"check-license": "./scripts/check-license-headers.sh",
+		"prepare": "husky"
+	},
+	"lint-staged": {
+		"*.{ts,tsx}": "pnpm typecheck"
+	},
+	"pnpm": {
+		"overrides": {
+			"ai": ">=6.0.0"
+		},
+		"supportedArchitectures": {
+			"os": [
+				"linux",
+				"darwin"
+			],
+			"cpu": [
+				"x64",
+				"arm64"
+			]
+		}
+	},
+	"devDependencies": {
+		"@commitlint/cli": "^20.3.0",
+		"@commitlint/config-conventional": "^20.3.0",
+		"husky": "^9.1.7",
+		"lint-staged": "^16.2.7"
+	}
+}

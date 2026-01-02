@@ -1,0 +1,51 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+# SPDX-FileCopyrightText: 2025 Seventeen Sierra LLC
+
+# Gitleaks configuration for Gemini Oracle
+
+[extend]
+useDefault = true
+
+# Google AI service secrets
+[[rules]]
+id = "google-api-key"
+description = "Google API Key"
+regex = '''AIza[0-9A-Za-z_-]{35}'''
+tags = ["google", "ai"]
+
+# Database URLs
+[[rules]]
+id = "database-url"
+description = "Database connection string"
+regex = '''(postgres|mysql)://[^\s]+'''
+tags = ["database", "connection"]
+
+# S3/MinIO credentials
+[[rules]]
+id = "aws-access-key"
+description = "AWS/S3 Access Key"
+regex = '''AKIA[0-9A-Z]{16}'''
+tags = ["aws", "s3", "minio"]
+
+# Allowlist for safe files
+[allowlist]
+description = "Safe files and patterns"
+paths = [
+  '''.env\.example''',
+  '''.env\.template''', 
+  '''.*\.md''',
+  '''package\.json''',
+  '''pnpm-lock\.yaml''',
+  '''.next/.*''',
+  '''node_modules/.*''',
+  '''database/seed/.*''',
+  '''seed-data/.*\.xml'''
+]
+
+# Regex patterns for known dev-only placeholder values
+regexes = [
+  '''0{64}''',  # All zeros (dev-only garage rpc_secret)
+  '''dev_.*_not_for_production''',  # Dev tokens pattern
+  '''PLACEHOLDER_.*_REMOVED''',  # Placeholder patterns
+]
+

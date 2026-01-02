@@ -1,0 +1,153 @@
+@import "tailwindcss";
+
+@plugin "tailwindcss-animate";
+@plugin "@tailwindcss/typography";
+
+@theme {
+  --color-background: hsl(var(--background));
+  --color-foreground: hsl(var(--foreground));
+
+  --color-card: hsl(var(--card));
+  --color-card-foreground: hsl(var(--card-foreground));
+
+  --color-popover: hsl(var(--popover));
+  --color-popover-foreground: hsl(var(--popover-foreground));
+
+  --color-primary: hsl(var(--primary));
+  --color-primary-foreground: hsl(var(--primary-foreground));
+
+  --color-secondary: hsl(var(--secondary));
+  --color-secondary-foreground: hsl(var(--secondary-foreground));
+
+  --color-muted: hsl(var(--muted));
+  --color-muted-foreground: hsl(var(--muted-foreground));
+
+  --color-accent: hsl(var(--accent));
+  --color-accent-foreground: hsl(var(--accent-foreground));
+
+  --color-destructive: hsl(var(--destructive));
+  --color-destructive-foreground: hsl(var(--destructive-foreground));
+
+  --color-border: hsl(var(--border));
+  --color-input: hsl(var(--input));
+  --color-ring: hsl(var(--ring));
+
+  --radius-lg: var(--radius);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-sm: calc(var(--radius) - 4px);
+
+  --font-body: var(--font-body), sans-serif;
+  --font-headline: var(--font-headline), sans-serif;
+  --font-code: var(--font-code), monospace;
+
+  --animate-accordion-down: accordion-down 0.2s ease-out;
+  --animate-accordion-up: accordion-up 0.2s ease-out;
+
+  @keyframes accordion-down {
+    from {
+      height: 0;
+    }
+
+    to {
+      height: var(--radix-accordion-content-height);
+    }
+  }
+
+  @keyframes accordion-up {
+    from {
+      height: var(--radix-accordion-content-height);
+    }
+
+    to {
+      height: 0;
+    }
+  }
+}
+
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 224 30% 25%;
+    --card: 0 0% 100%;
+    --card-foreground: 224 30% 25%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 224 30% 25%;
+    --primary: 270 45% 35%;
+    --primary-foreground: 30 50% 99%;
+    --secondary: 270 25% 94%;
+    --secondary-foreground: 270 45% 35%;
+    --muted: 270 25% 96.5%;
+    --muted-foreground: 240 5% 65%;
+    --accent: 320 80% 65%;
+    --accent-foreground: 30 50% 99%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 270 20% 90%;
+    --input: 270 20% 94%;
+    --ring: 320 80% 65%;
+    --radius: 0.5rem;
+  }
+
+  .dark {
+    --background: 220 15% 15%;
+    --foreground: 220 15% 85%;
+    --card: 220 15% 17%;
+    --card-foreground: 220 15% 85%;
+    --popover: 220 15% 15%;
+    --popover-foreground: 220 15% 85%;
+    --primary: 320 70% 75%;
+    --primary-foreground: 220 15% 10%;
+    --secondary: 220 15% 25%;
+    --secondary-foreground: 220 15% 85%;
+    --muted: 220 15% 25%;
+    --muted-foreground: 220 10% 65%;
+    --accent: 320 80% 65%;
+    --accent-foreground: 220 15% 10%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 220 15% 25%;
+    --input: 220 15% 25%;
+    --ring: 320 80% 65%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+@layer components {
+  .prose pre {
+    @apply bg-muted/50 p-4 rounded-lg text-foreground whitespace-pre-wrap break-words font-sans;
+  }
+
+  .prose code {
+    @apply text-secondary-foreground font-medium bg-muted/80 rounded-sm px-1 py-0.5;
+  }
+
+  .prose pre code {
+    @apply bg-transparent rounded-none p-0 font-sans;
+  }
+
+  .prose code::before,
+  .prose code::after {
+    content: "";
+  }
+
+  .dark .prose-invert pre {
+    @apply bg-background;
+  }
+
+  .dark .prose-invert code {
+    @apply text-secondary-foreground bg-muted/80;
+  }
+
+  .dark .prose-invert pre code {
+    @apply bg-transparent;
+  }
+}

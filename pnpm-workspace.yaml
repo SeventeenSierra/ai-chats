@@ -1,0 +1,9 @@
+packages:
+  - "apps/*"
+  - "shared"
+  - "backend"
+  - "ai"
+  - "infra"
+  - "tests"
+  - "seed-data"
+  - "docs"

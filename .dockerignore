@@ -1,0 +1,32 @@
+# dependencies
+node_modules
+**/node_modules
+
+# next.js
+.next/
+**/.next/
+**/out/
+
+# testing
+coverage/
+
+# misc
+.DS_Store
+*.pem
+*.log
+.git/
+.husky/
+.venv/
+seed-data/*.xml
+
+# vercel
+.vercel/
+
+# IDX
+.idx/
+
+# Agent
+.agent/
+Task.md
+Implementation_Plan.md
+Walkthrough.md

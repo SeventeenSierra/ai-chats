@@ -1,0 +1,102 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+# SPDX-FileCopyrightText: 2025 Seventeen Sierra LLC
+
+# AI Autonomy Zones Configuration
+# Defines which code areas AI agents can modify autonomously
+
+zones:
+  # ZONE 0: Full Autonomy - No human required
+  full-autonomy:
+    paths:
+      - "pnpm-lock.yaml"
+      - "**/*.lock"
+      - ".changeset/*.md"
+      - "**/CHANGELOG.md"
+    allowed-agents:
+      - renovate
+      - dependabot
+      - release-please
+    merge-strategy: auto
+    human-involvement: automated
+
+  # ZONE 1: Auto-merge after CI passes
+  auto-merge-ci:
+    paths:
+      - "**/*.test.ts"
+      - "**/*.test.tsx"
+      - "**/*.spec.ts"
+      - "**/*.stories.tsx"
+      - "docs/**/*.md"
+      - "database/seed/**"
+    allowed-agents:
+      - kiro
+      - antigravity
+      - cline
+      - jules
+      - copilot
+      - cursor
+      - gemini
+    merge-strategy: auto-after-ci
+    human-notify: true
+    human-involvement: approved
+
+  # ZONE 2: Human review required
+  human-required:
+    paths:
+      - "src/**"
+      - "!**/*.test.ts"
+    allowed-agents:
+      - kiro
+      - antigravity
+      - cline
+      - jules
+      - copilot
+      - cursor
+      - gemini
+    merge-strategy: require-approval
+    required-approvals: 1
+    human-involvement: reviewed
+
+  # ZONE 3: Human only - AI cannot modify
+  human-only:
+    paths:
+      - "CODEOWNERS"
+      - ".ai-zones.yaml"
+      - "LICENSE"
+      - "CODE_OF_CONDUCT.md"
+      - "SECURITY.md"
+      - ".github/CODEOWNERS"
+      - "compose.yaml"
+    allowed-agents: []
+    merge-strategy: human-only
+    human-involvement: full
+
+# Commit trailer requirements
+commit-trailers:
+  required:
+    - "AI-Agent"           # Which agent made the change
+    - "Human-Involvement"  # full | reviewed | approved | automated
+  optional:
+    - "AI-Session"         # Session ID for audit
+    - "Reviewed-By"        # Human reviewer
+    - "Zone"               # Which zone this falls under
+
+# Scope-based path mapping
+scope-path-mapping:
+  web: ["src/app/**"]
+  api: ["src/app/api/**"]
+  lib: ["src/lib/**"]
+  ui: ["src/components/**"]
+  db: ["database/**", "src/lib/db-queries.ts", "src/lib/database.ts"]
+  storage: ["src/lib/storage.ts"]
+  deps: ["package.json", "pnpm-lock.yaml"]
+  config: ["*.config.*", ".*rc", ".env*"]
+  ci: [".github/workflows/**"]
+  docs: ["docs/**", "README.md", "**/*.md"]
+
+# Human involvement levels
+involvement-levels:
+  full: "Human wrote the code, AI may have assisted"
+  reviewed: "AI wrote, human reviewed line-by-line"
+  approved: "AI wrote, human approved without line-by-line review"
+  automated: "Fully autonomous, no human involvement"

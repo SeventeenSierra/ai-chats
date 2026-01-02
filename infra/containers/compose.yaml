@@ -1,0 +1,100 @@
+# SPDX-License-Identifier: PolyForm-Strict-1.0.0
+# SPDX-FileCopyrightText: 2025 Seventeen Sierra LLC
+
+# Gemini Oracle - Local Development Stack
+# Based on proposal-prepper pattern with security hardening
+
+services:
+  web:
+    build:
+      context: ../..
+      dockerfile: infra/web.Containerfile
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=development
+      - NEXT_TELEMETRY_DISABLED=1
+      - DATABASE_URL=postgresql://${DB_USER:-postgres}:${DB_PASSWORD:-postgres}@postgres:5432/${DB_NAME:-gemini_oracle}
+      - S3_ENDPOINT_URL=http://garage:3900
+      - S3_ACCESS_KEY=${S3_ACCESS_KEY}
+      - S3_SECRET_KEY=${S3_SECRET_KEY}
+      - S3_BUCKET_NAME=${S3_BUCKET_NAME:-conversations}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      garage:
+        condition: service_started
+    volumes:
+      - ../../apps/ai-chats:/app/apps/ai-chats
+      - ../../shared:/app/shared
+      - ../../backend:/app/backend
+      - ../../ai:/app/ai
+      - /app/apps/ai-chats/node_modules
+      - /app/apps/ai-chats/.next
+    command: pnpm dev
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:3000/api/health" ]
+      interval: 30s
+      timeout: 10s
+      start_period: 60s
+      retries: 3
+    restart: unless-stopped
+    networks:
+      gemini-network:
+        aliases:
+          - web-app
+
+  postgres:
+    image: postgres:16-alpine
+    ports:
+      - "${DB_PORT_EXTERNAL:-5433}:5432"
+    environment:
+      - POSTGRES_DB=${DB_NAME:-gemini_oracle}
+      - POSTGRES_USER=${DB_USER:-postgres}
+      - POSTGRES_PASSWORD=${DB_PASSWORD:-postgres}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ../init.sql:/docker-entrypoint-initdb.d/01-init.sql:ro
+    security_opt:
+      - no-new-privileges:true
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U ${DB_USER:-postgres} -d ${DB_NAME:-gemini_oracle}" ]
+      interval: 10s
+      timeout: 5s
+      start_period: 30s
+      retries: 5
+    restart: unless-stopped
+    networks:
+      gemini-network:
+        aliases:
+          - db
+
+  garage:
+    image: dxflrs/garage:v1.0.1
+    ports:
+      - "3900:3900" # S3 API
+      - "3902:3902" # Admin API
+    volumes:
+      - garage_data:/var/lib/garage/data
+      - garage_meta:/var/lib/garage/meta
+      - ../../garage.toml:/etc/garage.toml:ro
+    command: /garage -c /etc/garage.toml server
+    security_opt:
+      - no-new-privileges:true
+    restart: unless-stopped
+    networks:
+      gemini-network:
+        aliases:
+          - object-storage
+
+volumes:
+  postgres_data:
+    driver: local
+  garage_data:
+    driver: local
+  garage_meta:
+    driver: local
+
+networks:
+  gemini-network:
+    driver: bridge

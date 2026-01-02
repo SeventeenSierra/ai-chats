@@ -1,0 +1,28 @@
+{
+	"compilerOptions": {
+		"target": "ES2017",
+		"lib": ["esnext"],
+		"module": "esnext",
+		"moduleResolution": "bundler",
+		"declaration": true,
+		"declarationMap": true,
+		"strict": true,
+		"noEmit": true,
+		"esModuleInterop": true,
+		"skipLibCheck": true,
+		"isolatedModules": true,
+		"resolveJsonModule": true,
+		"paths": {
+			"@/ai/genkit": ["./src/core/genkit.ts"],
+			"@/ai/*": ["./src/*"],
+			"@/types": ["../shared/src/types/index.ts"],
+			"@/types/*": ["../shared/src/types/*"],
+			"@/lib/database": ["../backend/src/database.ts"],
+			"@/lib/storage": ["../backend/src/storage.ts"],
+			"@/lib/db-queries": ["../backend/src/db-queries.ts"],
+			"@/lib/xml-parser": ["../backend/src/xml-parser.ts"]
+		}
+	},
+	"include": ["src/**/*.ts"],
+	"exclude": ["node_modules"]
+}

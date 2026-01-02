@@ -1,0 +1,102 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+# SPDX-FileCopyrightText: 2025 Seventeen Sierra LLC
+
+name: Security
+
+on:
+  push:
+    branches: [main, develop, 'release/*', 'feature/**']
+  pull_request:
+    branches: [main, develop, 'release/*']
+  schedule:
+    - cron: '0 0 * * 1' # Weekly scan
+
+permissions:
+  contents: read
+
+jobs:
+  gitleaks:
+    name: Gitleaks
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Install Gitleaks
+        run: |
+          VERSION="8.18.2" # Pin to a stable version
+          curl -L -o gitleaks.tar.gz "https://github.com/gitleaks/gitleaks/releases/download/v${VERSION}/gitleaks_${VERSION}_linux_x64.tar.gz"
+          tar -xzf gitleaks.tar.gz
+          chmod +x gitleaks
+          sudo mv gitleaks /usr/local/bin/
+
+      - name: Run Gitleaks
+        run: |
+          gitleaks detect \
+            --config .gitleaks.toml \
+            --verbose \
+            --redact
+
+  npm-audit:
+    name: NPM Audit
+    runs-on: ubuntu-22.04
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v2
+        with:
+          version: '10.24.0'
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Install Dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Audit
+        run: pnpm audit --audit-level=high || true
+
+  trivy:
+    name: Trivy
+    runs-on: ubuntu-22.04
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@0.31.0
+        with:
+          scan-type: 'fs'
+          scan-ref: '.'
+          exit-code: '0'
+          ignore-unfixed: false
+          scanners: 'vuln,misconfig'
+          severity: 'CRITICAL,HIGH,MEDIUM,LOW,UNKNOWN'
+          format: 'table'
+          output: 'trivy-results.txt'
+
+  semgrep:
+    name: Semgrep
+    runs-on: ubuntu-22.04
+    permissions:
+      contents: read
+    container:
+      image: semgrep/semgrep:1.99.0
+
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run Semgrep
+        run: |
+          semgrep scan \
+            --config=p/security-audit \
+            --config=p/javascript \
+            --config=p/typescript \
+            --config=p/nodejs \
+            --config=p/react \
+            --config=p/nextjs \
+            --text \
+            --error \
+            --verbose

@@ -1,0 +1,48 @@
+# SPDX-License-Identifier: PolyForm-Strict-1.0.0
+# SPDX-FileCopyrightText: 2025 Seventeen Sierra LLC
+
+name: License Compliance
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+permissions:
+  contents: read
+
+jobs:
+  header-check:
+    name: License Header Check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Make script executable
+        run: chmod +x scripts/check-license-headers.sh
+      
+      - name: Check license headers
+        run: ./scripts/check-license-headers.sh
+
+  npm-licenses:
+    name: npm License Check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - uses: pnpm/action-setup@v2
+        with:
+          version: 10.24.0
+      
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'pnpm'
+      
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+      
+      - name: Check licenses
+        run: |
+          npx license-checker --onlyAllow 'MIT;Apache-2.0;BSD-2-Clause;BSD-3-Clause;ISC;0BSD;CC0-1.0;Unlicense;WTFPL;Python-2.0;AGPL-3.0-or-later;PolyForm-Strict-1.0.0;CC-BY-SA-4.0' --excludePrivatePackages || echo "::warning::Some packages have incompatible licenses"

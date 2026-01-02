@@ -1,0 +1,41 @@
+{
+	"compilerOptions": {
+		"target": "ES2017",
+		"lib": ["dom", "dom.iterable", "esnext"],
+		"allowJs": true,
+		"skipLibCheck": true,
+		"strict": true,
+		"noEmit": true,
+		"esModuleInterop": true,
+		"module": "esnext",
+		"moduleResolution": "bundler",
+		"resolveJsonModule": true,
+		"isolatedModules": true,
+		"jsx": "react-jsx",
+		"incremental": true,
+		"plugins": [
+			{
+				"name": "next"
+			}
+		],
+		"paths": {
+			"@/*": ["./src/*"],
+			"@/types": ["../../shared/src/types/index.ts"],
+			"@/types/*": ["../../shared/src/types/*"],
+			"@/hooks/use-toast": ["./src/hooks/use-toast.ts"],
+			"@/hooks/*": ["../../shared/src/hooks/*"],
+			"@/lib/utils": ["../../shared/src/utils.ts"],
+			"@/ai/flows/*": ["../../ai/src/flows/*"],
+			"@/ai/*": ["../../ai/src/*"]
+		},
+		"types": []
+	},
+	"include": [
+		"next-env.d.ts",
+		"**/*.ts",
+		"**/*.tsx",
+		".next/types/**/*.ts",
+		".next/dev/types/**/*.ts"
+	],
+	"exclude": ["node_modules"]
+}
