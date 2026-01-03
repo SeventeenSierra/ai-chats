@@ -4,15 +4,28 @@
 import { getCategories, getConversations, getQuarantinedCount } from '@ai-chat/backend'
 
 export async function GET() {
-	const [conversations, categories, quarantinedCount] = await Promise.all([
-		getConversations(),
-		getCategories(),
-		getQuarantinedCount(),
-	])
+	try {
+		const [conversations, categories, quarantinedCount] = await Promise.all([
+			getConversations(),
+			getCategories(),
+			getQuarantinedCount(),
+		])
 
-	return Response.json({
-		conversations,
-		categories,
-		quarantinedCount,
-	})
+		return Response.json({
+			conversations,
+			categories,
+			quarantinedCount,
+		})
+	} catch (error) {
+		console.error('Dashboard API error:', error)
+		return Response.json(
+			{
+				conversations: [],
+				categories: [],
+				quarantinedCount: 0,
+				error: 'Database unavailable',
+			},
+			{ status: 503 },
+		)
+	}
 }
