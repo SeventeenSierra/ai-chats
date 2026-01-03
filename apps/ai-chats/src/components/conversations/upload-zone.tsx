@@ -48,37 +48,76 @@ export function UploadZone({ onUploadComplete, className }: UploadZoneProps) {
 		}
 	}
 
+	type JobStatus = Awaited<ReturnType<typeof getImportJobStatusAction>>
+	type StageResult = {
+		status: UploadStatus
+		progress: number
+		message: string
+		isComplete: boolean
+	}
+
+	const isJobInProgress = (job: JobStatus): boolean => Boolean(job && job.status !== 'completed')
+	const isJobComplete = (job: JobStatus): boolean => Boolean(job && job.status === 'completed')
+
+	const createStage = (
+		status: UploadStatus,
+		progress: number,
+		message: string,
+		isComplete = false,
+	): StageResult => ({
+		status,
+		progress,
+		message,
+		isComplete,
+	})
+
+	/** Determines the current import stage from job statuses */
+	const determineImportStage = (
+		splitJob: JobStatus,
+		processJob: JobStatus,
+		fetchJob: JobStatus,
+	): StageResult => {
+		if (isJobInProgress(splitJob)) {
+			return createStage(
+				'splitting',
+				splitJob?.progress ?? 10,
+				splitJob?.message ?? 'Splitting file...',
+			)
+		}
+		if (isJobInProgress(processJob)) {
+			const progress = 33 + (processJob?.progress ?? 0) * 0.33
+			return createStage(
+				'processing',
+				progress,
+				processJob?.message ?? 'Processing conversations...',
+			)
+		}
+		if (isJobInProgress(fetchJob)) {
+			const progress = 66 + (fetchJob?.progress ?? 0) * 0.34
+			return createStage('fetching', progress, fetchJob?.message ?? 'Fetching transcripts...')
+		}
+		if (isJobComplete(fetchJob)) {
+			return createStage('complete', 100, 'Import complete!', true)
+		}
+		return createStage('uploading', 5, 'Waiting...')
+	}
+
 	const startPolling = (jobId: string) => {
-		// Poll every 1.5 seconds
 		pollIntervalRef.current = setInterval(async () => {
 			try {
-				// Check all 3 job stages
 				const [splitJob, processJob, fetchJob] = await Promise.all([
 					getImportJobStatusAction(`${jobId}-split`),
 					getImportJobStatusAction(`${jobId}-process`),
 					getImportJobStatusAction(`${jobId}-fetch`),
 				])
 
-				// Determine current stage
-				if (splitJob && splitJob.status !== 'completed') {
-					setStatus('splitting')
-					setProgress(splitJob.progress ?? 10)
-					setStatusMessage(splitJob.message ?? 'Splitting file...')
-				} else if (processJob && processJob.status !== 'completed') {
-					setStatus('processing')
-					setProgress(33 + (processJob.progress ?? 0) * 0.33)
-					setStatusMessage(processJob.message ?? 'Processing conversations...')
-				} else if (fetchJob && fetchJob.status !== 'completed') {
-					setStatus('fetching')
-					setProgress(66 + (fetchJob.progress ?? 0) * 0.34)
-					setStatusMessage(fetchJob.message ?? 'Fetching transcripts...')
-				} else if (fetchJob && fetchJob.status === 'completed') {
-					// All done!
-					setStatus('complete')
-					setProgress(100)
-					setStatusMessage('Import complete!')
-					stopPolling()
+				const stage = determineImportStage(splitJob, processJob, fetchJob)
+				setStatus(stage.status)
+				setProgress(stage.progress)
+				setStatusMessage(stage.message)
 
+				if (stage.isComplete) {
+					stopPolling()
 					setTimeout(() => {
 						setStatus('idle')
 						setProgress(0)

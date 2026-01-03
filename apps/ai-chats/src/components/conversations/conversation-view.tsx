@@ -40,6 +40,56 @@ type ConversationViewProps = {
 
 const TRUNCATION_LENGTH = 500
 
+type TurnPart = { type: string; content: string }
+
+/** Renders a single part of a conversation turn */
+function PartRenderer({ part, partKey }: { part: TurnPart; partKey: string }) {
+	if (part.type === 'text') {
+		const isChip =
+			part.content.includes('googleusercontent.com') ||
+			part.content.includes('deep_research_confirmation_content') ||
+			part.content.includes('immersive_entry_chip')
+
+		if (isChip && part.content.length < 200) {
+			const chipLabel = part.content.includes('immersive')
+				? 'Immersive Content'
+				: part.content.includes('research')
+					? 'Research Plan'
+					: 'View Content'
+
+			return (
+				<div key={partKey} className="my-4">
+					<a
+						href={part.content}
+						target="_blank"
+						rel="noopener noreferrer"
+						className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-primary/5 border border-primary/20 text-primary font-semibold text-sm no-underline hover:bg-primary/10 transition-all shadow-sm"
+					>
+						<ExternalLink className="h-4 w-4" />
+						{chipLabel}
+					</a>
+				</div>
+			)
+		}
+
+		return (
+			<ReactMarkdown key={partKey} remarkPlugins={[remarkGfm]}>
+				{part.content}
+			</ReactMarkdown>
+		)
+	}
+
+	if (part.type === 'code') {
+		return (
+			<pre key={partKey}>
+				<code>{part.content}</code>
+			</pre>
+		)
+	}
+
+	return null
+}
+
 function TurnView({ turn }: { turn: ConversationTurn }) {
 	const isUser = turn.author === 'user'
 	const AuthorIcon = isUser ? User : Bot
@@ -75,48 +125,8 @@ function TurnView({ turn }: { turn: ConversationTurn }) {
 				</p>
 				<div className="prose max-w-none">
 					{turn.parts.map((part, i) => {
-						// Create a stable key from part content
 						const partKey = `${part.type}-${i}-${part.content.slice(0, 20)}`
-						if (part.type === 'text') {
-							// Check if it's a special chip URL
-							const isChip =
-								part.content.includes('googleusercontent.com') ||
-								part.content.includes('deep_research_confirmation_content') ||
-								part.content.includes('immersive_entry_chip')
-
-							if (isChip && part.content.length < 200) {
-								return (
-									<div key={partKey} className="my-4">
-										<a
-											href={part.content}
-											target="_blank"
-											rel="noopener noreferrer"
-											className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-primary/5 border border-primary/20 text-primary font-semibold text-sm no-underline hover:bg-primary/10 transition-all shadow-sm"
-										>
-											<ExternalLink className="h-4 w-4" />
-											{part.content.includes('immersive')
-												? 'Immersive Content'
-												: part.content.includes('research')
-													? 'Research Plan'
-													: 'View Content'}
-										</a>
-									</div>
-								)
-							}
-							return (
-								<ReactMarkdown key={partKey} remarkPlugins={[remarkGfm]}>
-									{part.content}
-								</ReactMarkdown>
-							)
-						}
-						if (part.type === 'code') {
-							return (
-								<pre key={partKey}>
-									<code>{part.content}</code>
-								</pre>
-							)
-						}
-						return null
+						return <PartRenderer key={partKey} part={part} partKey={partKey} />
 					})}
 				</div>
 				{isTruncated && (
