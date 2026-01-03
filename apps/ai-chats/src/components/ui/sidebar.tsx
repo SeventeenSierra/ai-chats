@@ -3,14 +3,13 @@
 
 'use client'
 
-import { Code, FileText, FolderOpen, Lightbulb, Plus, Search, Settings } from 'lucide-react'
+import { Code, FileText, FolderOpen, Lightbulb, Search, Settings } from 'lucide-react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import * as React from 'react'
 import { useIsMobile } from '@/hooks/use-mobile'
 import { cn } from '@/lib/utils'
 import { Button } from './button'
-import { Input } from './input'
 import { ScrollArea } from './scroll-area'
 
 // --- Context ---
@@ -81,7 +80,12 @@ export const SidebarContent = ({ children }: { children: React.ReactNode }) => {
 			<div className="p-3">
 				<div className="relative">
 					<Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-					<Input placeholder="Search..." className="pl-8 h-9 text-sm" disabled />
+					<input
+						type="text"
+						placeholder="Search..."
+						className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 pl-8 text-sm shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+						disabled
+					/>
 				</div>
 			</div>
 
@@ -106,19 +110,7 @@ export const SidebarContent = ({ children }: { children: React.ReactNode }) => {
 				</nav>
 			</div>
 
-			{/* Binders (Collections) */}
-			<div className="px-3 py-2 mt-2">
-				<h2 className="mb-2 px-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-					Binders
-				</h2>
-				<nav className="space-y-1">
-					{/* Placeholder for dynamic binders */}
-					<Button variant="ghost" size="sm" className="w-full justify-start gap-2 text-muted-foreground">
-						<Plus className="h-4 w-4" />
-						New Binder
-					</Button>
-				</nav>
-			</div>
+
 
 			{/* Main scrollable content area (passed children, e.g., conversation list) */}
 			<ScrollArea className="flex-1">{children}</ScrollArea>

@@ -400,23 +400,6 @@ export async function deleteAllConversations(): Promise<number> {
 	return 0
 }
 
-export async function createBinder(title: string, description?: string, color?: string) {
-	const res = await pool.query(
-		'INSERT INTO binders (title, description, color) VALUES ($1, $2, $3) RETURNING *',
-		[title, description, color || '#64748b']
-	)
-	return res.rows[0]
-}
-
-export async function getBinders() {
-	const res = await pool.query('SELECT * FROM binders ORDER BY created_at DESC')
-	return res.rows
-}
-
-export async function deleteBinder(id: string) {
-	await pool.query('DELETE FROM binders WHERE id = $1', [id])
-}
-
 export async function getConversationsWithTranscript(): Promise<Conversation[]> {
 	try {
 		const result = await pool.query(`
