@@ -74,7 +74,7 @@
             fi
 
             echo "💡 Run 'pnpm dev' to start the dev server"
-            echo "💡 Run 'podman-compose up -d' for PostgreSQL/MinIO"
+            echo "💡 Run 'podman-compose up -d' for PostgreSQL/Garage"
           '';
         };
       }

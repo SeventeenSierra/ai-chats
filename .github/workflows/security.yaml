@@ -112,7 +112,7 @@ jobs:
         uses: aquasecurity/trivy-action@0.31.0
         with:
           scan-type: 'image'
-          image-ref: 'postgres:16-alpine'
+          image-ref: 'cgr.dev/chainguard/postgres:latest'
           exit-code: '0'
           ignore-unfixed: true
           scanners: 'vuln'
@@ -131,6 +131,18 @@ jobs:
           severity: 'CRITICAL,HIGH,MEDIUM'
           format: 'sarif'
           output: 'trivy-image-garage.sarif'
+
+      - name: Run Trivy vulnerability scanner (Node.js Image)
+        uses: aquasecurity/trivy-action@0.31.0
+        with:
+          scan-type: 'image'
+          image-ref: 'node:22-slim'
+          exit-code: '0'
+          ignore-unfixed: true
+          scanners: 'vuln'
+          severity: 'CRITICAL,HIGH,MEDIUM'
+          format: 'sarif'
+          output: 'trivy-image-node.sarif'
 
       - name: Upload Trivy FS results
         if: always()
@@ -159,6 +171,13 @@ jobs:
         with:
           sarif_file: trivy-image-garage.sarif
           category: trivy-image-garage
+
+      - name: Upload Trivy Node.js Image results
+        if: always()
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: trivy-image-node.sarif
+          category: trivy-image-node
 
   semgrep:
     name: Semgrep

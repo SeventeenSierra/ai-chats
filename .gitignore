@@ -46,6 +46,10 @@ firebase-debug.log
 firestore-debug.log
 # Security audit artifacts
 .sbom/
+.trivy-cache/
+
+# Python virtual environment (for semgrep)
+.venv/
 
 # Seed data (contains user chat exports with potentially sensitive content)
 seed-data/*

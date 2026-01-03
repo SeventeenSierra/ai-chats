@@ -36,7 +36,7 @@ export default {
                 "lib",       // Library code
                 "ui",        // UI components
                 "db",        // Database
-                "storage",   // MinIO/S3
+                "storage",   // Garage S3
 
                 // Infrastructure
                 "deps",      // Dependencies

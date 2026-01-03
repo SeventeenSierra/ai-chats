@@ -1,4 +1,21 @@
-# Required for Postgres official image entrypoint (needs root to chown data)
-AVD-DS-0002
-# Orchestration (Compose/K8s) handles healthchecks
-AVD-DS-0026
+# SPDX-License-Identifier: AGPL-3.0-or-later
+# SPDX-FileCopyrightText: 2025 Seventeen Sierra LLC
+#
+# Trivy ignore file for known issues we accept or cannot fix
+# https://trivy.dev/docs/configuration/ignoring/
+#
+# Current image configuration:
+# - postgres: cgr.dev/chainguard/postgres:latest (0 CVEs)
+# - web: node:22-slim (official Node 22 LTS)
+# - garage: dxflrs/garage:v1.0.1 (scratch image)
+
+# ==============================================================================
+# Base Image Vulnerabilities (not our code)
+# ==============================================================================
+
+# CVE-2025-64756: glob command injection in node:22-slim base image
+# This is a vulnerability in npm's bundled glob package within the official
+# Node.js base image. We cannot fix this - must wait for upstream update.
+# Risk: LOW - requires malicious filename control which we don't expose
+# Status: Monitoring for node:22-slim image update
+CVE-2025-64756

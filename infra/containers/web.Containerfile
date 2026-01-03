@@ -2,20 +2,16 @@
 # SPDX-FileCopyrightText: 2025 Seventeen Sierra LLC
 
 # Development Containerfile for Gemini Oracle Next.js web application
-FROM node:22-bullseye-slim
+# Using official Node.js 22 LTS image to match local development environment
+# For production, consider Chainguard distroless images
+
+FROM node:22-slim AS base
 
 # Set working directory
 WORKDIR /app
 
-# Install curl for health checks and pnpm
-RUN apt-get update && \
-    apt-get install -y --no-install-recommends curl=7.74.0-1.3+deb11u15 && \
-    npm install -g pnpm@10.27.0 && \
-    rm -rf /var/lib/apt/lists/*
-
-# Ensure permissions for node user
-RUN mkdir -p /app && chown -R node:node /app
-
+# Install pnpm globally and set ownership for non-root user
+RUN npm install -g pnpm@10.27.0 && chown -R node:node /app
 USER node
 
 # Copy workspace configuration
@@ -45,6 +41,10 @@ EXPOSE 3000
 # Set environment variables for development
 ENV NODE_ENV=development
 ENV NEXT_TELEMETRY_DISABLED=1
+
+# Health check for Next.js dev server (using node since wget/curl may not be available)
+HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
+    CMD node -e "require('http').get('http://localhost:3000/api/health', (r) => process.exit(r.statusCode === 200 ? 0 : 1)).on('error', () => process.exit(1))"
 
 # Start development server
 CMD ["pnpm", "dev"]
