@@ -8,7 +8,7 @@ A Next.js application for importing, exploring, and analyzing Gemini conversatio
 
 - **Frontend**: Next.js 16, React 19, Tailwind CSS v4
 - **Database**: PostgreSQL (via Podman/Docker)
-- **Storage**: MinIO (S3-compatible, via Podman/Docker)
+- **Storage**: Garage (S3-compatible, via Podman/Docker)
 - **Package Manager**: pnpm 10.27.0 (Monorepo)
 
 ## Current State

@@ -32,6 +32,8 @@ export type Conversation = {
 	backlinkedAt?: string | null
 	// Deep Research conversation flag
 	isDeepResearch?: boolean
+	// Flag for transcript existence (UI optimization)
+	hasTranscript?: boolean
 }
 
 export type ConversationGroup = {
@@ -44,14 +46,14 @@ export type ImportJob = {
 	jobId: string
 	filename: string
 	status:
-		| 'starting'
-		| 'splitting'
-		| 'processing'
-		| 'enriching'
-		| 'staged'
-		| 'completed'
-		| 'failed'
-		| 'cancelled'
+	| 'starting'
+	| 'splitting'
+	| 'processing'
+	| 'enriching'
+	| 'staged'
+	| 'completed'
+	| 'failed'
+	| 'cancelled'
 	total?: number
 	processed?: number
 	progress?: number

@@ -9,6 +9,7 @@
 
 import { saveConversation } from '@ai-chat/backend/queries'
 import { downloadFromStorage, listFromStorage } from '@ai-chat/backend/storage'
+import { detectActivityType } from '@ai-chat/backend'
 import { z } from 'zod'
 import { ai } from '../core/genkit'
 import { analyzeAndExtractConversation } from './analyze-and-extract-conversation'
@@ -16,6 +17,7 @@ import { getImportJobStatus, updateImportStatus } from './update-import-status'
 
 const ProcessConversationsInputSchema = z.object({
 	jobId: z.string().describe('The unique ID for this import job.'),
+	splitJobId: z.string().optional().describe('The ID of the split job that generated the staging files.'),
 })
 export type ProcessConversationsInput = z.infer<typeof ProcessConversationsInputSchema>
 
@@ -55,10 +57,11 @@ const processConversationsFlow = ai.defineFlow(
 		inputSchema: ProcessConversationsInputSchema,
 		outputSchema: ProcessConversationsOutputSchema,
 	},
-	async ({ jobId }) => {
+	async ({ jobId, splitJobId }) => {
 		try {
-			// List all files in staging directory
-			const stagedFiles = await listFromStorage('staging/')
+			// List files in the specific staging directory if splitJobId is provided, else fallback to staging/
+			const prefix = splitJobId ? `staging/${splitJobId}/` : 'staging/'
+			const stagedFiles = await listFromStorage(prefix)
 			const fileCount = stagedFiles.length
 
 			console.log(`[Job ${jobId}] Found ${fileCount} staged files to process.`)
@@ -92,19 +95,25 @@ const processConversationsFlow = ai.defineFlow(
 				}
 
 				try {
-					// Extract filename from path (e.g., 'staging/filename.xml' -> 'filename.xml')
+					// Extract filename from path relative to staging (e.g., 'staging/jobId/filename.xml' -> 'jobId/filename.xml')
 					const filename = filePath.replace('staging/', '')
 
 					// Download file content from S3
 					const xmlContent = await downloadFromStorage(filePath)
 
 					const extractedData = await analyzeAndExtractConversation({ xmlContent })
+					const activityType = detectActivityType(xmlContent)
 
 					// Save to PostgreSQL with storage filename
-					await saveConversation({
-						...extractedData,
-						storageFilename: filename,
-					})
+					await saveConversation(
+						{
+							...extractedData,
+							storageFilename: filename,
+						},
+						undefined,
+						undefined,
+						activityType
+					)
 
 					if (extractedData.status !== 'quarantined') {
 						processedCount++

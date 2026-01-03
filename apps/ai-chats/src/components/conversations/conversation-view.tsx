@@ -3,47 +3,24 @@
 
 'use client'
 
-import {
-	Archive,
-	ArchiveRestore,
-	Bot,
-	BrainCircuit,
-	Database,
-	Download,
-	FileText,
-	Folder,
-	MessageSquareQuote,
-	MoreVertical,
-	Pencil,
-	User,
-} from 'lucide-react'
+import { Bot, Download, ExternalLink, FileText, MessageSquareQuote, MoreVertical, User } from 'lucide-react'
 import * as React from 'react'
 import ReactMarkdown from 'react-markdown'
+import { Virtuoso } from 'react-virtuoso'
 import remarkGfm from 'remark-gfm'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
 import {
 	DropdownMenu,
 	DropdownMenuContent,
 	DropdownMenuItem,
-	DropdownMenuSeparator,
 	DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { ScrollArea } from '@/components/ui/scroll-area'
-import {
-	Select,
-	SelectContent,
-	SelectItem,
-	SelectTrigger,
-	SelectValue,
-} from '@/components/ui/select'
-import { useToast } from '@/hooks/use-toast'
-import { archiveConversationAction, exportToMarkdownAction, getSummaryAction } from '@/lib/actions'
+import { Skeleton } from '@/components/ui/skeleton'
+import { exportToMarkdownAction } from '@/lib/actions'
 import { cn } from '@/lib/utils'
 import type { AppCategory, Conversation, ConversationTurn } from '@/types'
-import { Badge } from '../ui/badge'
-import { Button } from '../ui/button'
-import { Skeleton } from '../ui/skeleton'
-import { CategoryManagerDialog } from './category-manager-dialog'
 
 type ConversationViewProps = {
 	conversation: Conversation
@@ -51,58 +28,68 @@ type ConversationViewProps = {
 	onUpdateCategory: (conversationId: string, newCategory: string) => void
 	onAddCategory: (categoryName: string) => Promise<boolean>
 	onRenameCategory: (oldName: string, newName: string) => Promise<boolean>
-	onDataChange: () => void // Callback to tell the parent page to re-fetch all data
+	onDataChange: () => void
 }
 
-const TRUNCATION_LENGTH = 500 // 500 characters
+const TRUNCATION_LENGTH = 500
 
 function TurnView({ turn }: { turn: ConversationTurn }) {
 	const isUser = turn.author === 'user'
 	const AuthorIcon = isUser ? User : Bot
-
 	const [isExpanded, setIsExpanded] = React.useState(false)
 
 	const fullContent = React.useMemo(
-		() => turn.parts.map((p) => p.content).join('\n\n'),
+		() => (turn.parts || []).map((p) => p.content).join('\n\n'),
 		[turn.parts],
 	)
 
 	const isTruncated = fullContent.length > TRUNCATION_LENGTH
-
-	const contentToShow =
-		isExpanded || !isTruncated ? fullContent : `${fullContent.substring(0, TRUNCATION_LENGTH)}...`
-
-	const hiddenCharCount = fullContent.length - TRUNCATION_LENGTH
+	const contentToShow = isExpanded || !isTruncated ? fullContent : `${fullContent.substring(0, TRUNCATION_LENGTH)}...`
 
 	return (
 		<div className="flex items-start gap-4 my-4">
-			<div
-				className={cn('p-2 rounded-full', isUser ? 'bg-primary/10 text-primary' : 'bg-secondary')}
-			>
+			<div className={cn('p-2 rounded-full shrink-0', isUser ? 'bg-primary/10 text-primary' : 'bg-secondary')}>
 				<AuthorIcon className="h-5 w-5" />
 			</div>
-			<div className="flex-1">
-				<p
-					className={cn(
-						'text-sm font-semibold mb-1',
-						isUser ? 'text-primary' : 'text-secondary-foreground',
-					)}
-				>
+			<div className="flex-1 min-w-0">
+				<p className={cn('text-[10px] font-black uppercase tracking-[0.15em] mb-3 opacity-40', isUser ? 'text-primary' : 'text-slate-500')}>
 					{isUser ? 'User' : 'Model'}
 				</p>
-				<div className="prose prose-sm dark:prose-invert max-w-none">
-					<ReactMarkdown remarkPlugins={[remarkGfm]}>{contentToShow}</ReactMarkdown>
+				<div className="prose max-w-none">
+					{turn.parts.map((part, i) => {
+						if (part.type === 'text') {
+							// Check if it's a special chip URL
+							const isChip = part.content.includes('googleusercontent.com') ||
+								part.content.includes('deep_research_confirmation_content') ||
+								part.content.includes('immersive_entry_chip');
+
+							if (isChip && part.content.length < 200) {
+								return (
+									<div key={i} className="my-4">
+										<a
+											href={part.content}
+											target="_blank"
+											rel="noopener noreferrer"
+											className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-primary/5 border border-primary/20 text-primary font-semibold text-sm no-underline hover:bg-primary/10 transition-all shadow-sm"
+										>
+											<ExternalLink className="h-4 w-4" />
+											{part.content.includes('immersive') ? 'Immersive Content' :
+												part.content.includes('research') ? 'Research Plan' : 'View Content'}
+										</a>
+									</div>
+								);
+							}
+							return <ReactMarkdown key={i} remarkPlugins={[remarkGfm]}>{part.content}</ReactMarkdown>;
+						}
+						if (part.type === 'code') {
+							return <pre key={i}><code>{part.content}</code></pre>;
+						}
+						return null;
+					})}
 				</div>
 				{isTruncated && (
-					<Button
-						variant="link"
-						size="sm"
-						className="px-0 h-auto py-1 text-sm"
-						onClick={() => setIsExpanded(!isExpanded)}
-					>
-						{isExpanded
-							? 'Show less'
-							: `Show more (${hiddenCharCount.toLocaleString()} characters)`}
+					<Button variant="link" size="sm" className="px-0 h-auto py-1 text-sm" onClick={() => setIsExpanded(!isExpanded)}>
+						{isExpanded ? 'Show less' : `Show more`}
 					</Button>
 				)}
 			</div>
@@ -111,354 +98,100 @@ function TurnView({ turn }: { turn: ConversationTurn }) {
 }
 
 function StagedConversationPreview({ conversation }: { conversation: Conversation }) {
-	// This component now simply displays the pre-processed firstPrompt and firstResponse.
 	return (
 		<div className="p-4 space-y-4">
-			<Card className="bg-muted/30">
-				<CardHeader>
-					<CardTitle className="text-base flex items-center gap-2">
-						<User className="h-4 w-4" />
-						First User Prompt
-					</CardTitle>
-				</CardHeader>
-				<CardContent>
-					<div className="text-sm whitespace-pre-wrap font-sans">
-						{conversation.firstPrompt || 'No prompt found.'}
-					</div>
-				</CardContent>
-			</Card>
-			<Card>
-				<CardHeader>
-					<CardTitle className="text-base flex items-center gap-2">
-						<Bot className="h-4 w-4" />
-						First Model Response
-					</CardTitle>
-				</CardHeader>
-				<CardContent>
-					<div className="text-sm whitespace-pre-wrap font-sans">
-						{conversation.firstResponse || 'No response found.'}
-					</div>
-				</CardContent>
-			</Card>
-		</div>
-	)
-}
-
-function _ConversationViewSkeleton() {
-	return (
-		<div className="p-4 space-y-6">
-			<div className="flex items-start gap-3">
-				<Skeleton className="h-10 w-10 rounded-full" />
-				<div className="flex-1 space-y-2">
-					<Skeleton className="h-4 w-24" />
-					<Skeleton className="h-12 w-full max-w-lg" />
+			<div className="p-4 border rounded-lg bg-muted/30">
+				<p className="text-sm font-semibold mb-2 flex items-center gap-2"><User className="h-4 w-4" /> First Prompt</p>
+				<div className="prose prose-sm dark:prose-invert max-w-none">
+					<ReactMarkdown remarkPlugins={[remarkGfm]}>{conversation.firstPrompt || 'No prompt found.'}</ReactMarkdown>
 				</div>
 			</div>
-			<div className="flex items-start gap-3">
-				<Skeleton className="h-10 w-10 rounded-full" />
-				<div className="flex-1 space-y-2">
-					<Skeleton className="h-4 w-24" />
-					<Skeleton className="h-8 w-full max-w-md" />
-				</div>
-			</div>
-			<div className="flex items-start gap-3">
-				<Skeleton className="h-10 w-10 rounded-full" />
-				<div className="flex-1 space-y-2">
-					<Skeleton className="h-4 w-24" />
-					<Skeleton className="h-24 w-full max-w-2xl" />
-					<Skeleton className="h-8 w-full max-w-lg" />
+			<div className="p-4 border rounded-lg">
+				<p className="text-sm font-semibold mb-2 flex items-center gap-2"><Bot className="h-4 w-4" /> First Response</p>
+				<div className="prose prose-sm dark:prose-invert max-w-none">
+					<ReactMarkdown remarkPlugins={[remarkGfm]}>{conversation.firstResponse || 'No response found.'}</ReactMarkdown>
 				</div>
 			</div>
 		</div>
-	)
-}
-
-function SummarySection({
-	conversation,
-	onDataChange,
-}: {
-	conversation: Conversation
-	onDataChange: () => void
-}) {
-	const [isSummarizing, setIsSummarizing] = React.useState(false)
-	const { toast } = useToast()
-	const transcript = conversation.transcript
-	const summary = conversation.summary
-
-	const handleSummarize = async () => {
-		if (!transcript || transcript.length === 0) {
-			toast({
-				variant: 'destructive',
-				title: 'Error',
-				description: 'Cannot summarize without a full transcript.',
-			})
-			return
-		}
-
-		setIsSummarizing(true)
-		toast({ title: 'Generating Summary', description: 'AI is summarizing the conversation...' })
-
-		const transcriptString = transcript
-			.map((turn) => `${turn.author}:\n${turn.parts.map((p) => p.content).join('\n')}`)
-			.join('\n\n')
-
-		const result = await getSummaryAction(conversation.id, transcriptString)
-		if (result.summary) {
-			toast({
-				title: 'Summary Complete',
-				description: 'The conversation has been summarized and saved.',
-			})
-			onDataChange()
-		} else {
-			toast({ variant: 'destructive', title: 'Error', description: result.error })
-		}
-		setIsSummarizing(false)
-	}
-
-	return (
-		<div className="p-4 border-t">
-			<h3 className="font-semibold mb-2">AI Summary</h3>
-			{isSummarizing ? (
-				<Skeleton className="h-16 w-full" />
-			) : summary ? (
-				<p className="text-sm text-muted-foreground prose prose-sm max-w-none">{summary}</p>
-			) : transcript && transcript.length > 0 ? (
-				<div className="text-center py-4 space-y-2">
-					<p className="text-sm text-muted-foreground">
-						No summary available for this conversation.
-					</p>
-					<Button onClick={handleSummarize} disabled={isSummarizing} size="sm">
-						<BrainCircuit className="mr-2 h-4 w-4" />
-						Generate Summary
-					</Button>
-				</div>
-			) : (
-				<div className="p-4 text-center text-sm text-muted-foreground">
-					This conversation has not been enriched with its full transcript.
-				</div>
-			)}
-		</div>
-	)
-}
-
-function CategorySelector({
-	conversation,
-	categories,
-	onUpdateCategory,
-	onAddCategory,
-	onRenameCategory,
-}: {
-	conversation: Conversation
-	categories: AppCategory[]
-	onUpdateCategory: (conversationId: string, newCategory: string) => void
-	onAddCategory: (categoryName: string) => Promise<boolean>
-	onRenameCategory: (oldName: string, newName: string) => Promise<boolean>
-}) {
-	// The "Unprocessed" category is a virtual one, so we don't show it as a selectable option.
-	const displayCategories = categories.filter((c) => c.name !== 'Unprocessed')
-	const [isManagerOpen, setIsManagerOpen] = React.useState(false)
-
-	return (
-		<>
-			<div className="flex items-center gap-1">
-				<Select
-					value={conversation.category || ''}
-					onValueChange={(newCategory) => {
-						if (newCategory && newCategory !== conversation.category) {
-							onUpdateCategory(conversation.id, newCategory)
-						}
-					}}
-				>
-					<SelectTrigger className="w-auto gap-2 text-xs h-7 px-2">
-						<Folder className="h-3 w-3" />
-						<SelectValue placeholder="Categorize..." />
-					</SelectTrigger>
-					<SelectContent>
-						{displayCategories.map((cat) => (
-							<SelectItem key={cat.name} value={cat.name}>
-								{cat.name}
-							</SelectItem>
-						))}
-					</SelectContent>
-				</Select>
-				<Button
-					variant="ghost"
-					size="icon"
-					className="h-7 w-7"
-					onClick={() => setIsManagerOpen(true)}
-				>
-					<Pencil className="h-3.5 w-3.5" />
-					<span className="sr-only">Manage Categories</span>
-				</Button>
-			</div>
-			<CategoryManagerDialog
-				open={isManagerOpen}
-				onOpenChange={setIsManagerOpen}
-				categories={displayCategories}
-				onAddCategory={onAddCategory}
-				onRenameCategory={onRenameCategory}
-			/>
-		</>
 	)
 }
 
 export default function ConversationView({
 	conversation,
-	categories,
-	onUpdateCategory,
-	onAddCategory,
-	onRenameCategory,
 	onDataChange,
 }: ConversationViewProps) {
-	const { toast } = useToast()
-
-	const handleCopyToClipboard = (text: string | undefined, label: string) => {
-		if (!text) return
-		navigator.clipboard
-			.writeText(text)
-			.then(() => {
-				toast({
-					title: 'Copied to Clipboard',
-					description: `${label} has been copied.`,
-				})
-			})
-			.catch((err) => {
-				console.error('Failed to copy text: ', err)
-				toast({
-					variant: 'destructive',
-					title: 'Copy Failed',
-					description: 'Could not copy to clipboard.',
-				})
-			})
-	}
 
 	const handleExport = async () => {
-		toast({ title: 'Exporting...', description: 'Generating Markdown file.' })
 		const result = await exportToMarkdownAction(conversation)
 		if (result.error || !result.markdownContent) {
-			toast({ variant: 'destructive', title: 'Export Failed', description: result.error })
 			return
 		}
-
 		const blob = new Blob([result.markdownContent], { type: 'text/markdown;charset=utf-8' })
 		const url = URL.createObjectURL(blob)
 		window.open(url, '_blank')
-		URL.revokeObjectURL(url) // Revoke the URL after opening the new tab
-		toast({ title: 'Export Complete', description: `Content opened in a new tab.` })
-	}
-
-	const handleArchive = async (archive: boolean) => {
-		const _action = archive ? 'Archiving' : 'Unarchiving'
-		const result = await archiveConversationAction(conversation.id, archive)
-		if (result.success) {
-			toast({
-				title: 'Success',
-				description: `Conversation has been ${archive ? 'archived' : 'restored'}.`,
-			})
-			onDataChange()
-		} else {
-			toast({
-				variant: 'destructive',
-				title: 'Error',
-				description: `Could not ${archive ? 'archive' : 'restore'} conversation.`,
-			})
-		}
+		URL.revokeObjectURL(url)
 	}
 
 	const hasTranscript = conversation.transcript && conversation.transcript.length > 0
-	const isArchived = conversation.status === 'archived'
 
 	return (
 		<div className="flex flex-col h-full">
-			<div className="p-4 border-b shrink-0 flex items-center justify-between gap-4 flex-wrap">
+			{/* Header */}
+			<div className="px-6 py-8 border-b shrink-0 flex items-center justify-between gap-6 flex-wrap bg-primary/5">
 				<div className="min-w-0 flex-1">
-					<h2 className="text-lg font-semibold truncate">{conversation.title}</h2>
-					<p className="text-sm text-muted-foreground">
-						{new Date(conversation.createdAt).toLocaleString()}
+					<h2 className="text-2xl font-bold font-headline tracking-tight leading-tight text-foreground mb-1">{conversation.title}</h2>
+					<p className="text-sm text-muted-foreground font-medium flex items-center gap-2">
+						<span className="opacity-60">{new Date(conversation.createdAt).toLocaleDateString()}</span>
+						<span className="opacity-30">•</span>
+						<span className="opacity-60">{new Date(conversation.createdAt).toLocaleTimeString()}</span>
 					</p>
 				</div>
-				<div className="flex items-center gap-2 flex-wrap">
-					<CategorySelector
-						conversation={conversation}
-						categories={categories}
-						onUpdateCategory={onUpdateCategory}
-						onAddCategory={onAddCategory}
-						onRenameCategory={onRenameCategory}
-					/>
-					<Badge variant="outline" className="flex items-center gap-1.5">
-						<MessageSquareQuote className="h-3 w-3" />
+				<div className="flex items-center gap-3 flex-wrap">
+					<Badge variant="secondary" className="px-3 py-1 text-xs font-semibold rounded-full bg-background border-primary/20 text-primary flex items-center gap-1.5 shadow-sm">
+						<MessageSquareQuote className="h-3.5 w-3.5" />
 						{conversation.turnCount} turn(s)
 					</Badge>
-					<Badge variant="outline" className="flex items-center gap-1.5">
-						<FileText className="h-3 w-3" />
+					<Badge variant="secondary" className="px-3 py-1 text-xs font-semibold rounded-full bg-background border-primary/20 text-primary flex items-center gap-1.5 shadow-sm">
+						<FileText className="h-3.5 w-3.5" />
 						{(conversation.charCount / 1000).toFixed(1)}k chars
 					</Badge>
-					{conversation.hasRichContent && <Badge variant="secondary">Rich Content</Badge>}
-
 					<DropdownMenu>
 						<DropdownMenuTrigger asChild>
-							<Button variant="ghost" size="icon" className="h-8 w-8">
+							<Button variant="outline" size="icon" className="h-9 w-9 bg-background border-primary/20 text-primary hover:bg-primary/5 rounded-full shadow-sm">
 								<MoreVertical className="h-4 w-4" />
 								<span className="sr-only">More actions</span>
 							</Button>
 						</DropdownMenuTrigger>
 						<DropdownMenuContent align="end">
-							{isArchived ? (
-								<DropdownMenuItem onClick={() => handleArchive(false)}>
-									<ArchiveRestore className="mr-2 h-4 w-4" />
-									<span>Restore from Archive</span>
-								</DropdownMenuItem>
-							) : (
-								<DropdownMenuItem onClick={() => handleArchive(true)}>
-									<Archive className="mr-2 h-4 w-4" />
-									<span>Archive Conversation</span>
-								</DropdownMenuItem>
-							)}
 							<DropdownMenuItem onClick={handleExport} disabled={!hasTranscript}>
 								<Download className="mr-2 h-4 w-4" />
 								<span>Export to Markdown</span>
-							</DropdownMenuItem>
-							<DropdownMenuSeparator />
-							<DropdownMenuItem
-								onClick={() => handleCopyToClipboard(conversation.id, 'Database ID')}
-							>
-								<Database className="mr-2 h-4 w-4" />
-								<span className="truncate">DB ID: {conversation.id}</span>
-							</DropdownMenuItem>
-							<DropdownMenuItem
-								onClick={() =>
-									handleCopyToClipboard(conversation.storageFilename, 'Storage Filename')
-								}
-								disabled={!conversation.storageFilename}
-							>
-								<FileText className="mr-2 h-4 w-4" />
-								<span className="truncate">Storage: {conversation.storageFilename || 'N/A'}</span>
 							</DropdownMenuItem>
 						</DropdownMenuContent>
 					</DropdownMenu>
 				</div>
 			</div>
-			<ScrollArea className="flex-grow">
-				{hasTranscript ? (
-					<div className="p-4">
-						{conversation.transcript?.map((turn, index) => (
-							// biome-ignore lint/suspicious/noArrayIndexKey: turn extends existing type without unique id
-							<TurnView key={index} turn={turn} />
-						))}
+
+			{/* Transcript */}
+			{hasTranscript ? (
+				<div className="flex-grow">
+					<Virtuoso
+						data={conversation.transcript || []}
+						itemContent={(index, turn) => (
+							<div className="px-8 py-6 border-b border-border/40 last:border-0 hover:bg-muted/5 transition-colors">
+								<TurnView key={index} turn={turn} />
+							</div>
+						)}
+					/>
+				</div>
+			) : (
+				<ScrollArea className="flex-grow">
+					<StagedConversationPreview conversation={conversation} />
+					<div className="p-4 text-center border-t text-sm text-muted-foreground">
+						<p>This conversation has not been fully enriched.</p>
 					</div>
-				) : (
-					<>
-						<StagedConversationPreview conversation={conversation} />
-						<div className="p-4 text-center border-t text-sm text-muted-foreground">
-							<p>This conversation has not been fully enriched.</p>
-							<p>
-								Run the "Enrich Transcripts" step in the pipeline to load the full conversation.
-							</p>
-						</div>
-					</>
-				)}
-			</ScrollArea>
-			<SummarySection conversation={conversation} onDataChange={onDataChange} />
+				</ScrollArea>
+			)}
 		</div>
 	)
 }

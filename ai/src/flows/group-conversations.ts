@@ -96,6 +96,16 @@ const categorizeSingleConversationFlow = ai.defineFlow(
 				return result.output
 			} catch (err) {
 				lastError = err instanceof Error ? err : new Error(String(err))
+
+				// Identify fatal errors that should not be retried
+				const fatalErrors = ['FAILED_PRECONDITION', '401', '403', 'API key']
+				const isFatal = fatalErrors.some(e => lastError?.message.includes(e))
+
+				if (isFatal) {
+					console.error('Fatal AI error encountered (not retrying):', lastError.message)
+					throw lastError
+				}
+
 				console.warn('Attempt %d failed:', attempt + 1, lastError.message)
 				if (attempt < maxRetries - 1) {
 					await new Promise((resolve) => setTimeout(resolve, 1000 * (attempt + 1)))

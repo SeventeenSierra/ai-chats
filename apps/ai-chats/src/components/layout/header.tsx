@@ -4,20 +4,18 @@
 'use client'
 
 import {
+	Database,
 	Download,
-	LayoutDashboard,
 	Loader,
 	Menu,
-	MessageSquare,
 	Moon,
 	MoreVertical,
+	RefreshCw,
 	Sun,
 	Trash2,
-	Upload,
-	Waypoints,
 } from 'lucide-react'
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 import { useTheme } from 'next-themes'
 import * as React from 'react'
 import {
@@ -41,11 +39,9 @@ import {
 	DropdownMenuSubTrigger,
 	DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import { useToast } from '@/hooks/use-toast'
 import { downloadAllAction } from '@/lib/actions'
-import { ImportDialog } from '../conversations/import-dialog'
+
 import { GeminiIcon } from '../icons'
-import { PipelineDialog } from '../pipeline/pipeline-dialog'
 import { useSidebar } from '../ui/sidebar'
 
 type AppHeaderProps = {
@@ -57,11 +53,9 @@ type AppHeaderProps = {
 export default function AppHeader({ onWipe, isWiping, isJobRunning }: AppHeaderProps) {
 	const { toggleSidebar } = useSidebar()
 	const pathname = usePathname()
+	const router = useRouter()
 	const { setTheme } = useTheme()
-	const { toast } = useToast()
 
-	const [isPipelineOpen, setIsPipelineOpen] = React.useState(false)
-	const [isImportOpen, setIsImportOpen] = React.useState(false)
 	const [isWipeAlertOpen, setIsWipeAlertOpen] = React.useState(false)
 	const [isDownloading, setIsDownloading] = React.useState(false)
 
@@ -70,9 +64,9 @@ export default function AppHeader({ onWipe, isWiping, isJobRunning }: AppHeaderP
 		setIsWipeAlertOpen(false)
 	}
 
+
 	const handleDownloadAll = async () => {
 		setIsDownloading(true)
-		toast({ title: 'Zipping...', description: 'Preparing your conversations for download.' })
 		try {
 			const result = await downloadAllAction()
 			if (result.error || !result.zipContent) {
@@ -96,12 +90,8 @@ export default function AppHeader({ onWipe, isWiping, isJobRunning }: AppHeaderP
 			a.click()
 			document.body.removeChild(a)
 			window.URL.revokeObjectURL(url)
-
-			toast({ title: 'Success!', description: `Downloaded ${result.fileCount} conversations.` })
 		} catch (error) {
-			const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred.'
 			console.error('Download all error:', error)
-			toast({ variant: 'destructive', title: 'Download Failed', description: errorMessage })
 		} finally {
 			setIsDownloading(false)
 		}
@@ -115,25 +105,14 @@ export default function AppHeader({ onWipe, isWiping, isJobRunning }: AppHeaderP
 						<Menu className="h-6 w-6" />
 						<span className="sr-only">Toggle Sidebar</span>
 					</Button>
-					<Link href="/dashboard" className="flex items-center gap-2">
+					<Link href="/vault" className="flex items-center gap-2">
 						<GeminiIcon className="h-6 w-6" />
 						<h1 className="text-lg font-semibold font-headline hidden sm:block">Gemini Oracle</h1>
 					</Link>
 				</div>
 
 				<nav className="hidden md:flex items-center gap-2 justify-center">
-					<Button variant={pathname.startsWith('/dashboard') ? 'secondary' : 'ghost'} asChild>
-						<Link href="/dashboard">
-							<LayoutDashboard className="mr-2 h-4 w-4" />
-							Dashboard
-						</Link>
-					</Button>
-					<Button variant={pathname.startsWith('/explorer') ? 'secondary' : 'ghost'} asChild>
-						<Link href="/explorer">
-							<MessageSquare className="mr-2 h-4 w-4" />
-							Explorer
-						</Link>
-					</Button>
+					{/* Single View: No navigation needed */}
 				</nav>
 
 				<div className="flex items-center gap-2 justify-end">
@@ -145,14 +124,8 @@ export default function AppHeader({ onWipe, isWiping, isJobRunning }: AppHeaderP
 							</Button>
 						</DropdownMenuTrigger>
 						<DropdownMenuContent align="end">
-							<DropdownMenuItem onClick={() => setIsImportOpen(true)}>
-								<Upload className="mr-2 h-4 w-4" />
-								<span>Quick Import</span>
-							</DropdownMenuItem>
-							<DropdownMenuItem onClick={() => setIsPipelineOpen(true)}>
-								<Waypoints className="mr-2 h-4 w-4" />
-								<span>Pipeline</span>
-							</DropdownMenuItem>
+							<DropdownMenuSeparator />
+
 							<DropdownMenuItem onClick={handleDownloadAll} disabled={isDownloading}>
 								{isDownloading ? (
 									<Loader className="mr-2 h-4 w-4 animate-spin" />
@@ -192,16 +165,7 @@ export default function AppHeader({ onWipe, isWiping, isJobRunning }: AppHeaderP
 				</div>
 			</header>
 
-			{/* Dialogs controlled by the header */}
-			<PipelineDialog open={isPipelineOpen} onOpenChange={setIsPipelineOpen} />
-			<ImportDialog
-				open={isImportOpen}
-				onOpenChange={setIsImportOpen}
-				onFileUploaded={() => {
-					setIsImportOpen(false)
-					window.location.reload()
-				}}
-			/>
+
 
 			<AlertDialog open={isWipeAlertOpen} onOpenChange={setIsWipeAlertOpen}>
 				<AlertDialogContent>

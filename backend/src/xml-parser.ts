@@ -25,6 +25,10 @@ interface ParsedConversation {
 	ConversationTurns?: {
 		ConversationTurn?: ParsedTurn | ParsedTurn[]
 	}
+	GroundingMetadata?: {
+		GroundingChunk?: ParsedGroundingChunk | ParsedGroundingChunk[]
+		GroundingSupport?: ParsedGroundingSupport | ParsedGroundingSupport[]
+	}
 }
 
 interface ParsedTurn {
@@ -40,6 +44,27 @@ interface ParsedTurn {
 		ToolOutput?: string | string[]
 		'#text'?: string
 	}
+}
+
+interface ParsedGroundingChunk {
+	// Add specific fields if known, otherwise treat as free-form JSON
+	[key: string]: unknown
+}
+
+interface ParsedGroundingSupport {
+	[key: string]: unknown
+}
+
+export interface ThinkingTrace {
+	step_number: number
+	content: string
+	action_type: 'thought' | 'tool_code' | 'tool_output'
+	metadata_json: unknown
+}
+
+export interface GroundingData {
+	raw_chunks_json: unknown
+	raw_supports_json: unknown
 }
 
 /**
@@ -180,12 +205,113 @@ export function getFirstResponse(conversationXml: string): string | null {
 
 /**
  * Counts the number of <ConversationTurn> tags, multiplied by 2 for prompt/response pairs.
+ * UPDATE: Now actually inspects the content to see if there are prompts and responses.
  */
 export function getTurnCount(conversationXml: string): number {
 	const parsed = parseConversationXml(conversationXml)
-	const turns = toArray(parsed?.ConversationTurns?.ConversationTurn)
-	// Each ConversationTurn has a prompt and a response, so count as 2 turns
-	return turns.length * 2
+	if (!parsed) return 0
+
+	const turns = toArray(parsed.ConversationTurns?.ConversationTurn)
+	let count = 0
+
+	for (const turn of turns) {
+		if (turn.Prompt) count++
+		if (turn.PrimaryResponse) count++
+	}
+
+	return count
+}
+
+/**
+ * Extracts thinking traces (tool code, tool output) from the conversation.
+ */
+export function getThinkingTraces(conversationXml: string): ThinkingTrace[] {
+	const parsed = parseConversationXml(conversationXml)
+	if (!parsed) return []
+
+	const traces: ThinkingTrace[] = []
+	const turns = toArray(parsed.ConversationTurns?.ConversationTurn)
+
+	let stepCounter = 1
+
+	for (const turn of turns) {
+		const response = turn.PrimaryResponse
+		if (!response) continue
+
+		// Extract ToolCode
+		for (const code of toArray(response.ToolCode)) {
+			if (code) {
+				traces.push({
+					step_number: stepCounter++,
+					content: String(code).trim(),
+					action_type: 'tool_code',
+					metadata_json: { timestamp: turn.Timestamp }
+				})
+			}
+		}
+
+		// Extract ToolOutput
+		for (const output of toArray(response.ToolOutput)) {
+			if (output) {
+				traces.push({
+					step_number: stepCounter++,
+					content: String(output).trim(),
+					action_type: 'tool_output',
+					metadata_json: { timestamp: turn.Timestamp }
+				})
+			}
+		}
+	}
+
+	return traces
+}
+
+/**
+ * Extracts grounding data (chunks and supports) from the conversation.
+ */
+export function getGroundingData(conversationXml: string): GroundingData | null {
+	const parsed = parseConversationXml(conversationXml)
+	if (!parsed || !parsed.GroundingMetadata) return null
+
+	return {
+		raw_chunks_json: toArray(parsed.GroundingMetadata.GroundingChunk),
+		raw_supports_json: toArray(parsed.GroundingMetadata.GroundingSupport),
+	}
+}
+
+/**
+ * Activity Type Definition
+ */
+export type ActivityType = 'coding' | 'research' | 'writing' | 'design' | 'mixed' | 'unknown'
+
+/**
+ * Detects the dominant activity type based on conversation content.
+ */
+export function detectActivityType(conversationXml: string): ActivityType {
+	// 1. Coding: High signal if ToolCode tags exist
+	if (conversationXml.includes('<ToolCode>')) {
+		return 'coding'
+	}
+
+	// 2. Deep Research: high signal if deep research chips exist
+	if (conversationXml.includes('deep_research_confirmation_content')) {
+		return 'research'
+	}
+
+	// 3. Design: high signal if image generation or immersive view
+	if (conversationXml.includes('image_generation_content') || conversationXml.includes('immersive_entry_chip')) {
+		return 'design'
+	}
+
+	// 4. Writing: analyze if prompts request writing (basic heuristic)
+	// This is weaker, so we check it last.
+	const prompt = getFirstPrompt(conversationXml)?.toLowerCase() || ''
+	if (prompt.includes('write') || prompt.includes('draft') || prompt.includes('essay') || prompt.includes('blog')) {
+		return 'writing'
+	}
+
+	// Default fallback
+	return 'mixed'
 }
 
 /**

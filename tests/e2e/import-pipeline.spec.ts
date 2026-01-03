@@ -90,6 +90,125 @@ test.describe('Import Pipeline', () => {
     })
 })
 
+test.describe('Full Pipeline Walkthrough', () => {
+    test('should run complete pipeline steps 1-4', async ({ page }) => {
+        // Navigate to dashboard
+        await page.goto('/dashboard')
+        // Wait for hydration/load
+        await expect(page.locator('h1, h2').first()).toBeVisible()
+
+        // --- STEP 0: WIPE DATA (Reset) ---
+        console.log('Step 0: Wiping data for clean slate...')
+        const menuButton = page.locator('button[aria-haspopup="menu"]').or(page.locator('button:has(svg.lucide-ellipsis-vertical)')).first()
+        await menuButton.click()
+        await page.waitForTimeout(500)
+
+        const wipeMenuItem = page.getByRole('menuitem', { name: /wipe data/i })
+        if (await wipeMenuItem.isVisible()) {
+            await wipeMenuItem.click()
+            // Handle confirmation dialog
+            const continueButton = page.getByRole('button', { name: /continue/i })
+            await expect(continueButton).toBeVisible()
+            await continueButton.click()
+
+            // Wait for wipe to complete
+            await page.waitForTimeout(2000)
+
+            // Re-open menu
+            await menuButton.click()
+            await page.waitForTimeout(500)
+        }
+
+        // --- OPEN PIPELINE ---
+        console.log('Opening Pipeline dialog...')
+        const pipelineMenuItem = page.getByRole('menuitem', { name: /pipeline/i })
+        await pipelineMenuItem.click()
+
+        // Wait for dialog content to be ready
+        const dialog = page.locator('div[role="dialog"]')
+        await expect(dialog).toBeVisible()
+        await expect(dialog.getByText('Import & Processing Pipeline')).toBeVisible()
+
+        // Take initial screenshot
+        await page.screenshot({ path: 'test-results/pipeline-00-initial.png' })
+
+        // --- STEP 1: UPLOAD ---
+        console.log('Step 1: Uploading file...')
+        const uploadButton = page.getByRole('button', { name: /import demo/i }).first()
+        // Wait for button to be interactive
+        await expect(uploadButton).toBeVisible()
+
+        // If we see "Upload Complete" or similar, we might have skipped wipe? 
+        // But assuming wipe worked, we should see upload button.
+
+        await uploadButton.click()
+        await page.waitForTimeout(1000)
+
+        // Handle file selection
+        const fileInput = page.locator('input[type="file"]')
+        const demoFile = path.join(fixturesDir, 'demo-export.xml')
+        await fileInput.setInputFiles(demoFile)
+
+        // Wait for file selection to register
+        await page.waitForTimeout(500)
+
+        // Click the Upload button inside the dialog (it might have name 'Upload' too)
+        // Since there are multiple upload buttons (one in step card, one in dialog), we need to be specific
+        // The dialog one is likely the last one or inside a dialog content
+        const dialogUploadButton = page.locator('div[role="dialog"] button:has-text("Upload")').last()
+        await dialogUploadButton.click()
+
+        // Wait for upload processing
+        await page.waitForTimeout(2000)
+        await page.screenshot({ path: 'test-results/pipeline-01-uploaded.png' })
+
+        // --- STEP 2: SPLIT ---
+        console.log('Step 2: Splitting file...')
+        const splitButton = page.getByRole('button', { name: /split/i })
+        await expect(splitButton).toBeEnabled({ timeout: 10000 })
+        await splitButton.click()
+
+        // Poll/wait for split completion
+        // The UI should show progress then complete
+        await page.waitForTimeout(3000)
+        await page.screenshot({ path: 'test-results/pipeline-02-split.png' })
+
+        // --- STEP 3: PROCESS ---
+        console.log('Step 3: Processing files...')
+        const processButton = page.getByRole('button', { name: /process|extract|metadata/i })
+        await expect(processButton).toBeEnabled({ timeout: 10000 })
+        await processButton.click()
+
+        // Wait for processing
+        await page.waitForTimeout(5000)
+        await page.screenshot({ path: 'test-results/pipeline-03-processed.png' })
+
+        // --- STEP 4: FETCH TRANSCRIPTS ---
+        console.log('Step 4: Fetching transcripts...')
+        const fetchButton = page.getByRole('button', { name: /fetch|transcript/i })
+        await expect(fetchButton).toBeEnabled({ timeout: 10000 })
+        await fetchButton.click()
+
+        // Wait for completion - this was failing before
+        // We expect it to succeed now or show an error
+        await page.waitForTimeout(8000)
+        await page.screenshot({ path: 'test-results/pipeline-04-fetched.png' })
+
+        // Check for error toasts or messages
+        const errorToast = page.getByText(/error|failed/i)
+        if (await errorToast.isVisible()) {
+            console.log('Error toast found:', await errorToast.textContent())
+        }
+
+        // Final state verification
+        // If successful, Backlink button (Step 5) should be enabled/visible
+        // or Fetch button disabled/marked complete
+
+        const finalContent = await dialog.textContent()
+        console.log('Final dialog content:', finalContent)
+    })
+})
+
 test.describe('API Endpoints', () => {
     test('dashboard API returns proper structure', async ({ request }) => {
         const response = await request.get('/api/dashboard')

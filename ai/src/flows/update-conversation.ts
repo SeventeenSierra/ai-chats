@@ -21,6 +21,9 @@ const UpdateConversationInputSchema = z.object({
 	status: z.enum(['processed', 'quarantined', 'archived']).optional(),
 	// Add the new backlinking timestamp
 	backlinkedAt: z.string().optional(),
+	// Retry tracking
+	retryCount: z.number().optional(),
+	lastError: z.string().optional().nullable(),
 })
 export type UpdateConversationInput = z.infer<typeof UpdateConversationInputSchema>
 
@@ -48,6 +51,8 @@ const updateConversationFlow = ai.defineFlow(
 				categorizedAt: updateData.categorizedAt,
 				backlinkedAt: updateData.backlinkedAt,
 				status: updateData.status,
+				retryCount: updateData.retryCount,
+				lastError: updateData.lastError,
 			})
 			return { success: true }
 		} catch (error) {
