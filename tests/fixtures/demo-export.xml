@@ -1,0 +1,435 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Export>
+  <ExportedAt>2024-12-08T10:00:00.000000-05:00</ExportedAt>
+  <Conversations>
+    <!-- Day 1: Monday - TypeScript Basics -->
+    <Conversation>
+      <ConversationId>c_demo_001</ConversationId>
+      <ConversationTopic>Getting Started with TypeScript</ConversationTopic>
+      <ConversationTurns>
+        <ConversationTurn>
+          <RequestId>r_001</RequestId>
+          <ModelVersion>gemini-demo-1.0</ModelVersion>
+          <Timestamp>2024-12-02T09:30:00.000000-05:00</Timestamp>
+          <Prompt>
+            <Text>What is TypeScript and why should I use it?</Text>
+          </Prompt>
+          <PrimaryResponse>
+            <ResponseId>rc_001</ResponseId>
+            <Text>TypeScript is a strongly typed programming language that builds on JavaScript. Here are the key benefits:
+
+* **Type Safety**: Catch errors at compile time rather than runtime
+* **Better IDE Support**: Get autocomplete, refactoring, and inline documentation
+* **Improved Maintainability**: Types serve as documentation for your code
+
+TypeScript compiles to plain JavaScript, so it runs anywhere JavaScript runs.</Text>
+          </PrimaryResponse>
+        </ConversationTurn>
+        <ConversationTurn>
+          <RequestId>r_002</RequestId>
+          <ParentRequestId>r_001</ParentRequestId>
+          <ModelVersion>gemini-demo-1.0</ModelVersion>
+          <Timestamp>2024-12-02T09:35:00.000000-05:00</Timestamp>
+          <Prompt>
+            <Text>Show me a simple example</Text>
+          </Prompt>
+          <PrimaryResponse>
+            <ResponseId>rc_002</ResponseId>
+            <Text>Here&apos;s a simple TypeScript example:</Text>
+            <ToolCode>interface User {
+  name: string;
+  age: number;
+}
+
+function greet(user: User): string {
+  return `Hello, ${user.name}!`;
+}
+
+const user: User = { name: "Alice", age: 30 };
+console.log(greet(user));</ToolCode>
+            <ToolOutput>Hello, Alice!</ToolOutput>
+          </PrimaryResponse>
+        </ConversationTurn>
+      </ConversationTurns>
+    </Conversation>
+
+    <!-- Day 1: Monday - Database Design -->
+    <Conversation>
+      <ConversationId>c_demo_002</ConversationId>
+      <ConversationTopic>PostgreSQL Schema Design</ConversationTopic>
+      <ConversationTurns>
+        <ConversationTurn>
+          <RequestId>r_003</RequestId>
+          <ModelVersion>gemini-demo-1.0</ModelVersion>
+          <Timestamp>2024-12-02T14:00:00.000000-05:00</Timestamp>
+          <Prompt>
+            <Text>Best practices for designing a PostgreSQL schema for a chat application?</Text>
+          </Prompt>
+          <PrimaryResponse>
+            <ResponseId>rc_003</ResponseId>
+            <Text>Here are key best practices for a chat application schema:
+
+1. **Normalize your data** - Separate users, conversations, and messages into distinct tables
+2. **Use UUIDs** - Better for distributed systems and prevents ID enumeration
+3. **Add timestamps** - Include created_at and updated_at on all tables
+4. **Index strategically** - Add indexes on foreign keys and frequently queried columns
+5. **Consider partitioning** - For large message tables, partition by date</Text>
+          </PrimaryResponse>
+        </ConversationTurn>
+      </ConversationTurns>
+    </Conversation>
+
+    <!-- Day 2: Tuesday - React Hooks -->
+    <Conversation>
+      <ConversationId>c_demo_003</ConversationId>
+      <ConversationTopic>React Hooks Explained</ConversationTopic>
+      <ConversationTurns>
+        <ConversationTurn>
+          <RequestId>r_004</RequestId>
+          <ModelVersion>gemini-demo-1.0</ModelVersion>
+          <Timestamp>2024-12-03T10:15:00.000000-05:00</Timestamp>
+          <Prompt>
+            <Text>When should I use useState vs useReducer?</Text>
+          </Prompt>
+          <PrimaryResponse>
+            <ResponseId>rc_004</ResponseId>
+            <Text>**useState** is best for:
+- Simple, independent state values
+- Boolean toggles, counters, form inputs
+- When state updates don&apos;t depend on each other
+
+**useReducer** is better for:
+- Complex state with multiple sub-values
+- When next state depends on previous state
+- When you have related state transitions
+- Sharing update logic between components</Text>
+          </PrimaryResponse>
+        </ConversationTurn>
+      </ConversationTurns>
+    </Conversation>
+
+    <!-- Day 2: Tuesday - API Design -->
+    <Conversation>
+      <ConversationId>c_demo_004</ConversationId>
+      <ConversationTopic>REST API Best Practices</ConversationTopic>
+      <ConversationTurns>
+        <ConversationTurn>
+          <RequestId>r_005</RequestId>
+          <ModelVersion>gemini-demo-1.0</ModelVersion>
+          <Timestamp>2024-12-03T15:45:00.000000-05:00</Timestamp>
+          <Prompt>
+            <Text>What HTTP status codes should I use for different error scenarios?</Text>
+          </Prompt>
+          <PrimaryResponse>
+            <ResponseId>rc_005</ResponseId>
+            <Text>Here are the most important HTTP status codes:
+
+**Success:**
+- 200 OK - Request succeeded
+- 201 Created - Resource created
+- 204 No Content - Success with no body
+
+**Client Errors:**
+- 400 Bad Request - Invalid syntax
+- 401 Unauthorized - Authentication required
+- 403 Forbidden - No permission
+- 404 Not Found - Resource doesn&apos;t exist
+- 422 Unprocessable Entity - Validation failed
+
+**Server Errors:**
+- 500 Internal Server Error - Generic server error
+- 503 Service Unavailable - Temporary overload</Text>
+          </PrimaryResponse>
+        </ConversationTurn>
+      </ConversationTurns>
+    </Conversation>
+
+    <!-- Day 3: Wednesday - Deep Research -->
+    <Conversation>
+      <ConversationId>c_demo_005</ConversationId>
+      <ConversationTopic>Deep Research: Modern Auth Patterns</ConversationTopic>
+      <ConversationTurns>
+        <ConversationTurn>
+          <RequestId>r_006</RequestId>
+          <ModelVersion>gemini-demo-1.0</ModelVersion>
+          <Timestamp>2024-12-04T11:00:00.000000-05:00</Timestamp>
+          <Prompt>
+            <Text>Research modern authentication patterns for web applications</Text>
+          </Prompt>
+          <PrimaryResponse>
+            <ResponseId>rc_b_deep_research_001</ResponseId>
+            <Text>deep_research_confirmation_content</Text>
+          </PrimaryResponse>
+        </ConversationTurn>
+      </ConversationTurns>
+    </Conversation>
+
+    <!-- Day 3: Wednesday - CSS Tips -->
+    <Conversation>
+      <ConversationId>c_demo_006</ConversationId>
+      <ConversationTopic>Modern CSS Techniques</ConversationTopic>
+      <ConversationTurns>
+        <ConversationTurn>
+          <RequestId>r_007</RequestId>
+          <ModelVersion>gemini-demo-1.0</ModelVersion>
+          <Timestamp>2024-12-04T16:30:00.000000-05:00</Timestamp>
+          <Prompt>
+            <Text>What&apos;s the best way to create a responsive grid layout?</Text>
+          </Prompt>
+          <PrimaryResponse>
+            <ResponseId>rc_007</ResponseId>
+            <Text>Use CSS Grid with auto-fit and minmax for responsive layouts:</Text>
+            <ToolCode>.grid-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 1.5rem;
+  padding: 1rem;
+}</ToolCode>
+            <Text>This creates a responsive grid where:
+- Cards are at least 300px wide
+- They grow to fill available space
+- New columns are added/removed automatically</Text>
+          </PrimaryResponse>
+        </ConversationTurn>
+      </ConversationTurns>
+    </Conversation>
+
+    <!-- Day 4: Thursday - Git Workflow -->
+    <Conversation>
+      <ConversationId>c_demo_007</ConversationId>
+      <ConversationTopic>Git Branching Strategy</ConversationTopic>
+      <ConversationTurns>
+        <ConversationTurn>
+          <RequestId>r_008</RequestId>
+          <ModelVersion>gemini-demo-1.0</ModelVersion>
+          <Timestamp>2024-12-05T09:00:00.000000-05:00</Timestamp>
+          <Prompt>
+            <Text>What git branching strategy do you recommend for a small team?</Text>
+          </Prompt>
+          <PrimaryResponse>
+            <ResponseId>rc_008</ResponseId>
+            <Text>For small teams, I recommend **GitHub Flow**:
+
+1. **main** branch is always deployable
+2. Create feature branches from main (feature/add-auth)
+3. Open PRs early for discussion
+4. Merge to main after review
+5. Deploy immediately after merge
+
+It&apos;s simpler than GitFlow and works well with CI/CD.</Text>
+          </PrimaryResponse>
+        </ConversationTurn>
+      </ConversationTurns>
+    </Conversation>
+
+    <!-- Day 4: Thursday - Testing -->
+    <Conversation>
+      <ConversationId>c_demo_008</ConversationId>
+      <ConversationTopic>Unit Testing Strategies</ConversationTopic>
+      <ConversationTurns>
+        <ConversationTurn>
+          <RequestId>r_009</RequestId>
+          <ModelVersion>gemini-demo-1.0</ModelVersion>
+          <Timestamp>2024-12-05T14:20:00.000000-05:00</Timestamp>
+          <Prompt>
+            <Text>How do I mock API calls in vitest?</Text>
+          </Prompt>
+          <PrimaryResponse>
+            <ResponseId>rc_009</ResponseId>
+            <Text>Here&apos;s how to mock fetch in vitest:</Text>
+            <ToolCode>import { vi, describe, it, expect, beforeEach } from 'vitest'
+
+const mockFetch = vi.fn()
+global.fetch = mockFetch
+
+describe('API calls', () => {
+  beforeEach(() => {
+    mockFetch.mockReset()
+  })
+
+  it('fetches user data', async () => {
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({ name: 'Alice' })
+    })
+
+    const result = await fetchUser(1)
+    expect(result.name).toBe('Alice')
+  })
+})</ToolCode>
+          </PrimaryResponse>
+        </ConversationTurn>
+      </ConversationTurns>
+    </Conversation>
+
+    <!-- Day 5: Friday - Docker -->
+    <Conversation>
+      <ConversationId>c_demo_009</ConversationId>
+      <ConversationTopic>Docker Best Practices</ConversationTopic>
+      <ConversationTurns>
+        <ConversationTurn>
+          <RequestId>r_010</RequestId>
+          <ModelVersion>gemini-demo-1.0</ModelVersion>
+          <Timestamp>2024-12-06T10:00:00.000000-05:00</Timestamp>
+          <Prompt>
+            <Text>How do I reduce Docker image size for a Node.js app?</Text>
+          </Prompt>
+          <PrimaryResponse>
+            <ResponseId>rc_010</ResponseId>
+            <Text>Key strategies to reduce Node.js Docker image size:
+
+1. **Use alpine or slim base images**
+2. **Multi-stage builds** - Build in one stage, run in another
+3. **Only copy production dependencies**
+4. **Use .dockerignore** - Exclude node_modules, tests, docs
+5. **Combine RUN commands** - Reduces layers</Text>
+            <ToolCode># Multi-stage build example
+FROM node:22-alpine AS builder
+WORKDIR /app
+COPY package*.json ./
+RUN npm ci
+COPY . .
+RUN npm run build
+
+FROM node:22-alpine
+WORKDIR /app
+COPY --from=builder /app/dist ./dist
+COPY --from=builder /app/node_modules ./node_modules
+CMD ["node", "dist/index.js"]</ToolCode>
+          </PrimaryResponse>
+        </ConversationTurn>
+      </ConversationTurns>
+    </Conversation>
+
+    <!-- Day 5: Friday - Performance -->
+    <Conversation>
+      <ConversationId>c_demo_010</ConversationId>
+      <ConversationTopic>Web Performance Optimization</ConversationTopic>
+      <ConversationTurns>
+        <ConversationTurn>
+          <RequestId>r_011</RequestId>
+          <ModelVersion>gemini-demo-1.0</ModelVersion>
+          <Timestamp>2024-12-06T15:30:00.000000-05:00</Timestamp>
+          <Prompt>
+            <Text>How can I improve my website&apos;s Core Web Vitals?</Text>
+          </Prompt>
+          <PrimaryResponse>
+            <ResponseId>rc_011</ResponseId>
+            <Text>Here&apos;s how to improve each Core Web Vital:
+
+**LCP (Largest Contentful Paint):**
+- Optimize images with next/image or srcset
+- Preload critical resources
+- Use a CDN
+
+**FID (First Input Delay):**
+- Break up long tasks
+- Use web workers for heavy computation
+- Minimize third-party scripts
+
+**CLS (Cumulative Layout Shift):**
+- Set explicit dimensions on images/videos
+- Reserve space for dynamic content
+- Avoid inserting content above existing content</Text>
+          </PrimaryResponse>
+        </ConversationTurn>
+      </ConversationTurns>
+    </Conversation>
+
+    <!-- Day 6: Saturday - Side Project -->
+    <Conversation>
+      <ConversationId>c_demo_011</ConversationId>
+      <ConversationTopic>Building a CLI Tool</ConversationTopic>
+      <ConversationTurns>
+        <ConversationTurn>
+          <RequestId>r_012</RequestId>
+          <ModelVersion>gemini-demo-1.0</ModelVersion>
+          <Timestamp>2024-12-07T11:00:00.000000-05:00</Timestamp>
+          <Prompt>
+            <Text>What&apos;s the best library for building CLI apps in Node.js?</Text>
+          </Prompt>
+          <PrimaryResponse>
+            <ResponseId>rc_012</ResponseId>
+            <Text>Popular CLI libraries for Node.js:
+
+1. **Commander.js** - Most popular, great for complex CLIs
+2. **yargs** - Powerful argument parsing
+3. **oclif** - Framework by Heroku, great for large CLIs
+4. **citty** - Lightweight, modern, by the Nuxt team
+5. **inquirer** - For interactive prompts
+
+For simple CLIs, Commander.js is a great choice. For complex multi-command CLIs, consider oclif.</Text>
+          </PrimaryResponse>
+        </ConversationTurn>
+      </ConversationTurns>
+    </Conversation>
+
+    <!-- Day 7: Sunday - Planning -->
+    <Conversation>
+      <ConversationId>c_demo_012</ConversationId>
+      <ConversationTopic>Project Planning Tips</ConversationTopic>
+      <ConversationTurns>
+        <ConversationTurn>
+          <RequestId>r_013</RequestId>
+          <ModelVersion>gemini-demo-1.0</ModelVersion>
+          <Timestamp>2024-12-08T10:00:00.000000-05:00</Timestamp>
+          <Prompt>
+            <Text>How do I estimate development time for a new feature?</Text>
+          </Prompt>
+          <PrimaryResponse>
+            <ResponseId>rc_013</ResponseId>
+            <Text>Tips for better development estimates:
+
+1. **Break it down** - Smaller tasks are easier to estimate
+2. **Use ranges** - Give best/likely/worst case
+3. **Include buffer** - Add 20-30% for unknowns
+4. **Consider dependencies** - Account for reviews, testing, deployment
+5. **Track actuals** - Compare estimates to reality to improve
+
+Remember: Most developers underestimate by 2-3x, especially for unfamiliar work.</Text>
+          </PrimaryResponse>
+        </ConversationTurn>
+      </ConversationTurns>
+    </Conversation>
+
+    <!-- Day 7: Sunday - Deep Research 2 -->
+    <Conversation>
+      <ConversationId>c_demo_013</ConversationId>
+      <ConversationTopic>Deep Research: AI Code Assistants</ConversationTopic>
+      <ConversationTurns>
+        <ConversationTurn>
+          <RequestId>r_014</RequestId>
+          <ModelVersion>gemini-demo-1.0</ModelVersion>
+          <Timestamp>2024-12-08T14:00:00.000000-05:00</Timestamp>
+          <Prompt>
+            <Text>Research the current state of AI-powered code assistants and their impact on developer productivity</Text>
+          </Prompt>
+          <PrimaryResponse>
+            <ResponseId>rc_b_deep_research_002</ResponseId>
+            <Text>deep_research_confirmation_content</Text>
+          </PrimaryResponse>
+        </ConversationTurn>
+      </ConversationTurns>
+    </Conversation>
+
+    <!-- Day 7: Sunday - Quick Question -->
+    <Conversation>
+      <ConversationId>c_demo_014</ConversationId>
+      <ConversationTopic>Request Not Completed</ConversationTopic>
+      <ConversationTurns>
+        <ConversationTurn>
+          <RequestId>r_015</RequestId>
+          <ModelVersion>gemini-demo-1.0</ModelVersion>
+          <Timestamp>2024-12-08T16:45:00.000000-05:00</Timestamp>
+          <Prompt>
+            <Text>what&apos;s 2+2</Text>
+          </Prompt>
+          <PrimaryResponse>
+            <ResponseId>rc_015</ResponseId>
+            <Text>4</Text>
+          </PrimaryResponse>
+        </ConversationTurn>
+      </ConversationTurns>
+    </Conversation>
+  </Conversations>
+</Export>

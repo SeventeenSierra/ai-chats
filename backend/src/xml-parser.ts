@@ -2,38 +2,83 @@
 // SPDX-FileCopyrightText: 2025 Seventeen Sierra LLC
 
 /**
- * A simple utility to split a large Gemini Vault XML export and extract metadata.
- * This does not perform full parsing, just string manipulation.
+ * XML parser utility for Gemini Vault exports.
+ * Uses fast-xml-parser for reliable parsing with HTML entity decoding.
  */
 
+import { XMLParser } from 'fast-xml-parser'
 import type { ConversationTurn, ConversationTurnPart } from '@ai-chat/shared/types'
 
-// Basic HTML entity decoding
-function decodeEntities(encodedString: string): string {
-	const translate_re = /&#(\d+);|&#x([0-9a-fA-F]+);/g
-	return encodedString
-		.replace(translate_re, (match, dec, hex) => {
-			if (dec) {
-				return String.fromCharCode(Number(dec))
-			}
-			if (hex) {
-				return String.fromCharCode(parseInt(hex, 16))
-			}
-			return match
-		})
-		.replace(/&lt;/g, '<')
-		.replace(/&gt;/g, '>')
-		.replace(/&quot;/g, '"')
-		.replace(/&apos;/g, "'")
-		.replace(/&#39;/g, "'")
-		.replace(/&amp;/g, '&')
+// Configure the XML parser with HTML entity decoding
+const parser = new XMLParser({
+	ignoreAttributes: false,
+	parseTagValue: true,
+	trimValues: true,
+	processEntities: true,
+	htmlEntities: true,
+})
+
+// Type definitions for parsed XML structure
+interface ParsedConversation {
+	ConversationId?: string
+	ConversationTopic?: string
+	ConversationTurns?: {
+		ConversationTurn?: ParsedTurn | ParsedTurn[]
+	}
+	GroundingMetadata?: {
+		GroundingChunk?: ParsedGroundingChunk | ParsedGroundingChunk[]
+		GroundingSupport?: ParsedGroundingSupport | ParsedGroundingSupport[]
+	}
+}
+
+interface ParsedTurn {
+	Timestamp?: string
+	Prompt?: {
+		Text?: string | string[]
+		ToolCode?: string | string[]
+		ToolOutput?: string | string[]
+	}
+	PrimaryResponse?: {
+		Text?: string | string[]
+		ToolCode?: string | string[]
+		ToolOutput?: string | string[]
+		'#text'?: string
+	}
+}
+
+interface ParsedGroundingChunk {
+	// Add specific fields if known, otherwise treat as free-form JSON
+	[key: string]: unknown
+}
+
+interface ParsedGroundingSupport {
+	[key: string]: unknown
+}
+
+export interface ThinkingTrace {
+	step_number: number
+	content: string
+	action_type: 'thought' | 'tool_code' | 'tool_output'
+	metadata_json: unknown
+}
+
+export interface GroundingData {
+	raw_chunks_json: unknown
+	raw_supports_json: unknown
+}
+
+/**
+ * Normalizes a value that might be a string, array, or undefined into an array.
+ */
+function toArray<T>(value: T | T[] | undefined): T[] {
+	if (value === undefined) return []
+	return Array.isArray(value) ? value : [value]
 }
 
 /**
  * Splits the XML string containing multiple conversations into an array of strings,
  * where each string is a single <Conversation> block.
- * @param xmlString The full XML content from the export file.
- * @returns An array of XML strings, each being a complete conversation.
+ * Note: This still uses string splitting since we need individual XML strings for storage.
  */
 export function splitConversationsXml(xmlString: string): string[] {
 	const conversations: string[] = []
@@ -54,264 +99,281 @@ export function splitConversationsXml(xmlString: string): string[] {
 }
 
 /**
+ * Parses a single conversation XML string into a structured object.
+ */
+function parseConversationXml(conversationXml: string): ParsedConversation | null {
+	try {
+		const result = parser.parse(conversationXml)
+		return result?.Conversation || null
+	} catch {
+		return null
+	}
+}
+
+/**
  * Extracts the ConversationId from a single conversation's XML string.
- * @param conversationXml The XML string for a single conversation.
- * @returns The conversation ID or null if not found.
  */
 export function getConversationId(conversationXml: string): string | null {
-	const idRegex = /<ConversationId>([^<]*)<\/ConversationId>/
-	const match = conversationXml.match(idRegex)
-	return match ? match[1] : null
+	const parsed = parseConversationXml(conversationXml)
+	return parsed?.ConversationId?.toString() || null
 }
 
 /**
  * Extracts the ConversationTopic from a single conversation's XML string.
- * This is now strict and will NOT fall back to using a prompt.
- * @param conversationXml The XML string for a single conversation.
- * @returns The conversation topic or null if not found.
  */
 export function getConversationTitle(conversationXml: string): string | null {
-	const startTag = '<ConversationTopic>'
-	const endTag = '</ConversationTopic>'
-	const start = conversationXml.indexOf(startTag)
-	if (start === -1) return null
-	const end = conversationXml.indexOf(endTag, start)
-	if (end === -1) return null
-
-	const content = conversationXml.slice(start + startTag.length, end).trim()
-	if (content) {
-		return decodeEntities(content)
-	}
-
-	return null
+	const parsed = parseConversationXml(conversationXml)
+	const topic = parsed?.ConversationTopic
+	return topic ? String(topic).trim() : null
 }
 
 /**
  * Extracts the first Timestamp from a single conversation's XML string.
- * @param conversationXml The XML string for a single conversation.
- * @returns The ISO 8601 timestamp string or null if not found.
  */
 export function getConversationTimestamp(conversationXml: string): string | null {
-	const timestampRegex = /<Timestamp>([^<]*)<\/Timestamp>/
-	const match = conversationXml.match(timestampRegex)
-	return match ? match[1] : null
+	const parsed = parseConversationXml(conversationXml)
+	const turns = toArray(parsed?.ConversationTurns?.ConversationTurn)
+	return turns[0]?.Timestamp?.toString() || null
 }
 
 /**
  * Checks if a conversation's XML contains tool usage or special interactive components.
- * This regex checks the entire conversation for a more reliable flag.
- * @param conversationXml The XML string for a single conversation.
- * @returns True if any of the indicators are found, false otherwise.
+ * Uses string search for efficiency on these specific patterns.
  */
 export function hasRichContent(conversationXml: string): boolean {
-	const richContentRegex =
-		/<(ToolCode|ToolOutput|ResponseId>rc_b)|deep_research_confirmation_content|immersive_entry_chip|image_generation_content/
-	return richContentRegex.test(conversationXml)
+	return (
+		conversationXml.includes('<ToolCode>') ||
+		conversationXml.includes('<ToolOutput>') ||
+		conversationXml.includes('deep_research_confirmation_content') ||
+		conversationXml.includes('immersive_entry_chip') ||
+		conversationXml.includes('image_generation_content') ||
+		conversationXml.includes('ResponseId>rc_b')
+	)
 }
 
 /**
  * Extracts the text from the first <Prompt> tag.
- * @param conversationXml The XML string for a single conversation.
- * @returns The first prompt text or null if not found.
  */
 export function getFirstPrompt(conversationXml: string): string | null {
-	const promptStart = conversationXml.indexOf('<Prompt>')
-	if (promptStart === -1) return null
-	const promptEnd = conversationXml.indexOf('</Prompt>', promptStart)
-	if (promptEnd === -1) return null
+	const parsed = parseConversationXml(conversationXml)
+	const turns = toArray(parsed?.ConversationTurns?.ConversationTurn)
+	const firstTurn = turns[0]
+	if (!firstTurn?.Prompt) return null
 
-	const promptContent = conversationXml.slice(promptStart + 8, promptEnd)
-	const textStart = promptContent.indexOf('<Text>')
-	if (textStart === -1) return null
-	const textEnd = promptContent.indexOf('</Text>', textStart)
-	if (textEnd === -1) return null
-
-	const text = promptContent.slice(textStart + 6, textEnd).trim()
-	return text ? decodeEntities(text) : null
+	const texts = toArray(firstTurn.Prompt.Text)
+	return texts[0]?.toString().trim() || null
 }
 
 /**
- * Extracts all content from the first <PrimaryResponse> tag, including text and tool usage.
- * If the response is a research plan confirmation, it returns a standardized message.
- * @param conversationXml The XML string for a single conversation.
- * @returns The combined first response text or null if not found.
+ * Extracts all content from the first <PrimaryResponse> tag.
+ * If the response is a research plan confirmation, returns a standardized message.
  */
 export function getFirstResponse(conversationXml: string): string | null {
-	// Find the first ConversationTurn
-	const turnStart = conversationXml.indexOf('<ConversationTurn>')
-	if (turnStart === -1) return null
-	const turnEnd = conversationXml.indexOf('</ConversationTurn>', turnStart)
-	if (turnEnd === -1) return null
-
-	const turnContent = conversationXml.slice(turnStart, turnEnd)
-
-	// Find PrimaryResponse within this turn
-	const responseStart = turnContent.indexOf('<PrimaryResponse>')
-	if (responseStart === -1) return null
-	const responseEnd = turnContent.indexOf('</PrimaryResponse>', responseStart)
-	if (responseEnd === -1) return null
-
-	const primaryResponseContent = turnContent.slice(responseStart + 17, responseEnd)
-
-	// Check for research confirmation URLs and return a standardized message if found.
+	// Check for research confirmation content first (string search is faster)
 	if (
-		primaryResponseContent.includes('deep_research_confirmation_content') ||
-		primaryResponseContent.includes('immersive_entry_chip')
+		conversationXml.includes('deep_research_confirmation_content') ||
+		conversationXml.includes('immersive_entry_chip')
 	) {
 		return "The model's response included a research plan or interactive component, which is not available in this preview."
 	}
 
-	// Extract content parts using string-based approach
+	const parsed = parseConversationXml(conversationXml)
+	const turns = toArray(parsed?.ConversationTurns?.ConversationTurn)
+	const firstTurn = turns[0]
+	if (!firstTurn?.PrimaryResponse) return null
+
 	const parts: string[] = []
-	const extractTagContent = (content: string, tagName: string): void => {
-		let searchStart = 0
-		const openTag = `<${tagName}>`
-		const closeTag = `</${tagName}>`
-		while (true) {
-			const start = content.indexOf(openTag, searchStart)
-			if (start === -1) break
-			const end = content.indexOf(closeTag, start)
-			if (end === -1) break
-			const tagContent = content.slice(start + openTag.length, end).trim()
-			if (tagContent) {
-				const decodedContent = decodeEntities(tagContent)
-				if (tagName === 'ToolCode') {
-					parts.push('```\n' + decodedContent + '\n```')
-				} else {
-					parts.push(decodedContent)
-				}
-			}
-			searchStart = end + closeTag.length
-		}
+	const response = firstTurn.PrimaryResponse
+
+	// Extract Text content
+	for (const text of toArray(response.Text)) {
+		if (text) parts.push(String(text).trim())
 	}
 
-	extractTagContent(primaryResponseContent, 'Text')
-	extractTagContent(primaryResponseContent, 'ToolCode')
-	extractTagContent(primaryResponseContent, 'ToolOutput')
+	// Extract ToolCode content (format as code block)
+	for (const code of toArray(response.ToolCode)) {
+		if (code) parts.push('```\n' + String(code).trim() + '\n```')
+	}
+
+	// Extract ToolOutput content
+	for (const output of toArray(response.ToolOutput)) {
+		if (output) parts.push(String(output).trim())
+	}
 
 	return parts.length > 0 ? parts.join('\n\n') : null
 }
 
 /**
- * Counts the number of <ConversationTurn> tags, multiplied by 2 to account for prompt/response pairs.
- * @param conversationXml The XML string for a single conversation.
- * @returns The number of turns.
+ * Counts the number of <ConversationTurn> tags, multiplied by 2 for prompt/response pairs.
+ * UPDATE: Now actually inspects the content to see if there are prompts and responses.
  */
 export function getTurnCount(conversationXml: string): number {
-	const turnRegex = /<ConversationTurn>/g
-	const matches = conversationXml.match(turnRegex)
-	// Each <ConversationTurn> has a prompt and a response, so we count it as 2 turns.
-	return (matches ? matches.length : 0) * 2
+	const parsed = parseConversationXml(conversationXml)
+	if (!parsed) return 0
+
+	const turns = toArray(parsed.ConversationTurns?.ConversationTurn)
+	let count = 0
+
+	for (const turn of turns) {
+		if (turn.Prompt) count++
+		if (turn.PrimaryResponse) count++
+	}
+
+	return count
 }
 
 /**
- * Helper function to extract content parts from a given XML block (e.g., a <Prompt> or <PrimaryResponse>).
- * @param blockXml The XML content of the block.
- * @returns An array of ConversationTurnPart objects.
+ * Extracts thinking traces (tool code, tool output) from the conversation.
  */
-function extractPartsFromBlock(blockXml: string): ConversationTurnPart[] {
-	const parts: ConversationTurnPart[] = []
+export function getThinkingTraces(conversationXml: string): ThinkingTrace[] {
+	const parsed = parseConversationXml(conversationXml)
+	if (!parsed) return []
 
-	const extractTag = (tagName: string): void => {
-		let searchStart = 0
-		const openTag = `<${tagName}>`
-		const closeTag = `</${tagName}>`
-		while (true) {
-			const start = blockXml.indexOf(openTag, searchStart)
-			if (start === -1) break
-			const end = blockXml.indexOf(closeTag, start)
-			if (end === -1) break
-			const content = decodeEntities(blockXml.slice(start + openTag.length, end).trim())
-			if (content) {
-				if (tagName === 'ToolCode') {
-					parts.push({ type: 'code', content })
-				} else if (tagName === 'ToolOutput') {
-					parts.push({ type: 'text', content: `Tool Output:\n\`\`\`\n${content}\n\`\`\`` })
-				} else {
-					parts.push({ type: 'text', content })
-				}
+	const traces: ThinkingTrace[] = []
+	const turns = toArray(parsed.ConversationTurns?.ConversationTurn)
+
+	let stepCounter = 1
+
+	for (const turn of turns) {
+		const response = turn.PrimaryResponse
+		if (!response) continue
+
+		// Extract ToolCode
+		for (const code of toArray(response.ToolCode)) {
+			if (code) {
+				traces.push({
+					step_number: stepCounter++,
+					content: String(code).trim(),
+					action_type: 'tool_code',
+					metadata_json: { timestamp: turn.Timestamp }
+				})
 			}
-			searchStart = end + closeTag.length
+		}
+
+		// Extract ToolOutput
+		for (const output of toArray(response.ToolOutput)) {
+			if (output) {
+				traces.push({
+					step_number: stepCounter++,
+					content: String(output).trim(),
+					action_type: 'tool_output',
+					metadata_json: { timestamp: turn.Timestamp }
+				})
+			}
 		}
 	}
 
-	extractTag('Text')
-	extractTag('ToolCode')
-	extractTag('ToolOutput')
+	return traces
+}
+
+/**
+ * Extracts grounding data (chunks and supports) from the conversation.
+ */
+export function getGroundingData(conversationXml: string): GroundingData | null {
+	const parsed = parseConversationXml(conversationXml)
+	if (!parsed || !parsed.GroundingMetadata) return null
+
+	return {
+		raw_chunks_json: toArray(parsed.GroundingMetadata.GroundingChunk),
+		raw_supports_json: toArray(parsed.GroundingMetadata.GroundingSupport),
+	}
+}
+
+/**
+ * Activity Type Definition
+ */
+export type ActivityType = 'coding' | 'research' | 'writing' | 'design' | 'mixed' | 'unknown'
+
+/**
+ * Detects the dominant activity type based on conversation content.
+ */
+export function detectActivityType(conversationXml: string): ActivityType {
+	// 1. Coding: High signal if ToolCode tags exist
+	if (conversationXml.includes('<ToolCode>')) {
+		return 'coding'
+	}
+
+	// 2. Deep Research: high signal if deep research chips exist
+	if (conversationXml.includes('deep_research_confirmation_content')) {
+		return 'research'
+	}
+
+	// 3. Design: high signal if image generation or immersive view
+	if (conversationXml.includes('image_generation_content') || conversationXml.includes('immersive_entry_chip')) {
+		return 'design'
+	}
+
+	// 4. Writing: analyze if prompts request writing (basic heuristic)
+	// This is weaker, so we check it last.
+	const prompt = getFirstPrompt(conversationXml)?.toLowerCase() || ''
+	if (prompt.includes('write') || prompt.includes('draft') || prompt.includes('essay') || prompt.includes('blog')) {
+		return 'writing'
+	}
+
+	// Default fallback
+	return 'mixed'
+}
+
+/**
+ * Helper function to extract content parts from a parsed prompt or response block.
+ */
+function extractPartsFromBlock(block: ParsedTurn['Prompt'] | ParsedTurn['PrimaryResponse']): ConversationTurnPart[] {
+	if (!block) return []
+	const parts: ConversationTurnPart[] = []
+
+	// Extract Text content
+	for (const text of toArray(block.Text)) {
+		const content = String(text).trim()
+		if (content) {
+			parts.push({ type: 'text', content })
+		}
+	}
+
+	// Extract ToolCode content
+	for (const code of toArray(block.ToolCode)) {
+		const content = String(code).trim()
+		if (content) {
+			parts.push({ type: 'code', content })
+		}
+	}
+
+	// Extract ToolOutput content
+	for (const output of toArray(block.ToolOutput)) {
+		const content = String(output).trim()
+		if (content) {
+			parts.push({ type: 'text', content: `Tool Output:\n\`\`\`\n${content}\n\`\`\`` })
+		}
+	}
 
 	return parts
 }
 
 /**
- * Parses the full transcript from a conversation's XML string based on the correct structure.
- * This is the refactored, correct implementation.
- * @param conversationXml The XML string for a single conversation.
- * @returns An array of ConversationTurn objects.
+ * Parses the full transcript from a conversation's XML string.
  */
 export function parseConversationTranscript(conversationXml: string): ConversationTurn[] {
+	const parsed = parseConversationXml(conversationXml)
+	if (!parsed) return []
+
 	const turns: ConversationTurn[] = []
+	const conversationTurns = toArray(parsed.ConversationTurns?.ConversationTurn)
 
-	// Find ConversationTurns block using indexOf
-	const turnsStart = conversationXml.indexOf('<ConversationTurns>')
-	if (turnsStart === -1) return []
-	const turnsEnd = conversationXml.indexOf('</ConversationTurns>', turnsStart)
-	if (turnsEnd === -1) return []
+	for (const turn of conversationTurns) {
+		const timestamp = turn.Timestamp?.toString()
 
-	const turnsXml = conversationXml.slice(turnsStart + 19, turnsEnd)
-
-	// Extract each ConversationTurn using indexOf loop
-	let searchStart = 0
-	const turnStartTag = '<ConversationTurn>'
-	const turnEndTag = '</ConversationTurn>'
-	const timestampStartTag = '<Timestamp>'
-	const timestampEndTag = '</Timestamp>'
-	const promptStartTag = '<Prompt>'
-	const promptEndTag = '</Prompt>'
-	const responseStartTag = '<PrimaryResponse>'
-	const responseEndTag = '</PrimaryResponse>'
-
-	while (true) {
-		const turnStart = turnsXml.indexOf(turnStartTag, searchStart)
-		if (turnStart === -1) break
-		const turnEnd = turnsXml.indexOf(turnEndTag, turnStart)
-		if (turnEnd === -1) break
-
-		const turnXml = turnsXml.slice(turnStart + turnStartTag.length, turnEnd)
-		searchStart = turnEnd + turnEndTag.length
-
-		// Extract timestamp
-		let timestamp: string | undefined
-		const tsStart = turnXml.indexOf(timestampStartTag)
-		if (tsStart !== -1) {
-			const tsEnd = turnXml.indexOf(timestampEndTag, tsStart)
-			if (tsEnd !== -1) {
-				timestamp = turnXml.slice(tsStart + timestampStartTag.length, tsEnd)
+		// Process user prompt
+		if (turn.Prompt) {
+			const userParts = extractPartsFromBlock(turn.Prompt)
+			if (userParts.length > 0) {
+				turns.push({ author: 'user', parts: userParts, timestamp })
 			}
 		}
 
-		// 1. Process the user's prompt
-		const promptStart = turnXml.indexOf(promptStartTag)
-		if (promptStart !== -1) {
-			const promptEnd = turnXml.indexOf(promptEndTag, promptStart)
-			if (promptEnd !== -1) {
-				const promptContent = turnXml.slice(promptStart + promptStartTag.length, promptEnd)
-				const userParts = extractPartsFromBlock(promptContent)
-				if (userParts.length > 0) {
-					turns.push({ author: 'user', parts: userParts, timestamp })
-				}
-			}
-		}
-
-		// 2. Process the model's response
-		const responseStart = turnXml.indexOf(responseStartTag)
-		if (responseStart !== -1) {
-			const responseEnd = turnXml.indexOf(responseEndTag, responseStart)
-			if (responseEnd !== -1) {
-				const responseContent = turnXml.slice(responseStart + responseStartTag.length, responseEnd)
-				const modelParts = extractPartsFromBlock(responseContent)
-				if (modelParts.length > 0) {
-					turns.push({ author: 'model', parts: modelParts, timestamp })
-				}
+		// Process model response
+		if (turn.PrimaryResponse) {
+			const modelParts = extractPartsFromBlock(turn.PrimaryResponse)
+			if (modelParts.length > 0) {
+				turns.push({ author: 'model', parts: modelParts, timestamp })
 			}
 		}
 	}

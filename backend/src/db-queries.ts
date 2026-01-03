@@ -4,7 +4,9 @@
 'use server'
 
 import type { AppCategory, Conversation } from '@ai-chat/shared/types'
+import { v4 as uuidv4 } from 'uuid'
 import { pool } from './database'
+import type { GroundingData, ThinkingTrace } from './xml-parser'
 
 export async function getConversations(): Promise<Conversation[]> {
 	try {
@@ -21,7 +23,8 @@ export async function getConversations(): Promise<Conversation[]> {
         summarized_at as "summarizedAt",
         categorized_at as "categorizedAt",
         backlinked_at as "backlinkedAt",
-        is_deep_research as "isDeepResearch"
+        is_deep_research as "isDeepResearch",
+        (transcript IS NOT NULL) as "hasTranscript"
       FROM conversations 
       ORDER BY created_at DESC 
       LIMIT 500
@@ -30,6 +33,49 @@ export async function getConversations(): Promise<Conversation[]> {
 	} catch (error) {
 		console.error('Error fetching conversations:', error)
 		return []
+	}
+}
+
+export async function getConversationById(id: string): Promise<Conversation | null> {
+	try {
+		const result = await pool.query(
+			`
+      SELECT 
+        id, title, created_at as "createdAt", status, 
+        has_rich_content as "hasRichContent", 
+        first_prompt as "firstPrompt",
+        first_response as "firstResponse",
+        turn_count as "turnCount", 
+        char_count as "charCount",
+        storage_filename as "storageFilename",
+        category, summary,
+        summarized_at as "summarizedAt",
+        categorized_at as "categorizedAt",
+        backlinked_at as "backlinkedAt",
+        is_deep_research as "isDeepResearch",
+        transcript
+      FROM conversations 
+      WHERE id = $1
+    `,
+			[id],
+		)
+		const row = result.rows[0]
+		if (!row) return null
+
+		// Parse the transcript JSON string if it exists
+		if (row.transcript && typeof row.transcript === 'string') {
+			try {
+				row.transcript = JSON.parse(row.transcript)
+			} catch (e) {
+				console.error('Failed to parse transcript JSON for conversation:', id, e)
+				row.transcript = null
+			}
+		}
+
+		return row
+	} catch (error) {
+		console.error('Error fetching conversation:', error)
+		return null
 	}
 }
 
@@ -151,35 +197,98 @@ export async function renameCategory(oldName: string, newName: string): Promise<
 
 export async function saveConversation(
 	conversation: Partial<Conversation> & { id: string },
+	thinkingTraces?: ThinkingTrace[],
+	groundingData?: GroundingData | null,
+	activityType?: string
 ): Promise<void> {
-	await pool.query(
-		`
+	const client = await pool.connect()
+	try {
+		await client.query('BEGIN')
+
+		await client.query(
+			`
     INSERT INTO conversations (
       id, title, created_at, status, has_rich_content,
       first_prompt, first_response, turn_count, char_count,
-      storage_filename, category, is_deep_research
-    ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+      storage_filename, category, is_deep_research, activity_type
+    ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
     ON CONFLICT (id) DO UPDATE SET
       title = EXCLUDED.title,
       category = EXCLUDED.category,
       summary = EXCLUDED.summary,
-      is_deep_research = EXCLUDED.is_deep_research
+      is_deep_research = EXCLUDED.is_deep_research,
+      turn_count = EXCLUDED.turn_count,
+      char_count = EXCLUDED.char_count,
+      has_rich_content = EXCLUDED.has_rich_content,
+      activity_type = EXCLUDED.activity_type
   `,
-		[
-			conversation.id,
-			conversation.title || 'Untitled',
-			conversation.createdAt || new Date().toISOString(),
-			conversation.status || 'processed',
-			conversation.hasRichContent || false,
-			conversation.firstPrompt || null,
-			conversation.firstResponse || null,
-			conversation.turnCount || 0,
-			conversation.charCount || 0,
-			conversation.storageFilename || null,
-			conversation.category || null,
-			conversation.isDeepResearch || false,
-		],
-	)
+			[
+				conversation.id,
+				conversation.title || 'Untitled',
+				conversation.createdAt || new Date().toISOString(),
+				conversation.status || 'processed',
+				conversation.hasRichContent || false,
+				conversation.firstPrompt || null,
+				conversation.firstResponse || null,
+				conversation.turnCount || 0,
+				conversation.charCount || 0,
+				conversation.storageFilename || null,
+				conversation.category || null,
+				conversation.isDeepResearch || false,
+				activityType || 'natural_language'
+			],
+		)
+
+		// Save Thinking Traces
+		if (thinkingTraces && thinkingTraces.length > 0) {
+			// Clear existing traces for this conversation to avoid duplicates on re-import
+			await client.query('DELETE FROM thinking_traces WHERE conversation_id = $1', [
+				conversation.id,
+			])
+
+			for (const trace of thinkingTraces) {
+				await client.query(
+					`
+          INSERT INTO thinking_traces (conversation_id, step_number, content, action_type, metadata_json)
+          VALUES ($1, $2, $3, $4, $5)
+        `,
+					[
+						conversation.id,
+						trace.step_number,
+						trace.content,
+						trace.action_type,
+						JSON.stringify(trace.metadata_json),
+					],
+				)
+			}
+		}
+
+		// Save Grounding Data
+		if (groundingData) {
+			await client.query(
+				`
+        INSERT INTO grounding_data (conversation_id, raw_chunks_json, raw_supports_json)
+        VALUES ($1, $2, $3)
+        ON CONFLICT (conversation_id) DO UPDATE SET
+          raw_chunks_json = EXCLUDED.raw_chunks_json,
+          raw_supports_json = EXCLUDED.raw_supports_json
+      `,
+				[
+					conversation.id,
+					JSON.stringify(groundingData.raw_chunks_json),
+					JSON.stringify(groundingData.raw_supports_json),
+				],
+			)
+		}
+
+		await client.query('COMMIT')
+	} catch (error) {
+		await client.query('ROLLBACK')
+		console.error('Error saving conversation:', error)
+		throw error
+	} finally {
+		client.release()
+	}
 }
 
 export async function getConversationsToFetch(): Promise<Conversation[]> {
@@ -194,6 +303,7 @@ export async function getConversationsToFetch(): Promise<Conversation[]> {
         category
       FROM conversations 
       WHERE storage_filename IS NOT NULL
+        AND transcript IS NULL
       ORDER BY created_at DESC
     `)
 		return result.rows
@@ -230,6 +340,8 @@ export async function updateConversationById(
 		categorizedAt?: string
 		backlinkedAt?: string
 		status?: 'processed' | 'quarantined' | 'archived'
+		retryCount?: number
+		lastError?: string | null
 	},
 ): Promise<void> {
 	const setClauses: string[] = []
@@ -260,6 +372,14 @@ export async function updateConversationById(
 		setClauses.push(`status = $${paramIndex++}`)
 		values.push(updates.status)
 	}
+	if (updates.retryCount !== undefined) {
+		setClauses.push(`retry_count = $${paramIndex++}`)
+		values.push(updates.retryCount)
+	}
+	if (updates.lastError !== undefined) {
+		setClauses.push(`last_error = $${paramIndex++}`)
+		values.push(updates.lastError)
+	}
 
 	if (setClauses.length === 0) {
 		return // Nothing to update
@@ -273,8 +393,11 @@ export async function updateConversationById(
 }
 
 export async function deleteAllConversations(): Promise<number> {
-	const result = await pool.query('DELETE FROM conversations')
-	return result.rowCount || 0
+	// Clean Wipe: Truncate binders as well (Cascades to conversations via FK if configured, otherwise we delete manually)
+	// Since we defined ON DELETE SET NULL for binders, we need to delete conversations first or just truncate.
+	// But to be safe and thorough for "Wipe Data":
+	await pool.query('TRUNCATE table conversations, binders, thinking_traces, grounding_data RESTART IDENTITY CASCADE')
+	return 0
 }
 
 export async function getConversationsWithTranscript(): Promise<Conversation[]> {
@@ -288,7 +411,17 @@ export async function getConversationsWithTranscript(): Promise<Conversation[]> 
       WHERE transcript IS NOT NULL
       ORDER BY created_at DESC
     `)
-		return result.rows
+		return result.rows.map(row => {
+			if (row.transcript && typeof row.transcript === 'string') {
+				try {
+					row.transcript = JSON.parse(row.transcript)
+				} catch (e) {
+					console.error('Failed to parse transcript JSON for conversation:', row.id, e)
+					row.transcript = null
+				}
+			}
+			return row
+		})
 	} catch (error) {
 		console.error('Error fetching conversations with transcript:', error)
 		return []

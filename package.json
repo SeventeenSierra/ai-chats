@@ -33,6 +33,10 @@
 			"cpu": [
 				"x64",
 				"arm64"
+			],
+			"libc": [
+				"glibc",
+				"musl"
 			]
 		}
 	},
@@ -41,5 +45,8 @@
 		"@commitlint/config-conventional": "^20.3.0",
 		"husky": "^9.1.7",
 		"lint-staged": "^16.2.7"
+	},
+	"dependencies": {
+		"fast-xml-parser": "^5.3.3"
 	}
 }

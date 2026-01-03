@@ -100,7 +100,7 @@ const splitImportedFileFlow = ai.defineFlow(
 				}
 
 				const convId = `conversation_${index + 1}.xml`
-				await uploadToStorage(`staging/${convId}`, convXml)
+				await uploadToStorage(`staging/${jobId}/${convId}`, convXml)
 
 				const progress = Math.round(((index + 1) / fileCount) * 100)
 				await updateImportStatus({

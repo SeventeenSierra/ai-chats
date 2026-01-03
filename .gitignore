@@ -58,3 +58,10 @@ seed-data/*
 !seed-data/package.json
 !seed-data/tsconfig.json
 .git-filter-repo-replacements
+
+# Playwright test results (anywhere in tree)
+**/test-results/
+
+# Runtime logs and debug output
+*.log
+api_response.json

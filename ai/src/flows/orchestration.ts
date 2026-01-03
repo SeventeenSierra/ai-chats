@@ -11,9 +11,19 @@ import { getTranscript } from './get-transcript'
 import { updateConversation } from './update-conversation'
 import { updateImportStatus } from './update-import-status'
 
-export async function fetchAndSaveTranscripts({ jobId }: { jobId: string }) {
+export async function fetchAndSaveTranscripts({
+	jobId,
+	conversationId
+}: {
+	jobId: string,
+	conversationId?: string
+}) {
 	try {
-		const conversationsToFetch = await getConversationsToFetch()
+		let conversationsToFetch = await getConversationsToFetch()
+
+		if (conversationId) {
+			conversationsToFetch = conversationsToFetch.filter(c => c.id === conversationId)
+		}
 		const totalToProcess = conversationsToFetch.length
 
 		if (totalToProcess === 0) {
@@ -43,6 +53,15 @@ export async function fetchAndSaveTranscripts({ jobId }: { jobId: string }) {
 					continue
 				}
 
+				// Skip conversations that have failed too many times
+				const currentRetryCount = (convo as { retryCount?: number }).retryCount ?? 0
+				if (currentRetryCount >= 3) {
+					console.warn(
+						`Skipping conversation ${convo.id} - exceeded max retries (${currentRetryCount})`,
+					)
+					continue
+				}
+
 				const { transcript } = await getTranscript({ storageFilename: convo.storageFilename })
 				if (!transcript) {
 					throw new Error(`Failed to fetch transcript for ${convo.id}`)
@@ -51,6 +70,9 @@ export async function fetchAndSaveTranscripts({ jobId }: { jobId: string }) {
 				await updateConversation({
 					id: convo.id,
 					transcript: transcript,
+					// Clear any previous error on success
+					retryCount: 0,
+					lastError: null,
 				})
 
 				await updateImportStatus({
@@ -62,7 +84,16 @@ export async function fetchAndSaveTranscripts({ jobId }: { jobId: string }) {
 					message: `Fetched transcript ${index + 1} of ${totalToProcess}...`,
 				})
 			} catch (fetchError) {
+				const errorMessage = fetchError instanceof Error ? fetchError.message : 'Unknown error'
 				console.error('Error fetching transcript for conversation %s:', convo.id, fetchError)
+
+				// Increment retry count and store error
+				const currentRetryCount = (convo as { retryCount?: number }).retryCount ?? 0
+				await updateConversation({
+					id: convo.id,
+					retryCount: currentRetryCount + 1,
+					lastError: errorMessage,
+				})
 			}
 		}
 		await updateImportStatus({

@@ -122,32 +122,139 @@
 }
 
 @layer components {
-  .prose pre {
-    @apply bg-muted/50 p-4 rounded-lg text-foreground whitespace-pre-wrap break-words font-sans;
+
+  /* === PROSE ENHANCEMENTS === */
+  .prose {
+    @apply break-words max-w-none;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    font-size: 1.05rem;
+    /* Slightly larger than standard 16px */
+    line-height: 1.6;
   }
 
-  .prose code {
-    @apply text-secondary-foreground font-medium bg-muted/80 rounded-sm px-1 py-0.5;
+  .prose p,
+  .prose li,
+  .prose blockquote {
+    @apply mb-4 leading-relaxed;
+  }
+
+  /* === SPECIAL CHIP/LINK STYLING === */
+  /* Target the jarring dark blocks that often contain special chips/links */
+  .prose p:has(a[href*="googleusercontent.com"]),
+  .prose a[href*="googleusercontent.com"],
+  .prose a[href*="deep_research_confirmation_content"],
+  .prose a[href*="immersive_entry_chip"] {
+    @apply inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/5 border border-primary/20 text-primary font-medium text-sm no-underline hover:bg-primary/10 transition-colors;
+  }
+
+  /* Prevent blocks from being forced to full-width black boxes */
+  .prose p:has(a[href*="googleusercontent.com"]) {
+    @apply bg-transparent p-0 m-0 border-none inline-flex;
+  }
+
+  /* === PROSE CODE BLOCKS === */
+  /* Force light backgrounds in light mode to avoid 'dark blocks' */
+  .prose pre,
+  .prose :where(pre):not(:where(.not-prose *)) {
+    background-color: var(--muted) !important;
+    @apply border border-border/60 p-6 rounded-2xl whitespace-pre-wrap break-words overflow-x-auto my-8 shadow-sm;
+    font-family: var(--font-code);
+    font-size: 0.95rem !important;
+    /* Larger font as requested */
+    line-height: 1.7;
+    color: var(--foreground) !important;
   }
 
   .prose pre code {
-    @apply bg-transparent rounded-none p-0 font-sans;
+    @apply bg-transparent p-0;
+    font: inherit;
+    color: inherit !important;
+    background-color: transparent !important;
   }
 
+  /* Inline code */
+  .prose :where(code):not(:where(pre code)) {
+    @apply text-primary font-bold bg-primary/10 rounded-md px-2 py-0.5;
+    font-size: 0.95em;
+  }
+
+  /* Remove backticks added by some markdown renderers */
   .prose code::before,
   .prose code::after {
     content: "";
   }
 
+  /* === DARK MODE CODE BLOCKS === */
+  .dark .prose pre,
   .dark .prose-invert pre {
-    @apply bg-background;
+    @apply bg-secondary/30 border-border/40 text-foreground/90 shadow-inner;
   }
 
+  .dark .prose code,
   .dark .prose-invert code {
-    @apply text-secondary-foreground bg-muted/80;
+    @apply text-primary bg-primary/10;
   }
 
+  .dark .prose pre code,
   .dark .prose-invert pre code {
     @apply bg-transparent;
+  }
+
+  /* === LINKS === */
+  .prose a:not([class*="bg-"]) {
+    @apply text-primary underline underline-offset-4 decoration-primary/30 hover:decoration-primary transition-all;
+  }
+
+  /* === BLOCKQUOTES === */
+  .prose blockquote {
+    @apply border-l-4 border-primary/30 pl-6 italic text-muted-foreground bg-muted/30 py-4 pr-4 rounded-r-lg my-6;
+  }
+
+  /* === TABLES === */
+  .prose table {
+    @apply w-full border-collapse text-sm my-6;
+  }
+
+  .prose th,
+  .prose td {
+    @apply border border-border/60 px-4 py-2.5 text-left;
+  }
+
+  .prose th {
+    @apply bg-muted/40 font-semibold text-foreground;
+  }
+
+  /* === LISTS === */
+  .prose ul {
+    @apply list-disc pl-6 space-y-2 mb-4;
+  }
+
+  .prose ol {
+    @apply list-decimal pl-6 space-y-2 mb-4;
+  }
+
+  /* === HEADINGS === */
+  .prose h1,
+  .prose h2,
+  .prose h3,
+  .prose h4 {
+    @apply font-semibold text-foreground font-headline tracking-tight;
+  }
+
+  .prose h1 {
+    @apply text-2xl mt-8 mb-4 border-b pb-2;
+  }
+
+  .prose h2 {
+    @apply text-xl mt-7 mb-3;
+  }
+
+  .prose h3 {
+    @apply text-lg mt-6 mb-2;
+  }
+
+  .prose h4 {
+    @apply text-base mt-5 mb-2;
   }
 }

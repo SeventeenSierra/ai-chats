@@ -3,12 +3,16 @@
 
 'use client'
 
+import { Code, FileText, FolderOpen, Lightbulb, Search, Settings } from 'lucide-react'
+import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import * as React from 'react'
-import { Badge } from '@/components/ui/badge'
 import { useIsMobile } from '@/hooks/use-mobile'
 import { cn } from '@/lib/utils'
+import { Button } from './button'
+import { ScrollArea } from './scroll-area'
 
+// --- Context ---
 interface SidebarContextType {
 	isOpen: boolean
 	toggleSidebar: () => void
@@ -26,59 +30,129 @@ export const useSidebar = () => {
 
 export const SidebarProvider = ({ children }: { children: React.ReactNode }) => {
 	const [isOpen, setIsOpen] = React.useState(true)
-	const pathname = usePathname()
 	const isMobile = useIsMobile()
 
 	React.useEffect(() => {
-		// On mobile, the sidebar should always be closed by default.
 		if (isMobile) {
 			setIsOpen(false)
-			return
+		} else {
+			setIsOpen(true)
 		}
+	}, [isMobile])
 
-		// On desktop, it should be open only on the explorer page.
-		const onExplorer = pathname.startsWith('/explorer')
-		setIsOpen(onExplorer)
-	}, [pathname, isMobile])
-
-	const toggleSidebar = () => {
+	const toggleSidebar = React.useCallback(() => {
 		setIsOpen((prev) => !prev)
-	}
+	}, [])
 
 	return (
 		<SidebarContext.Provider value={{ isOpen, toggleSidebar }}>{children}</SidebarContext.Provider>
 	)
 }
 
+// --- Main Sidebar Shell ---
 export const Sidebar = ({ children }: { children: React.ReactNode }) => {
 	const { isOpen } = useSidebar()
-	const pathname = usePathname()
-
-	// Only render the sidebar on the explorer page
-	if (!pathname.startsWith('/explorer')) {
-		return null
-	}
 
 	return (
 		<aside
 			className={cn(
-				'fixed inset-y-0 left-0 z-30 h-full w-80 transform bg-background border-r transition-transform duration-300 ease-in-out',
-				'lg:pt-16', // Position below the header on large screens
+				'fixed inset-y-0 left-0 z-30 h-full w-72 transform border-r bg-background/80 backdrop-blur-lg transition-transform duration-300 ease-in-out',
+				'lg:pt-16', // Position below header
 				isOpen ? 'translate-x-0' : '-translate-x-full',
 			)}
 		>
-			<div className="flex flex-col h-full">
-				<div className="flex-1 overflow-hidden">{children}</div>
-				<div className="p-4 border-t flex justify-center bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-					<Badge variant="outline" className="text-xs font-normal text-muted-foreground">
-						Version 1.0.0
-					</Badge>
-				</div>
-			</div>
+			<div className="flex flex-col h-full">{children}</div>
 		</aside>
 	)
 }
 
+// --- Sidebar Content (Main Layout) ---
 export const SidebarContent = ({ children }: { children: React.ReactNode }) => {
-	return <div className="flex flex-col h-full overflow-y-auto">{children}</div>
+	return (
+		<div className="flex flex-col h-full">
+			{/* Brand/Title */}
+			<div className="p-4 border-b">
+				<h1 className="text-xl font-bold tracking-tight">The Vault</h1>
+				<p className="text-xs text-muted-foreground">Your AI conversation archive.</p>
+			</div>
+
+			{/* Search (static placeholder for now) */}
+			<div className="p-3">
+				<div className="relative">
+					<Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+					<input
+						type="text"
+						placeholder="Search..."
+						className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 pl-8 text-sm shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+						disabled
+					/>
+				</div>
+			</div>
+
+			{/* Smart Views */}
+			<div className="px-3 py-2">
+				<h2 className="mb-2 px-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+					Smart Views
+				</h2>
+				<nav className="space-y-1">
+					<SidebarNavItem href="/vault" icon={<FolderOpen className="h-4 w-4" />}>
+						All Conversations
+					</SidebarNavItem>
+					<SidebarNavItem href="/vault?activity=coding" icon={<Code className="h-4 w-4" />}>
+						Coding
+					</SidebarNavItem>
+					<SidebarNavItem href="/vault?activity=research" icon={<Lightbulb className="h-4 w-4" />}>
+						Deep Research
+					</SidebarNavItem>
+					<SidebarNavItem href="/vault?activity=writing" icon={<FileText className="h-4 w-4" />}>
+						Writing & Prose
+					</SidebarNavItem>
+				</nav>
+			</div>
+
+			{/* Main scrollable content area (passed children, e.g., conversation list) */}
+			<ScrollArea className="flex-1">{children}</ScrollArea>
+
+			{/* Footer */}
+			<div className="p-3 border-t mt-auto">
+				<Button
+					variant="ghost"
+					size="sm"
+					className="w-full justify-start gap-2 text-muted-foreground"
+				>
+					<Settings className="h-4 w-4" />
+					Settings
+				</Button>
+			</div>
+		</div>
+	)
+}
+
+// --- Sidebar Nav Item ---
+function SidebarNavItem({
+	href,
+	icon,
+	children,
+}: {
+	href: string
+	icon: React.ReactNode
+	children: React.ReactNode
+}) {
+	const pathname = usePathname()
+	const isActive = pathname === href || (href !== '/vault' && pathname.startsWith(href))
+
+	return (
+		<Link
+			href={href}
+			className={cn(
+				'flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors',
+				isActive
+					? 'bg-primary/10 text-primary'
+					: 'text-muted-foreground hover:bg-accent hover:text-accent-foreground',
+			)}
+		>
+			{icon}
+			{children}
+		</Link>
+	)
 }
