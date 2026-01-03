@@ -3,15 +3,18 @@
 
 import { describe, it, expect } from 'vitest'
 import {
-    splitConversationsXml,
-    getConversationId,
-    getConversationTitle,
-    getConversationTimestamp,
-    hasRichContent,
-    getFirstPrompt,
-    getFirstResponse,
-    getTurnCount,
-    parseConversationTranscript,
+  splitConversationsXml,
+  getConversationId,
+  getConversationTitle,
+  getConversationTimestamp,
+  hasRichContent,
+  getFirstPrompt,
+  getFirstResponse,
+  getTurnCount,
+  parseConversationTranscript,
+  getThinkingTraces,
+  getGroundingData,
+  detectActivityType,
 } from '@ai-chat/backend'
 
 // Sample XML data based on real Gemini Vault export structure
@@ -104,145 +107,266 @@ const multipleConversationsXml = `<?xml version="1.0"?>
 </Export>`
 
 describe('XML Parser', () => {
-    describe('splitConversationsXml', () => {
-        it('should split multiple conversations into an array', () => {
-            const conversations = splitConversationsXml(multipleConversationsXml)
-            expect(conversations).toHaveLength(2)
-            expect(conversations[0]).toContain('c_test123abc')
-            expect(conversations[1]).toContain('c_tooltest')
-        })
-
-        it('should return empty array for XML without conversations', () => {
-            const conversations = splitConversationsXml('<Export></Export>')
-            expect(conversations).toHaveLength(0)
-        })
+  describe('splitConversationsXml', () => {
+    it('should split multiple conversations into an array', () => {
+      const conversations = splitConversationsXml(multipleConversationsXml)
+      expect(conversations).toHaveLength(2)
+      expect(conversations[0]).toContain('c_test123abc')
+      expect(conversations[1]).toContain('c_tooltest')
     })
 
-    describe('getConversationId', () => {
-        it('should extract the conversation ID', () => {
-            const id = getConversationId(sampleConversationXml)
-            expect(id).toBe('c_test123abc')
-        })
+    it('should return empty array for XML without conversations', () => {
+      const conversations = splitConversationsXml('<Export></Export>')
+      expect(conversations).toHaveLength(0)
+    })
+  })
 
-        it('should return null for missing ID', () => {
-            const id = getConversationId('<Conversation></Conversation>')
-            expect(id).toBeNull()
-        })
+  describe('getConversationId', () => {
+    it('should extract the conversation ID', () => {
+      const id = getConversationId(sampleConversationXml)
+      expect(id).toBe('c_test123abc')
     })
 
-    describe('getConversationTitle', () => {
-        it('should extract the conversation topic', () => {
-            const title = getConversationTitle(sampleConversationXml)
-            expect(title).toBe('Test Conversation Topic')
-        })
+    it('should return null for missing ID', () => {
+      const id = getConversationId('<Conversation></Conversation>')
+      expect(id).toBeNull()
+    })
+  })
 
-        it('should decode HTML entities in topic', () => {
-            const title = getConversationTitle(sampleWithHtmlEntities)
-            expect(title).toBe('HTML & Entities Test')
-        })
-
-        it('should return null for missing topic', () => {
-            const title = getConversationTitle('<Conversation><ConversationId>test</ConversationId></Conversation>')
-            expect(title).toBeNull()
-        })
+  describe('getConversationTitle', () => {
+    it('should extract the conversation topic', () => {
+      const title = getConversationTitle(sampleConversationXml)
+      expect(title).toBe('Test Conversation Topic')
     })
 
-    describe('getConversationTimestamp', () => {
-        it('should extract the first timestamp', () => {
-            const timestamp = getConversationTimestamp(sampleConversationXml)
-            expect(timestamp).toBe('2024-07-19T16:30:00.000000-04:00')
-        })
-
-        it('should return null for missing timestamp', () => {
-            const timestamp = getConversationTimestamp('<Conversation></Conversation>')
-            expect(timestamp).toBeNull()
-        })
+    it('should decode HTML entities in topic', () => {
+      const title = getConversationTitle(sampleWithHtmlEntities)
+      expect(title).toBe('HTML & Entities Test')
     })
 
-    describe('hasRichContent', () => {
-        it('should return true for conversations with ToolCode', () => {
-            expect(hasRichContent(sampleWithToolCode)).toBe(true)
-        })
+    it('should return null for missing topic', () => {
+      const title = getConversationTitle('<Conversation><ConversationId>test</ConversationId></Conversation>')
+      expect(title).toBeNull()
+    })
+  })
 
-        it('should return true for deep research content', () => {
-            expect(hasRichContent(sampleWithDeepResearch)).toBe(true)
-        })
-
-        it('should return false for plain text conversations', () => {
-            expect(hasRichContent(sampleConversationXml)).toBe(false)
-        })
+  describe('getConversationTimestamp', () => {
+    it('should extract the first timestamp', () => {
+      const timestamp = getConversationTimestamp(sampleConversationXml)
+      expect(timestamp).toBe('2024-07-19T16:30:00.000000-04:00')
     })
 
-    describe('getFirstPrompt', () => {
-        it('should extract the first prompt text', () => {
-            const prompt = getFirstPrompt(sampleConversationXml)
-            expect(prompt).toBe('What is the meaning of life?')
-        })
+    it('should return null for missing timestamp', () => {
+      const timestamp = getConversationTimestamp('<Conversation></Conversation>')
+      expect(timestamp).toBeNull()
+    })
+  })
 
-        it('should decode HTML entities in prompt', () => {
-            const prompt = getFirstPrompt(sampleWithHtmlEntities)
-            expect(prompt).toBe('Show me <code> and "quotes"')
-        })
+  describe('hasRichContent', () => {
+    it('should return true for conversations with ToolCode', () => {
+      expect(hasRichContent(sampleWithToolCode)).toBe(true)
     })
 
-    describe('getFirstResponse', () => {
-        it('should extract the first response text', () => {
-            const response = getFirstResponse(sampleConversationXml)
-            expect(response).toContain('philosophical question')
-        })
-
-        it('should return standardized message for deep research', () => {
-            const response = getFirstResponse(sampleWithDeepResearch)
-            expect(response).toContain('research plan or interactive component')
-        })
-
-        it('should include tool code formatted as code block', () => {
-            const response = getFirstResponse(sampleWithToolCode)
-            expect(response).toContain('```')
-            expect(response).toContain('print("Hello, World!")')
-        })
+    it('should return true for deep research content', () => {
+      expect(hasRichContent(sampleWithDeepResearch)).toBe(true)
     })
 
-    describe('getTurnCount', () => {
-        it('should return correct turn count (2 per ConversationTurn)', () => {
-            const count = getTurnCount(sampleConversationXml)
-            // 2 ConversationTurns * 2 = 4 turns (prompt + response each)
-            expect(count).toBe(4)
-        })
+    it('should return false for plain text conversations', () => {
+      expect(hasRichContent(sampleConversationXml)).toBe(false)
+    })
+  })
 
-        it('should return 0 for empty conversations', () => {
-            const count = getTurnCount('<Conversation></Conversation>')
-            expect(count).toBe(0)
-        })
+  describe('getFirstPrompt', () => {
+    it('should extract the first prompt text', () => {
+      const prompt = getFirstPrompt(sampleConversationXml)
+      expect(prompt).toBe('What is the meaning of life?')
     })
 
-    describe('parseConversationTranscript', () => {
-        it('should parse all turns into structured format', () => {
-            const turns = parseConversationTranscript(sampleConversationXml)
-            expect(turns).toHaveLength(4) // 2 user + 2 model turns
-            expect(turns[0].author).toBe('user')
-            expect(turns[0].parts[0].content).toBe('What is the meaning of life?')
-            expect(turns[1].author).toBe('model')
-            expect(turns[1].parts[0].content).toContain('philosophical question')
-        })
-
-        it('should include timestamps on turns', () => {
-            const turns = parseConversationTranscript(sampleConversationXml)
-            expect(turns[0].timestamp).toBe('2024-07-19T16:30:00.000000-04:00')
-        })
-
-        it('should handle tool code as code parts', () => {
-            const turns = parseConversationTranscript(sampleWithToolCode)
-            const modelTurn = turns.find(t => t.author === 'model')
-            const codePart = modelTurn?.parts.find(p => p.type === 'code')
-            expect(codePart).toBeDefined()
-            expect(codePart?.content).toBe('print("Hello, World!")')
-        })
-
-        it('should decode HTML entities in transcript', () => {
-            const turns = parseConversationTranscript(sampleWithHtmlEntities)
-            expect(turns[0].parts[0].content).toBe('Show me <code> and "quotes"')
-            expect(turns[1].parts[0].content).toContain("Here's the result with & symbols")
-        })
+    it('should decode HTML entities in prompt', () => {
+      const prompt = getFirstPrompt(sampleWithHtmlEntities)
+      expect(prompt).toBe('Show me <code> and "quotes"')
     })
+  })
+
+  describe('getFirstResponse', () => {
+    it('should extract the first response text', () => {
+      const response = getFirstResponse(sampleConversationXml)
+      expect(response).toContain('philosophical question')
+    })
+
+    it('should return standardized message for deep research', () => {
+      const response = getFirstResponse(sampleWithDeepResearch)
+      expect(response).toContain('research plan or interactive component')
+    })
+
+    it('should include tool code formatted as code block', () => {
+      const response = getFirstResponse(sampleWithToolCode)
+      expect(response).toContain('```')
+      expect(response).toContain('print("Hello, World!")')
+    })
+  })
+
+  describe('getTurnCount', () => {
+    it('should return correct turn count (2 per ConversationTurn)', () => {
+      const count = getTurnCount(sampleConversationXml)
+      // 2 ConversationTurns * 2 = 4 turns (prompt + response each)
+      expect(count).toBe(4)
+    })
+
+    it('should return 0 for empty conversations', () => {
+      const count = getTurnCount('<Conversation></Conversation>')
+      expect(count).toBe(0)
+    })
+  })
+
+  describe('parseConversationTranscript', () => {
+    it('should parse all turns into structured format', () => {
+      const turns = parseConversationTranscript(sampleConversationXml)
+      expect(turns).toHaveLength(4) // 2 user + 2 model turns
+      expect(turns[0].author).toBe('user')
+      expect(turns[0].parts[0].content).toBe('What is the meaning of life?')
+      expect(turns[1].author).toBe('model')
+      expect(turns[1].parts[0].content).toContain('philosophical question')
+    })
+
+    it('should include timestamps on turns', () => {
+      const turns = parseConversationTranscript(sampleConversationXml)
+      expect(turns[0].timestamp).toBe('2024-07-19T16:30:00.000000-04:00')
+    })
+
+    it('should handle tool code as code parts', () => {
+      const turns = parseConversationTranscript(sampleWithToolCode)
+      const modelTurn = turns.find(t => t.author === 'model')
+      const codePart = modelTurn?.parts.find(p => p.type === 'code')
+      expect(codePart).toBeDefined()
+      expect(codePart?.content).toBe('print("Hello, World!")')
+    })
+
+    it('should decode HTML entities in transcript', () => {
+      const turns = parseConversationTranscript(sampleWithHtmlEntities)
+      expect(turns[0].parts[0].content).toBe('Show me <code> and "quotes"')
+      expect(turns[1].parts[0].content).toContain("Here's the result with & symbols")
+    })
+  })
+
+  describe('getThinkingTraces', () => {
+    it('should extract tool code and tool output traces', () => {
+      const traces = getThinkingTraces(sampleWithToolCode)
+      expect(traces).toHaveLength(2)
+
+      // First trace should be tool_code
+      expect(traces[0].action_type).toBe('tool_code')
+      expect(traces[0].content).toBe('print("Hello, World!")')
+      expect(traces[0].step_number).toBe(1)
+
+      // Second trace should be tool_output
+      expect(traces[1].action_type).toBe('tool_output')
+      expect(traces[1].content).toBe('Hello, World!')
+      expect(traces[1].step_number).toBe(2)
+    })
+
+    it('should return empty array for conversations without tool usage', () => {
+      const traces = getThinkingTraces(sampleConversationXml)
+      expect(traces).toEqual([])
+    })
+
+    it('should return empty array for invalid XML', () => {
+      const traces = getThinkingTraces('<invalid>')
+      expect(traces).toEqual([])
+    })
+
+    it('should include timestamp in metadata', () => {
+      const traces = getThinkingTraces(sampleWithToolCode)
+      expect(traces[0].metadata_json).toEqual({
+        timestamp: '2024-07-20T10:00:00.000000-04:00'
+      })
+    })
+  })
+
+  describe('getGroundingData', () => {
+    const sampleWithGrounding = `<Conversation>
+      <ConversationId>c_grounding</ConversationId>
+      <ConversationTopic>Grounding Test</ConversationTopic>
+      <ConversationTurns>
+        <ConversationTurn>
+          <Timestamp>2024-07-22T10:00:00.000000-04:00</Timestamp>
+          <Prompt><Text>Search for something</Text></Prompt>
+          <PrimaryResponse>
+            <Text>Here's what I found.</Text>
+          </PrimaryResponse>
+        </ConversationTurn>
+      </ConversationTurns>
+      <GroundingMetadata>
+        <GroundingChunk>
+          <Title>Source Article</Title>
+          <Url>https://example.com/article</Url>
+        </GroundingChunk>
+        <GroundingSupport>
+          <Segment>The first sentence.</Segment>
+          <ChunkIndices>0</ChunkIndices>
+        </GroundingSupport>
+      </GroundingMetadata>
+    </Conversation>`
+
+    it('should extract grounding chunks and supports', () => {
+      const data = getGroundingData(sampleWithGrounding)
+      expect(data).not.toBeNull()
+      expect(data?.raw_chunks_json).toHaveLength(1)
+      expect(data?.raw_supports_json).toHaveLength(1)
+    })
+
+    it('should return null for conversations without grounding', () => {
+      const data = getGroundingData(sampleConversationXml)
+      expect(data).toBeNull()
+    })
+
+    it('should return null for invalid XML', () => {
+      const data = getGroundingData('<invalid>')
+      expect(data).toBeNull()
+    })
+  })
+
+  describe('detectActivityType', () => {
+    it('should detect coding activity when ToolCode is present', () => {
+      expect(detectActivityType(sampleWithToolCode)).toBe('coding')
+    })
+
+    it('should detect research activity for deep research content', () => {
+      expect(detectActivityType(sampleWithDeepResearch)).toBe('research')
+    })
+
+    it('should detect design activity for image generation', () => {
+      const imageGenXml = `<Conversation>
+        <ConversationId>c_design</ConversationId>
+        <ConversationTurns>
+          <ConversationTurn>
+            <Prompt><Text>Generate an image</Text></Prompt>
+            <PrimaryResponse>
+              <Text>image_generation_content</Text>
+            </PrimaryResponse>
+          </ConversationTurn>
+        </ConversationTurns>
+      </Conversation>`
+      expect(detectActivityType(imageGenXml)).toBe('design')
+    })
+
+    it('should detect writing activity when prompt mentions writing', () => {
+      const writingXml = `<Conversation>
+        <ConversationId>c_writing</ConversationId>
+        <ConversationTurns>
+          <ConversationTurn>
+            <Prompt><Text>Please write me an essay about climate change</Text></Prompt>
+            <PrimaryResponse>
+              <Text>Here is your essay...</Text>
+            </PrimaryResponse>
+          </ConversationTurn>
+        </ConversationTurns>
+      </Conversation>`
+      expect(detectActivityType(writingXml)).toBe('writing')
+    })
+
+    it('should return mixed for generic conversations', () => {
+      expect(detectActivityType(sampleConversationXml)).toBe('mixed')
+    })
+  })
 })
