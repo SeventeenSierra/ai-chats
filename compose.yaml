@@ -39,10 +39,13 @@ services:
           - web-app
 
   postgres:
+    # Build from Containerfile to ensure non-root user
     build:
       context: .
       dockerfile: infra/containers/postgres.Containerfile
-    image: postgres:16-alpine
+    # Using Chainguard's secure-by-default Postgres image (0 CVEs)
+    # https://images.chainguard.dev/directory/image/postgres/overview
+    image: cgr.dev/chainguard/postgres:latest
     ports:
       - "${DB_PORT_EXTERNAL:-5433}:5432"
     environment:

@@ -1,0 +1,41 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+# SPDX-FileCopyrightText: 2025 Seventeen Sierra LLC
+#
+# Trivy configuration for local scanning
+# This config helps Trivy work with Podman on macOS
+
+# Image scanning configuration
+image:
+  # Use Podman as the container runtime
+  # The socket path is set via DOCKER_HOST env var in security-audit.sh
+  
+  # Remove images after scanning to save disk space
+  removed-pkgs: false
+
+# Vulnerability scanner settings  
+severity:
+  - CRITICAL
+  - HIGH
+  - MEDIUM
+
+# Skip unfixed vulnerabilities (matches CI behavior)
+ignore-unfixed: true
+
+# Scanners to use
+scanners:
+  - vuln
+  - misconfig
+  - secret
+
+# Directories to skip
+skip-dirs:
+  - node_modules
+  - .venv
+  - .next
+  - seed-data
+  - .git
+
+# Cache settings
+cache:
+  # Use local cache directory
+  dir: .trivy-cache

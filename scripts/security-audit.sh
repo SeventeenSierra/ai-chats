@@ -3,8 +3,77 @@
 # SPDX-FileCopyrightText: 2025 Seventeen Sierra LLC
 #
 # Run comprehensive security audit locally before pushing to CI
+#
+# Usage: ./scripts/security-audit.sh [OPTIONS]
+#
+# Options:
+#   --skip-npm       Skip npm/pnpm security audit
+#   --skip-semgrep   Skip Semgrep SAST scan
+#   --skip-trivy     Skip Trivy filesystem scan
+#   --skip-images    Skip container image scanning
+#   --skip-gitleaks  Skip Gitleaks git history scan
+#   --skip-hadolint  Skip Hadolint Dockerfile linting
+#   --skip-sbom      Skip SBOM generation
+#   --fast           Skip container images and SBOM (quick local check)
+#   --help           Show this help message
 
 set -e
+
+# Parse command line arguments
+SKIP_NPM=false
+SKIP_SEMGREP=false
+SKIP_TRIVY=false
+SKIP_IMAGES=false
+SKIP_GITLEAKS=false
+SKIP_HADOLINT=false
+SKIP_SBOM=false
+
+while [[ $# -gt 0 ]]; do
+  case $1 in
+    --skip-npm)
+      SKIP_NPM=true
+      shift
+      ;;
+    --skip-semgrep)
+      SKIP_SEMGREP=true
+      shift
+      ;;
+    --skip-trivy)
+      SKIP_TRIVY=true
+      shift
+      ;;
+    --skip-images)
+      SKIP_IMAGES=true
+      shift
+      ;;
+    --skip-gitleaks)
+      SKIP_GITLEAKS=true
+      shift
+      ;;
+    --skip-hadolint)
+      SKIP_HADOLINT=true
+      shift
+      ;;
+    --skip-sbom)
+      SKIP_SBOM=true
+      shift
+      ;;
+    --fast)
+      SKIP_IMAGES=true
+      SKIP_SBOM=true
+      shift
+      ;;
+    --help|-h)
+      head -20 "$0" | tail -15
+      exit 0
+      ;;
+    *)
+      echo "Unknown option: $1"
+      echo "Run with --help for usage"
+      exit 1
+      ;;
+  esac
+done
 
 echo "🔍 Running security audit..."
 echo ""
@@ -61,23 +130,31 @@ pause_between_scans() {
 }
 
 # npm/pnpm security audit
-echo "📦 Running npm security audit..."
-if command -v pnpm >/dev/null 2>&1; then
-  # Use --audit-level=moderate (skips low severity like false positives)
-  # Note: GHSA-rwvc-j5jr-mgvh (ai package) is a false positive - we use @genkit-ai/ai, not Vercel's ai
-  pnpm audit --audit-level=moderate || {
-    echo "❌ npm audit found moderate+ vulnerabilities"
-    exit 1
-  }
-  echo "✅ npm audit passed"
+if [ "$SKIP_NPM" = true ]; then
+  echo "📦 Skipping npm security audit (--skip-npm)"
 else
-  echo "❌ pnpm not found. Install via Nix: nix develop"
-  exit 1
+  echo "📦 Running npm security audit..."
+  if command -v pnpm >/dev/null 2>&1; then
+    # Use --audit-level=moderate (skips low severity like false positives)
+    # Note: GHSA-rwvc-j5jr-mgvh (ai package) is a false positive - we use @genkit-ai/ai, not Vercel's ai
+    pnpm audit --audit-level=moderate || {
+      echo "❌ npm audit found moderate+ vulnerabilities"
+      exit 1
+    }
+    echo "✅ npm audit passed"
+  else
+    echo "❌ pnpm not found. Install via Nix: nix develop"
+    exit 1
+  fi
 fi
 
 echo ""
 
-pause_between_scans "🔬 Semgrep SAST Scan"
+if [ "$SKIP_SEMGREP" = true ]; then
+  echo "🔬 Skipping Semgrep SAST scan (--skip-semgrep)"
+  echo ""
+else
+  pause_between_scans "🔬 Semgrep SAST Scan"
 
 # Semgrep SAST scanning
 echo "🔬 Running Semgrep SAST scan..."
@@ -119,13 +196,32 @@ else
   echo "   Skipping Semgrep scan..."
 fi
 
+fi # end semgrep skip check
+
 echo ""
 
-pause_between_scans "🛡️  Trivy Security Scan"
+if [ "$SKIP_TRIVY" = true ]; then
+  echo "🛡️  Skipping Trivy security scan (--skip-trivy)"
+  echo ""
+else
+  pause_between_scans "🛡️  Trivy Security Scan"
 
 # Trivy security scanning
 echo "🛡️  Running Trivy security scan..."
 if command -v trivy >/dev/null 2>&1; then
+  # Setup Podman socket for macOS (Trivy needs DOCKER_HOST to access local Podman images)
+  # Note: We use --image-src remote for registry images, so socket is only needed for local builds
+  if [[ "$(uname)" == "Darwin" ]] && command -v podman >/dev/null 2>&1; then
+    PODMAN_SOCKET=$(podman machine inspect 2>/dev/null | grep -o '"Path": "[^"]*api.sock"' | head -1 | sed 's/"Path": "//;s/"//')
+    if [ -n "$PODMAN_SOCKET" ] && [ -S "$PODMAN_SOCKET" ]; then
+      export DOCKER_HOST="unix://$PODMAN_SOCKET"
+      echo "  → Using Podman socket: $PODMAN_SOCKET"
+    else
+      echo "  ℹ️  Podman socket not found (local image scanning unavailable)"
+      echo "     Registry images will be scanned via --image-src remote"
+    fi
+  fi
+
   # Warn about potentially long scan
   echo "⚠️  Note: Trivy scans can take 30+ seconds for large projects"
   echo "   Press 's' to skip, or wait 3 seconds to proceed..."
@@ -134,6 +230,13 @@ if command -v trivy >/dev/null 2>&1; then
   if [[ "$skip_response" == "s" ]] || [[ "$skip_response" == "skip" ]]; then
     echo "⏭️  Trivy scan skipped by user"
   else
+    # Use trivy.yaml config if present
+    TRIVY_CONFIG=""
+    if [ -f "trivy.yaml" ]; then
+      TRIVY_CONFIG="--config trivy.yaml"
+      echo "  → Using trivy.yaml configuration"
+    fi
+    
     # Skip directories that contain non-production code or large files
     TRIVY_SKIP="--skip-dirs seed-data --skip-dirs node_modules --skip-dirs .venv --skip-dirs .next"
     
@@ -170,35 +273,82 @@ if command -v trivy >/dev/null 2>&1; then
       exit 1
     }
 
-    # Identify and scan images
-    echo "  → Scanning container images..."
-    
-    # Base images (external)
-    EXTERNAL_IMAGES=$(grep -E "image:|FROM" compose.yaml infra/containers/*.Containerfile 2>/dev/null | grep -v "build:" | sed -E 's/.*image: //;s/.*FROM //;s/ as .*//' | grep -v "^\." | sort | uniq)
-    
-    for img in $EXTERNAL_IMAGES; do
-      echo "    • Scanning base image: $img"
-      trivy image --severity CRITICAL --exit-code 0 "$img" | grep -E "(Total:|CRITICAL:)" || echo "      ✅ Clean or scan failed"
-    done
-
-    # Local project images (attempt to scan built versions)
-    # We look for the service names in compose.yaml that have build context
-    LOCAL_SERVICES=$(grep -B 1 "build:" compose.yaml 2>/dev/null | grep ":" | grep -v "build" | sed 's/://;s/^[ \t]*//' | sort | uniq)
-    
-    for service in $LOCAL_SERVICES; do
-      # Convention: images are often named project_service or just service
-      # We'll try to find a local image matching the service name
-      echo "    • Auditing local service configuration: $service"
-      # For now, we scan the Dockerfile/Containerfile associated with the service
-      DOCKERFILE=$(grep -A 5 "$service:" compose.yaml | grep "dockerfile:" | sed 's/.*dockerfile: //;s/^[ \t]*//')
-      if [ -n "$DOCKERFILE" ] && [ -f "$DOCKERFILE" ]; then
-         echo "      → Scanning associated container definition: $DOCKERFILE"
-         trivy config --severity HIGH,CRITICAL --exit-code 1 "$DOCKERFILE" || {
-           echo "❌ Trivy found issues in $DOCKERFILE for service $service"
-           exit 1
-         }
+    # Identify and scan images (matching CI workflow behavior)
+    if [ "$SKIP_IMAGES" = true ]; then
+      echo "  → Skipping container image scanning (--skip-images)"
+    else
+      echo "  → Scanning container images..."
+      
+      # Explicitly define the images to scan (matching security.yaml)
+      # Using Chainguard for Postgres (0 CVEs), official Node for web
+      # Note: Version-specific Chainguard tags require paid subscription
+      IMAGES_TO_SCAN=(
+        "cgr.dev/chainguard/postgres:latest"
+        "node:22-slim"
+        "dxflrs/garage:v1.0.1"
+      )
+      
+      IMAGE_SCAN_FAILED=0
+      for img in "${IMAGES_TO_SCAN[@]}"; do
+        echo "    • Scanning image: $img (from registry, linux/amd64)"
+        # Match CI: HIGH,CRITICAL severity, ignore-unfixed, vuln scanner only
+        # Use --image-src remote to pull directly from registry (works on macOS with Podman)
+        # Use --platform linux/amd64 to match CI environment (GitHub Actions runs on amd64)
+        # Use --ignorefile to suppress known third-party image CVEs
+        if ! trivy image \
+          --image-src remote \
+          --platform linux/amd64 \
+          --ignorefile .trivyignore \
+          --severity HIGH,CRITICAL \
+          --ignore-unfixed \
+          --scanners vuln \
+          --exit-code 1 \
+          "$img"; then
+          echo "      ⚠️  Vulnerabilities found in $img (see above)"
+          IMAGE_SCAN_FAILED=1
+        else
+          echo "      ✅ $img clean"
+        fi
+      done
+      
+      if [ $IMAGE_SCAN_FAILED -eq 1 ]; then
+        echo ""
+        echo "⚠️  Container image vulnerabilities detected (non-blocking)"
+        echo "   These are in third-party base images, not your code."
+        echo "   Consider updating to newer image versions if available."
       fi
-    done
+      
+      # Also scan images from Containerfiles (base images)
+      CONTAINERFILE_IMAGES=$(grep -E "^FROM" infra/containers/*.Containerfile 2>/dev/null | sed -E 's/.*FROM //;s/ as .*//' | grep -v "^\." | sort | uniq)
+      
+      for img in $CONTAINERFILE_IMAGES; do
+        # Skip if already scanned
+        if [[ " ${IMAGES_TO_SCAN[*]} " =~ " ${img} " ]]; then
+          continue
+        fi
+        echo "    • Scanning Containerfile base image: $img"
+        trivy image --severity HIGH,CRITICAL --ignore-unfixed --scanners vuln "$img" || true
+      done
+
+      # Local project images (attempt to scan built versions)
+      # We look for the service names in compose.yaml that have build context
+      LOCAL_SERVICES=$(grep -B 1 "build:" compose.yaml 2>/dev/null | grep ":" | grep -v "build" | sed 's/://;s/^[ \t]*//' | sort | uniq)
+      
+      for service in $LOCAL_SERVICES; do
+        # Convention: images are often named project_service or just service
+        # We'll try to find a local image matching the service name
+        echo "    • Auditing local service configuration: $service"
+        # For now, we scan the Dockerfile/Containerfile associated with the service
+        DOCKERFILE=$(grep -A 5 "$service:" compose.yaml | grep "dockerfile:" | sed 's/.*dockerfile: //;s/^[ \t]*//')
+        if [ -n "$DOCKERFILE" ] && [ -f "$DOCKERFILE" ]; then
+           echo "      → Scanning associated container definition: $DOCKERFILE"
+           trivy config --severity HIGH,CRITICAL --exit-code 1 "$DOCKERFILE" || {
+             echo "❌ Trivy found issues in $DOCKERFILE for service $service"
+             exit 1
+           }
+        fi
+      done
+    fi # end skip-images check
     
     echo "✅ Trivy scan passed"
   fi
@@ -208,12 +358,18 @@ else
   echo "   Skipping Trivy scan..."
 fi
 
+fi # end trivy skip check
+
 echo ""
 
-pause_between_scans "🔑 Gitleaks (Git History Secrets)"
+if [ "$SKIP_GITLEAKS" = true ]; then
+  echo "🔑 Skipping Gitleaks (--skip-gitleaks)"
+  echo ""
+else
+  pause_between_scans "🔑 Gitleaks (Git History Secrets)"
 
-# Gitleaks - Git history secret scanning
-echo "🔑 Running gitleaks (Git history secret scan)..."
+  # Gitleaks - Git history secret scanning
+  echo "🔑 Running gitleaks (Git history secret scan)..."
 if command -v gitleaks >/dev/null 2>&1; then
   # Use .gitleaks.toml config if present (matches CI workflow)
   if [ -f ".gitleaks.toml" ]; then
@@ -235,37 +391,49 @@ else
   echo "   Skipping gitleaks scan..."
 fi
 
+fi # end gitleaks skip check
+
 echo ""
 
-pause_between_scans "🐳 Hadolint (Dockerfile Linting)"
-
-# Hadolint - Dockerfile linting
-echo "🐳 Running Hadolint (Dockerfile linting)..."
-if command -v hadolint >/dev/null 2>&1; then
-  dockerfile_count=0
-  for dockerfile in $(find . -name "Dockerfile" -o -name "*.dockerfile" -o -name "*.Containerfile" 2>/dev/null); do
-    echo "  → Checking $dockerfile"
-    hadolint "$dockerfile" || {
-      echo "❌ Hadolint found issues in $dockerfile"
-      exit 1
-    }
-    dockerfile_count=$((dockerfile_count + 1))
-  done
-  
-  if [ $dockerfile_count -gt 0 ]; then
-    echo "✅ Hadolint scan passed ($dockerfile_count Dockerfile(s) checked)"
-  else
-    echo "  → No Dockerfiles found"
-  fi
+if [ "$SKIP_HADOLINT" = true ]; then
+  echo "🐳 Skipping Hadolint (--skip-hadolint)"
+  echo ""
 else
-  echo "⚠️  Hadolint not installed. Install from: https://github.com/hadolint/hadolint"
-  echo "   Hadolint validates Dockerfile best practices"
-  echo "   Skipping Hadolint scan..."
-fi
+  pause_between_scans "🐳 Hadolint (Dockerfile Linting)"
+
+  # Hadolint - Dockerfile linting
+  echo "🐳 Running Hadolint (Dockerfile linting)..."
+  if command -v hadolint >/dev/null 2>&1; then
+    dockerfile_count=0
+    for dockerfile in $(find . -name "Dockerfile" -o -name "*.dockerfile" -o -name "*.Containerfile" 2>/dev/null); do
+      echo "  → Checking $dockerfile"
+      hadolint "$dockerfile" || {
+        echo "❌ Hadolint found issues in $dockerfile"
+        exit 1
+      }
+      dockerfile_count=$((dockerfile_count + 1))
+    done
+    
+    if [ $dockerfile_count -gt 0 ]; then
+      echo "✅ Hadolint scan passed ($dockerfile_count Dockerfile(s) checked)"
+    else
+      echo "  → No Dockerfiles found"
+    fi
+  else
+    echo "⚠️  Hadolint not installed. Install from: https://github.com/hadolint/hadolint"
+    echo "   Hadolint validates Dockerfile best practices"
+    echo "   Skipping Hadolint scan..."
+  fi
+
+fi # end hadolint skip check
 
 echo ""
 
-pause_between_scans "📋 SBOM Generation"
+if [ "$SKIP_SBOM" = true ]; then
+  echo "📋 Skipping SBOM generation (--skip-sbom)"
+  echo ""
+else
+  pause_between_scans "📋 SBOM Generation"
 
 # SBOM Generation
 echo "📋 Generating SBOM (Software Bill of Materials)..."
@@ -291,6 +459,8 @@ if command -v pnpm >/dev/null 2>&1; then
 fi
 
 echo "✅ SBOM generation complete (check $SBOM_DIR/ directory)"
+
+fi # end sbom skip check
 
 echo ""
 echo "✅ Security audit complete!"
