@@ -3,19 +3,8 @@
 
 'use client'
 
-import {
-	Database,
-	Download,
-	Loader,
-	Menu,
-	Moon,
-	MoreVertical,
-	RefreshCw,
-	Sun,
-	Trash2,
-} from 'lucide-react'
+import { Download, Loader, Menu, Moon, MoreVertical, Sun, Trash2 } from 'lucide-react'
 import Link from 'next/link'
-import { usePathname, useRouter } from 'next/navigation'
 import { useTheme } from 'next-themes'
 import * as React from 'react'
 import {
@@ -52,8 +41,6 @@ type AppHeaderProps = {
 
 export default function AppHeader({ onWipe, isWiping, isJobRunning }: AppHeaderProps) {
 	const { toggleSidebar } = useSidebar()
-	const pathname = usePathname()
-	const router = useRouter()
 	const { setTheme } = useTheme()
 
 	const [isWipeAlertOpen, setIsWipeAlertOpen] = React.useState(false)
@@ -63,7 +50,6 @@ export default function AppHeader({ onWipe, isWiping, isJobRunning }: AppHeaderP
 		await onWipe()
 		setIsWipeAlertOpen(false)
 	}
-
 
 	const handleDownloadAll = async () => {
 		setIsDownloading(true)
@@ -164,8 +150,6 @@ export default function AppHeader({ onWipe, isWiping, isJobRunning }: AppHeaderP
 					</DropdownMenu>
 				</div>
 			</header>
-
-
 
 			<AlertDialog open={isWipeAlertOpen} onOpenChange={setIsWipeAlertOpen}>
 				<AlertDialogContent>

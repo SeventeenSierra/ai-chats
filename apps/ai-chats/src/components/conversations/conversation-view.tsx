@@ -3,7 +3,15 @@
 
 'use client'
 
-import { Bot, Download, ExternalLink, FileText, MessageSquareQuote, MoreVertical, User } from 'lucide-react'
+import {
+	Bot,
+	Download,
+	ExternalLink,
+	FileText,
+	MessageSquareQuote,
+	MoreVertical,
+	User,
+} from 'lucide-react'
 import * as React from 'react'
 import ReactMarkdown from 'react-markdown'
 import { Virtuoso } from 'react-virtuoso'
@@ -17,7 +25,6 @@ import {
 	DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { ScrollArea } from '@/components/ui/scroll-area'
-import { Skeleton } from '@/components/ui/skeleton'
 import { exportToMarkdownAction } from '@/lib/actions'
 import { cn } from '@/lib/utils'
 import type { AppCategory, Conversation, ConversationTurn } from '@/types'
@@ -44,28 +51,42 @@ function TurnView({ turn }: { turn: ConversationTurn }) {
 	)
 
 	const isTruncated = fullContent.length > TRUNCATION_LENGTH
-	const contentToShow = isExpanded || !isTruncated ? fullContent : `${fullContent.substring(0, TRUNCATION_LENGTH)}...`
+	const _contentToShow =
+		isExpanded || !isTruncated ? fullContent : `${fullContent.substring(0, TRUNCATION_LENGTH)}...`
 
 	return (
 		<div className="flex items-start gap-4 my-4">
-			<div className={cn('p-2 rounded-full shrink-0', isUser ? 'bg-primary/10 text-primary' : 'bg-secondary')}>
+			<div
+				className={cn(
+					'p-2 rounded-full shrink-0',
+					isUser ? 'bg-primary/10 text-primary' : 'bg-secondary',
+				)}
+			>
 				<AuthorIcon className="h-5 w-5" />
 			</div>
 			<div className="flex-1 min-w-0">
-				<p className={cn('text-[10px] font-black uppercase tracking-[0.15em] mb-3 opacity-40', isUser ? 'text-primary' : 'text-slate-500')}>
+				<p
+					className={cn(
+						'text-[10px] font-black uppercase tracking-[0.15em] mb-3 opacity-40',
+						isUser ? 'text-primary' : 'text-slate-500',
+					)}
+				>
 					{isUser ? 'User' : 'Model'}
 				</p>
 				<div className="prose max-w-none">
 					{turn.parts.map((part, i) => {
+						// Create a stable key from part content
+						const partKey = `${part.type}-${i}-${part.content.slice(0, 20)}`
 						if (part.type === 'text') {
 							// Check if it's a special chip URL
-							const isChip = part.content.includes('googleusercontent.com') ||
+							const isChip =
+								part.content.includes('googleusercontent.com') ||
 								part.content.includes('deep_research_confirmation_content') ||
-								part.content.includes('immersive_entry_chip');
+								part.content.includes('immersive_entry_chip')
 
 							if (isChip && part.content.length < 200) {
 								return (
-									<div key={i} className="my-4">
+									<div key={partKey} className="my-4">
 										<a
 											href={part.content}
 											target="_blank"
@@ -73,22 +94,38 @@ function TurnView({ turn }: { turn: ConversationTurn }) {
 											className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-primary/5 border border-primary/20 text-primary font-semibold text-sm no-underline hover:bg-primary/10 transition-all shadow-sm"
 										>
 											<ExternalLink className="h-4 w-4" />
-											{part.content.includes('immersive') ? 'Immersive Content' :
-												part.content.includes('research') ? 'Research Plan' : 'View Content'}
+											{part.content.includes('immersive')
+												? 'Immersive Content'
+												: part.content.includes('research')
+													? 'Research Plan'
+													: 'View Content'}
 										</a>
 									</div>
-								);
+								)
 							}
-							return <ReactMarkdown key={i} remarkPlugins={[remarkGfm]}>{part.content}</ReactMarkdown>;
+							return (
+								<ReactMarkdown key={partKey} remarkPlugins={[remarkGfm]}>
+									{part.content}
+								</ReactMarkdown>
+							)
 						}
 						if (part.type === 'code') {
-							return <pre key={i}><code>{part.content}</code></pre>;
+							return (
+								<pre key={partKey}>
+									<code>{part.content}</code>
+								</pre>
+							)
 						}
-						return null;
+						return null
 					})}
 				</div>
 				{isTruncated && (
-					<Button variant="link" size="sm" className="px-0 h-auto py-1 text-sm" onClick={() => setIsExpanded(!isExpanded)}>
+					<Button
+						variant="link"
+						size="sm"
+						className="px-0 h-auto py-1 text-sm"
+						onClick={() => setIsExpanded(!isExpanded)}
+					>
 						{isExpanded ? 'Show less' : `Show more`}
 					</Button>
 				)}
@@ -101,26 +138,30 @@ function StagedConversationPreview({ conversation }: { conversation: Conversatio
 	return (
 		<div className="p-4 space-y-4">
 			<div className="p-4 border rounded-lg bg-muted/30">
-				<p className="text-sm font-semibold mb-2 flex items-center gap-2"><User className="h-4 w-4" /> First Prompt</p>
+				<p className="text-sm font-semibold mb-2 flex items-center gap-2">
+					<User className="h-4 w-4" /> First Prompt
+				</p>
 				<div className="prose prose-sm dark:prose-invert max-w-none">
-					<ReactMarkdown remarkPlugins={[remarkGfm]}>{conversation.firstPrompt || 'No prompt found.'}</ReactMarkdown>
+					<ReactMarkdown remarkPlugins={[remarkGfm]}>
+						{conversation.firstPrompt || 'No prompt found.'}
+					</ReactMarkdown>
 				</div>
 			</div>
 			<div className="p-4 border rounded-lg">
-				<p className="text-sm font-semibold mb-2 flex items-center gap-2"><Bot className="h-4 w-4" /> First Response</p>
+				<p className="text-sm font-semibold mb-2 flex items-center gap-2">
+					<Bot className="h-4 w-4" /> First Response
+				</p>
 				<div className="prose prose-sm dark:prose-invert max-w-none">
-					<ReactMarkdown remarkPlugins={[remarkGfm]}>{conversation.firstResponse || 'No response found.'}</ReactMarkdown>
+					<ReactMarkdown remarkPlugins={[remarkGfm]}>
+						{conversation.firstResponse || 'No response found.'}
+					</ReactMarkdown>
 				</div>
 			</div>
 		</div>
 	)
 }
 
-export default function ConversationView({
-	conversation,
-	onDataChange,
-}: ConversationViewProps) {
-
+export default function ConversationView({ conversation }: ConversationViewProps) {
 	const handleExport = async () => {
 		const result = await exportToMarkdownAction(conversation)
 		if (result.error || !result.markdownContent) {
@@ -139,25 +180,41 @@ export default function ConversationView({
 			{/* Header */}
 			<div className="px-6 py-8 border-b shrink-0 flex items-center justify-between gap-6 flex-wrap bg-primary/5">
 				<div className="min-w-0 flex-1">
-					<h2 className="text-2xl font-bold font-headline tracking-tight leading-tight text-foreground mb-1">{conversation.title}</h2>
+					<h2 className="text-2xl font-bold font-headline tracking-tight leading-tight text-foreground mb-1">
+						{conversation.title}
+					</h2>
 					<p className="text-sm text-muted-foreground font-medium flex items-center gap-2">
-						<span className="opacity-60">{new Date(conversation.createdAt).toLocaleDateString()}</span>
+						<span className="opacity-60">
+							{new Date(conversation.createdAt).toLocaleDateString()}
+						</span>
 						<span className="opacity-30">•</span>
-						<span className="opacity-60">{new Date(conversation.createdAt).toLocaleTimeString()}</span>
+						<span className="opacity-60">
+							{new Date(conversation.createdAt).toLocaleTimeString()}
+						</span>
 					</p>
 				</div>
 				<div className="flex items-center gap-3 flex-wrap">
-					<Badge variant="secondary" className="px-3 py-1 text-xs font-semibold rounded-full bg-background border-primary/20 text-primary flex items-center gap-1.5 shadow-sm">
+					<Badge
+						variant="secondary"
+						className="px-3 py-1 text-xs font-semibold rounded-full bg-background border-primary/20 text-primary flex items-center gap-1.5 shadow-sm"
+					>
 						<MessageSquareQuote className="h-3.5 w-3.5" />
 						{conversation.turnCount} turn(s)
 					</Badge>
-					<Badge variant="secondary" className="px-3 py-1 text-xs font-semibold rounded-full bg-background border-primary/20 text-primary flex items-center gap-1.5 shadow-sm">
+					<Badge
+						variant="secondary"
+						className="px-3 py-1 text-xs font-semibold rounded-full bg-background border-primary/20 text-primary flex items-center gap-1.5 shadow-sm"
+					>
 						<FileText className="h-3.5 w-3.5" />
 						{(conversation.charCount / 1000).toFixed(1)}k chars
 					</Badge>
 					<DropdownMenu>
 						<DropdownMenuTrigger asChild>
-							<Button variant="outline" size="icon" className="h-9 w-9 bg-background border-primary/20 text-primary hover:bg-primary/5 rounded-full shadow-sm">
+							<Button
+								variant="outline"
+								size="icon"
+								className="h-9 w-9 bg-background border-primary/20 text-primary hover:bg-primary/5 rounded-full shadow-sm"
+							>
 								<MoreVertical className="h-4 w-4" />
 								<span className="sr-only">More actions</span>
 							</Button>

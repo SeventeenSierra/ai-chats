@@ -3,16 +3,13 @@
 
 import { getConversationById } from '@ai-chat/backend'
 
-export async function GET(
-    request: Request,
-    { params }: { params: Promise<{ id: string }> },
-) {
-    const { id } = await params
-    const conversation = await getConversationById(id)
+export async function GET(_request: Request, { params }: { params: Promise<{ id: string }> }) {
+	const { id } = await params
+	const conversation = await getConversationById(id)
 
-    if (!conversation) {
-        return Response.json({ error: 'Conversation not found' }, { status: 404 })
-    }
+	if (!conversation) {
+		return Response.json({ error: 'Conversation not found' }, { status: 404 })
+	}
 
-    return Response.json(conversation)
+	return Response.json(conversation)
 }

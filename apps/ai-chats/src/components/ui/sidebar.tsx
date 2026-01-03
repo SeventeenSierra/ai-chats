@@ -110,14 +110,16 @@ export const SidebarContent = ({ children }: { children: React.ReactNode }) => {
 				</nav>
 			</div>
 
-
-
 			{/* Main scrollable content area (passed children, e.g., conversation list) */}
 			<ScrollArea className="flex-1">{children}</ScrollArea>
 
 			{/* Footer */}
 			<div className="p-3 border-t mt-auto">
-				<Button variant="ghost" size="sm" className="w-full justify-start gap-2 text-muted-foreground">
+				<Button
+					variant="ghost"
+					size="sm"
+					className="w-full justify-start gap-2 text-muted-foreground"
+				>
 					<Settings className="h-4 w-4" />
 					Settings
 				</Button>

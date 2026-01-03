@@ -3,7 +3,7 @@
 
 'use client'
 
-import { Bot, MessageSquare, RefreshCw, Loader } from 'lucide-react'
+import { Bot, Loader, RefreshCw } from 'lucide-react'
 import * as React from 'react'
 import ConversationView from '@/components/conversations/conversation-view'
 import { UploadZone } from '@/components/conversations/upload-zone'
@@ -36,9 +36,7 @@ function ConversationListItem({
 				onClick={() => onSelect(conversation)}
 				className={cn(
 					'w-full text-left p-3 rounded-lg transition-colors pr-10',
-					isSelected
-						? 'bg-primary/10 border border-primary/20'
-						: 'hover:bg-muted',
+					isSelected ? 'bg-primary/10 border border-primary/20' : 'hover:bg-muted',
 				)}
 			>
 				<p className="text-sm font-medium truncate">{conversation.title}</p>
@@ -52,8 +50,10 @@ function ConversationListItem({
 					size="icon"
 					data-testid="fetch-transcript-btn"
 					className={cn(
-						"absolute right-2 top-1/2 -translate-y-1/2 h-8 w-8",
-						isFetching ? "opacity-100" : "opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity"
+						'absolute right-2 top-1/2 -translate-y-1/2 h-8 w-8',
+						isFetching
+							? 'opacity-100'
+							: 'opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity',
 					)}
 					onClick={(e) => {
 						e.stopPropagation()
@@ -61,7 +61,11 @@ function ConversationListItem({
 					}}
 					disabled={isFetching}
 				>
-					{isFetching ? <Loader data-testid="fetch-loading" className="h-4 w-4 animate-spin text-primary" /> : <RefreshCw className="h-4 w-4 text-muted-foreground" />}
+					{isFetching ? (
+						<Loader data-testid="fetch-loading" className="h-4 w-4 animate-spin text-primary" />
+					) : (
+						<RefreshCw className="h-4 w-4 text-muted-foreground" />
+					)}
 				</Button>
 			)}
 		</div>
@@ -179,12 +183,12 @@ export default function VaultPage() {
 	}
 
 	const handleFetchIndividual = async (id: string) => {
-		setFetchingIds(prev => new Set(prev).add(id))
+		setFetchingIds((prev) => new Set(prev).add(id))
 		try {
 			const res = await fetch('/api/fetch-transcripts', {
 				method: 'POST',
 				body: JSON.stringify({ conversationId: id }),
-				headers: { 'Content-Type': 'application/json' }
+				headers: { 'Content-Type': 'application/json' },
 			})
 			if (!res.ok) throw new Error('Failed to start fetch')
 
@@ -192,7 +196,7 @@ export default function VaultPage() {
 			setTimeout(async () => {
 				// We refresh the whole list to catch status updates
 				await fetchConversations()
-				setFetchingIds(prev => {
+				setFetchingIds((prev) => {
 					const next = new Set(prev)
 					next.delete(id)
 					return next
@@ -200,7 +204,7 @@ export default function VaultPage() {
 			}, 3000)
 		} catch (error) {
 			console.error('Fetch individual error:', error)
-			setFetchingIds(prev => {
+			setFetchingIds((prev) => {
 				const next = new Set(prev)
 				next.delete(id)
 				return next
@@ -228,17 +232,17 @@ export default function VaultPage() {
 		fetchConversations()
 	}
 
-	const handleAddCategory = async (name: string) => {
+	const handleAddCategory = async (_name: string) => {
 		// Placeholder for category management
 		return true
 	}
 
-	const handleRenameCategory = async (oldName: string, newName: string) => {
+	const handleRenameCategory = async (_oldName: string, _newName: string) => {
 		// Placeholder for category management
 		return true
 	}
 
-	const handleUpdateCategory = async (conversationId: string, newCategory: string) => {
+	const handleUpdateCategory = async (_conversationId: string, _newCategory: string) => {
 		// Placeholder for category management
 	}
 

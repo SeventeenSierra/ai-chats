@@ -26,7 +26,6 @@ import {
 	getConversations,
 	renameCategory,
 	updateConversationCategory,
-	uploadToStorage,
 } from '@ai-chat/backend'
 import type { Conversation, ConversationTurn } from '@/types'
 
@@ -377,4 +376,3 @@ export async function getConversationsAction(): Promise<
 		return []
 	}
 }
-
