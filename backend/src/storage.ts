@@ -66,6 +66,10 @@ export async function listFiles(prefix?: string): Promise<string[]> {
 		// If prefix implies a directory (ends with /), list that directory
 		if (prefix?.endsWith('/')) {
 			const targetDir = path.join(STORAGE_DIR, prefix)
+			// PATH TRAVERSAL FIX: Ensure targetDir is still within STORAGE_DIR
+			if (!path.resolve(targetDir).startsWith(STORAGE_DIR)) {
+				return [] // Fail silently or throw, silent is safer for listing
+			}
 			if (!existsSync(targetDir)) return []
 			const files = await fs.readdir(targetDir)
 			// Return paths relative to STORAGE_DIR, e.g. "staging/file.xml"
