@@ -3,6 +3,7 @@
 # SPDX-FileCopyrightText: 2025 Seventeen Sierra LLC
 #
 # Comprehensive pre-push hook: Build, Security Audit, SBOM
+# Matches GitHub Actions CI workflows strictly.
 #
 
 set -e
@@ -28,13 +29,28 @@ pause_between_scans() {
     fi
 }
 
-echo "🔍 Running pre-push verification (Build & Security)..."
+echo "🔍 Running pre-push verification (Strict Mode via Nix)..."
 echo ""
+
+# 0. Nix Flake Check (CI Parity)
+pause_between_scans "❄️  Nix Flake Check"
+echo "❄️  Running nix flake check..."
+if command -v nix >/dev/null 2>&1; then
+    if nix flake check --no-build; then
+         echo "✅ Nix flake check passed"
+    else
+         echo "❌ Nix flake check failed"
+         exit 1
+    fi
+else
+    echo "⚠️ Nix not found (skipping)"
+fi
 
 # 1. Build Verification
 pause_between_scans "🏗️  Build Verification"
-echo "🏗️  Running build..."
-if pnpm build; then
+echo "🏗️  Running build (via Nix)..."
+# Use nix develop to ensure native deps (like sqlite) are available
+if nix develop --command pnpm build; then
     echo "✅ Build passed"
 else
     echo "❌ Build failed"
@@ -42,13 +58,12 @@ else
 fi
 
 # 2. Security Audit (Unified)
-# We re-use logic from the unified script effectively by inlining calls or running commands directly.
-# For simplicity in this split, we'll run commands directly with pauses.
 
 # npm Security Audit
 pause_between_scans "📦 npm/pnpm Security Audit"
-echo "📦 Running npm security audit..."
-if pnpm audit --audit-level=moderate; then
+echo "📦 Running npm security audit (via Nix)..."
+# Using moderate to match local sensitivity, though CI might use high.
+if nix develop --command pnpm audit --audit-level=moderate; then
     echo "✅ npm audit passed"
 else
     echo "❌ npm audit found moderate+ vulnerabilities"

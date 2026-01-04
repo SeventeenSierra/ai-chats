@@ -30,6 +30,7 @@
 		"react-dom": "^19.0.0"
 	},
 	"dependencies": {
+		"@ai-chat/backend": "workspace:*",
 		"zod": "3.25.76"
 	}
 }
