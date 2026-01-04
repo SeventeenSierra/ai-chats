@@ -9,7 +9,6 @@
  */
 
 import { z } from 'zod'
-import { ai } from '../core/genkit'
 import { deleteStorageDirectory } from './wipe-data'
 
 const DeleteStagedFilesInputSchema = z.object({})
@@ -19,24 +18,17 @@ const DeleteStagedFilesOutputSchema = z.object({ success: z.boolean(), deletedCo
 export type DeleteStagedFilesOutput = z.infer<typeof DeleteStagedFilesOutputSchema>
 
 export async function deleteStagedFiles(
-	input: DeleteStagedFilesInput,
+	_input: DeleteStagedFilesInput,
 ): Promise<DeleteStagedFilesOutput> {
-	return deleteStagedFilesFlow(input)
+	return deleteStagedFilesFlow()
 }
 
-const deleteStagedFilesFlow = ai.defineFlow(
-	{
-		name: 'deleteStagedFilesFlow',
-		inputSchema: DeleteStagedFilesInputSchema,
-		outputSchema: DeleteStagedFilesOutputSchema,
-	},
-	async () => {
-		try {
-			const deletedCount = await deleteStorageDirectory('staging/')
-			return { success: true, deletedCount }
-		} catch (error) {
-			console.error('Failed to delete staged files:', error)
-			return { success: false, deletedCount: 0 }
-		}
-	},
-)
+const deleteStagedFilesFlow = async (): Promise<DeleteStagedFilesOutput> => {
+	try {
+		const deletedCount = await deleteStorageDirectory('staging/')
+		return { success: true, deletedCount }
+	} catch (error) {
+		console.error('Failed to delete staged files:', error)
+		return { success: false, deletedCount: 0 }
+	}
+}

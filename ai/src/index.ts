@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: PolyForm-Strict-1.0.0
 // SPDX-FileCopyrightText: 2025 Seventeen Sierra LLC
 
-export { ai } from './core/genkit'
+export { ai, model } from './core/openai'
 export * from './flows/check-for-existing-uploads'
 export * from './flows/delete-staged-conversations'
 export * from './flows/delete-staged-files'

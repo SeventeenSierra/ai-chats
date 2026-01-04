@@ -5,9 +5,21 @@ name: Security
 
 on:
   push:
-    branches: [main, develop, 'release/*', 'feature/**']
+    branches:
+      - main
+      - develop
+      - 'feat/**'
+      - 'fix/**'
+      - 'chore/**'
+      - 'refactor/**'
+      - 'docs/**'
+      - 'infra/**'
+      - 'release/**'
   pull_request:
-    branches: [main, develop, 'release/*']
+    branches:
+      - main
+      - develop
+      - 'release/**'
   schedule:
     - cron: '0 0 * * 1' # Weekly scan
 
@@ -70,20 +82,14 @@ jobs:
         run: pnpm audit --audit-level=high || true
 
   trivy:
-    name: Trivy
-    runs-on: ubuntu-22.04
+    name: Trivy (Filesystem)
+    runs-on: ubuntu-latest
     permissions:
       contents: read
       security-events: write
     steps:
       - uses: actions/checkout@v4
-      - name: Build Web Docker Image
-        run: |
-          docker build \
-            --file infra/containers/web.Containerfile \
-            --tag gemini-oracle-web:${{ github.sha }} \
-            .
-
+      
       - name: Run Trivy vulnerability scanner (FileSystem)
         uses: aquasecurity/trivy-action@0.31.0
         with:
@@ -96,88 +102,12 @@ jobs:
           format: 'sarif'
           output: 'trivy-fs-results.sarif'
       
-      - name: Run Trivy vulnerability scanner (Web Image)
-        uses: aquasecurity/trivy-action@0.31.0
-        with:
-          scan-type: 'image'
-          image-ref: 'gemini-oracle-web:${{ github.sha }}'
-          exit-code: '0'
-          ignore-unfixed: true
-          scanners: 'vuln'
-          severity: 'CRITICAL,HIGH,MEDIUM'
-          format: 'sarif'
-          output: 'trivy-image-web.sarif'
-
-      - name: Run Trivy vulnerability scanner (Postgres Image)
-        uses: aquasecurity/trivy-action@0.31.0
-        with:
-          scan-type: 'image'
-          image-ref: 'cgr.dev/chainguard/postgres:latest'
-          exit-code: '0'
-          ignore-unfixed: true
-          scanners: 'vuln'
-          severity: 'CRITICAL,HIGH,MEDIUM'
-          format: 'sarif'
-          output: 'trivy-image-postgres.sarif'
-
-      - name: Run Trivy vulnerability scanner (Garage Image)
-        uses: aquasecurity/trivy-action@0.31.0
-        with:
-          scan-type: 'image'
-          image-ref: 'dxflrs/garage:v1.0.1'
-          exit-code: '0'
-          ignore-unfixed: true
-          scanners: 'vuln'
-          severity: 'CRITICAL,HIGH,MEDIUM'
-          format: 'sarif'
-          output: 'trivy-image-garage.sarif'
-
-      - name: Run Trivy vulnerability scanner (Node.js Image)
-        uses: aquasecurity/trivy-action@0.31.0
-        with:
-          scan-type: 'image'
-          image-ref: 'node:22-slim'
-          exit-code: '0'
-          ignore-unfixed: true
-          scanners: 'vuln'
-          severity: 'CRITICAL,HIGH,MEDIUM'
-          format: 'sarif'
-          output: 'trivy-image-node.sarif'
-
       - name: Upload Trivy FS results
         if: always()
         uses: github/codeql-action/upload-sarif@v3
         with:
           sarif_file: trivy-fs-results.sarif
           category: trivy-fs
-
-      - name: Upload Trivy Web Image results
-        if: always()
-        uses: github/codeql-action/upload-sarif@v3
-        with:
-          sarif_file: trivy-image-web.sarif
-          category: trivy-image-web
-
-      - name: Upload Trivy Postgres Image results
-        if: always()
-        uses: github/codeql-action/upload-sarif@v3
-        with:
-          sarif_file: trivy-image-postgres.sarif
-          category: trivy-image-postgres
-
-      - name: Upload Trivy Garage Image results
-        if: always()
-        uses: github/codeql-action/upload-sarif@v3
-        with:
-          sarif_file: trivy-image-garage.sarif
-          category: trivy-image-garage
-
-      - name: Upload Trivy Node.js Image results
-        if: always()
-        uses: github/codeql-action/upload-sarif@v3
-        with:
-          sarif_file: trivy-image-node.sarif
-          category: trivy-image-node
 
   semgrep:
     name: Semgrep

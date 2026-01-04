@@ -38,22 +38,48 @@ export function ConversationListItem({
 		// biome-ignore lint/a11y/noStaticElementInteractions: see above
 		<div
 			className={cn(
-				'flex items-start gap-3 p-2 rounded-md cursor-pointer', // w-full removed
-				isSelected ? 'bg-muted' : 'hover:bg-muted/50',
+				'group relative flex items-start gap-3 p-3 rounded-lg cursor-pointer transition-all duration-200 border border-transparent',
+				isSelected
+					? 'bg-accent/10 border-accent/20 shadow-sm'
+					: 'hover:bg-muted/60 hover:border-border/50',
 			)}
 			onClick={() => onSelect(conversation)}
 			draggable="true"
 			onDragStart={handleDragStart}
 		>
-			{children}
-			<Bot className="h-5 w-5 text-muted-foreground mt-1 flex-shrink-0" />
-			<div className="flex flex-col min-w-0 flex-1">
-				<p className={cn('text-sm', isSelected ? 'font-semibold text-primary' : 'font-medium')}>
+			{isSelected && (
+				<div className="absolute left-0 top-3 bottom-3 w-1 bg-accent rounded-r-full" />
+			)}
+
+			<div className={cn('mt-0.5 shrink-0', children ? 'mr-1' : '')}>{children}</div>
+
+			<div
+				className={cn(
+					'p-2 rounded-full shrink-0 transition-colors',
+					isSelected
+						? 'bg-accent/20 text-accent'
+						: 'bg-muted text-muted-foreground group-hover:bg-muted-foreground/10',
+				)}
+			>
+				<Bot className="h-4 w-4" />
+			</div>
+
+			<div className="flex flex-col min-w-0 flex-1 gap-1">
+				<p
+					className={cn(
+						'text-sm truncate pr-2',
+						isSelected ? 'font-semibold text-foreground' : 'font-medium text-foreground/90',
+					)}
+				>
 					{conversation.title}
 				</p>
-				<div className="flex items-center gap-2 text-xs text-muted-foreground mt-1">
+				<div className="flex items-center justify-between text-xs text-muted-foreground">
 					<span>{new Date(conversation.createdAt).toLocaleDateString()}</span>
-					{conversation.hasRichContent && <Badge variant="secondary">Rich Content</Badge>}
+					{conversation.hasRichContent && (
+						<Badge variant="secondary" className="text-[10px] px-1 h-5">
+							Rich
+						</Badge>
+					)}
 				</div>
 			</div>
 		</div>

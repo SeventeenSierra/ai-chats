@@ -75,29 +75,40 @@ function TurnView({ turn }: { turn: ConversationTurn }) {
 	const hiddenCharCount = fullContent.length - TRUNCATION_LENGTH
 
 	return (
-		<div className="flex items-start gap-4 my-4">
+		<div className={cn('flex items-end gap-3 my-4', isUser ? 'flex-row-reverse' : 'flex-row')}>
 			<div
-				className={cn('p-2 rounded-full', isUser ? 'bg-primary/10 text-primary' : 'bg-secondary')}
+				className={cn(
+					'shrink-0 flex items-center justify-center w-8 h-8 rounded-full border shadow-sm',
+					isUser ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground',
+				)}
 			>
 				<AuthorIcon className="h-5 w-5" />
 			</div>
-			<div className="flex-1">
-				<p
-					className={cn(
-						'text-sm font-semibold mb-1',
-						isUser ? 'text-primary' : 'text-secondary-foreground',
-					)}
-				>
+
+			<div
+				className={cn(
+					'relative max-w-[85%] px-4 py-3 shadow-sm',
+					isUser
+						? 'bg-primary text-primary-foreground rounded-2xl rounded-tr-sm'
+						: 'bg-muted/50 text-foreground border rounded-2xl rounded-tl-sm',
+				)}
+			>
+				<p className="text-[0.65rem] font-medium opacity-70 mb-1 mb-1.5 uppercase tracking-wider">
 					{isUser ? 'User' : 'Model'}
 				</p>
-				<div className="prose prose-sm dark:prose-invert max-w-none">
+				<div
+					className={cn(
+						'prose prose-sm max-w-none break-words leading-relaxed',
+						isUser ? 'prose-invert' : 'dark:prose-invert',
+					)}
+				>
 					<ReactMarkdown remarkPlugins={[remarkGfm]}>{contentToShow}</ReactMarkdown>
 				</div>
 				{isTruncated && (
 					<Button
 						variant="link"
 						size="sm"
-						className="px-0 h-auto py-1 text-sm"
+						className={cn('px-0 h-auto py-1 text-xs mt-2', isUser ? 'text-white/80' : '')}
 						onClick={() => setIsExpanded(!isExpanded)}
 					>
 						{isExpanded

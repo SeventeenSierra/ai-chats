@@ -15,7 +15,7 @@ const nextConfig: NextConfig = {
 	// Ignore watching the staging and transcripts directories during development
 	// to prevent server restarts during file processing.
 
-	serverExternalPackages: ['genkit', 'pg', '@aws-sdk/client-s3'],
+	serverExternalPackages: ['pg', '@aws-sdk/client-s3', 'better-sqlite3'],
 
 	async redirects() {
 		return []

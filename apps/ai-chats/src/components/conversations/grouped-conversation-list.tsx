@@ -203,7 +203,7 @@ export function GroupedConversationList({
 					<EmptyState />
 				) : (
 					<Accordion type="multiple" className="w-full p-2" defaultValue={[defaultOpenValue]}>
-						{groupedConversations.map((group, index) => {
+						{groupedConversations.map((group, _index) => {
 							// If a group has no conversations left after filtering on the page level, don't render it.
 							if (group.conversations.length === 0) {
 								return null

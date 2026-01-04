@@ -8,10 +8,9 @@
  * This function does not use AI. It now assumes backlinking is already done.
  */
 
-import type { Conversation, ConversationTurn } from '@ai-chat/shared/types'
+import type { ConversationTurn } from '@ai-chat/shared/types'
 import { ConversationTurnSchema } from '@ai-chat/shared/types/zod'
 import { z } from 'zod'
-import { ai } from '../core/genkit'
 
 const ExportToMarkdownInputSchema = z.object({
 	title: z.string(),
@@ -37,7 +36,7 @@ function formatTurn(turn: ConversationTurn): string {
 			// Backlinks like [[Topic]] are now assumed to be in the content already.
 			// We just need to handle code blocks.
 			if (part.type === 'code') {
-				return '```\n' + partContent + '\n```'
+				return `\`\`\`\n${partContent}\n\`\`\``
 			}
 			return partContent
 		})
@@ -52,27 +51,25 @@ export async function exportToMarkdown(
 	return exportToMarkdownFlow(input)
 }
 
-const exportToMarkdownFlow = ai.defineFlow(
-	{
-		name: 'exportToMarkdownFlow',
-		inputSchema: ExportToMarkdownInputSchema,
-		outputSchema: ExportToMarkdownOutputSchema,
-	},
-	async ({ title, createdAt, category, transcript }) => {
-		let markdownContent = `# ${title}\n\n`
+const exportToMarkdownFlow = async ({
+	title,
+	createdAt,
+	category,
+	transcript,
+}: ExportToMarkdownInput): Promise<ExportToMarkdownOutput> => {
+	let markdownContent = `# ${title}\n\n`
 
-		// Add metadata
-		markdownContent += `**Created:** ${new Date(createdAt).toLocaleString()}\n`
-		if (category) {
-			markdownContent += `**Category:** [[${category}]]\n`
-		}
-		markdownContent += '\n---\n\n'
+	// Add metadata
+	markdownContent += `**Created:** ${new Date(createdAt).toLocaleString()}\n`
+	if (category) {
+		markdownContent += `**Category:** [[${category}]]\n`
+	}
+	markdownContent += '\n---\n\n'
 
-		// Add transcript turns
-		transcript.forEach((turn) => {
-			markdownContent += `${formatTurn(turn)}\n\n`
-		})
+	// Add transcript turns
+	transcript.forEach((turn) => {
+		markdownContent += `${formatTurn(turn)}\n\n`
+	})
 
-		return { markdownContent }
-	},
-)
+	return { markdownContent }
+}

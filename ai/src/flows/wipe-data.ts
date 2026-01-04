@@ -12,7 +12,6 @@
 import { deleteAllConversations } from '@ai-chat/backend/queries'
 import { deleteFromStorage, listFromStorage } from '@ai-chat/backend/storage'
 import { z } from 'zod'
-import { ai } from '../core/genkit'
 
 const WipeDataInputSchema = z.object({})
 export type WipeDataInput = z.infer<typeof WipeDataInputSchema>
@@ -25,8 +24,8 @@ const WipeDataOutputSchema = z.object({
 })
 export type WipeDataOutput = z.infer<typeof WipeDataOutputSchema>
 
-export async function wipeData(input: WipeDataInput): Promise<WipeDataOutput> {
-	return wipeDataFlow(input)
+export async function wipeData(_input: WipeDataInput): Promise<WipeDataOutput> {
+	return wipeDataFlow()
 }
 
 // Helper function to robustly delete all items in a storage path
@@ -46,42 +45,35 @@ export async function deleteStorageDirectory(prefix: string): Promise<number> {
 	return deletedCount
 }
 
-const wipeDataFlow = ai.defineFlow(
-	{
-		name: 'wipeDataFlow',
-		inputSchema: WipeDataInputSchema,
-		outputSchema: WipeDataOutputSchema,
-	},
-	async () => {
-		console.log('Starting data wipe flow...')
-		let deletedDocs = 0
-		let deletedFiles = 0
+const wipeDataFlow = async (): Promise<WipeDataOutput> => {
+	console.log('Starting data wipe flow...')
+	let deletedDocs = 0
+	let deletedFiles = 0
 
-		try {
-			// 1. Delete all conversations from PostgreSQL
-			deletedDocs = await deleteAllConversations()
-			console.log(`Deleted ${deletedDocs} conversation(s) from database.`)
+	try {
+		// 1. Delete all conversations from PostgreSQL
+		deletedDocs = await deleteAllConversations()
+		console.log(`Deleted ${deletedDocs} conversation(s) from database.`)
 
-			// 2. Delete all files from S3 storage
-			deletedFiles += await deleteStorageDirectory('uploads/')
-			deletedFiles += await deleteStorageDirectory('transcripts/')
-			deletedFiles += await deleteStorageDirectory('staging/')
+		// 2. Delete all files from S3 storage
+		deletedFiles += await deleteStorageDirectory('uploads/')
+		deletedFiles += await deleteStorageDirectory('transcripts/')
+		deletedFiles += await deleteStorageDirectory('staging/')
 
-			return {
-				success: true,
-				message: `Successfully wiped ${deletedDocs} document(s) and ${deletedFiles} file(s).`,
-				deletedDocs,
-				deletedFiles,
-			}
-		} catch (error) {
-			console.error('!!!!!!!!!! Failed to wipe data !!!!!!!!!!', error)
-			const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred.'
-			return {
-				success: false,
-				message: `An error occurred during wipe: ${errorMessage}`,
-				deletedDocs: 0,
-				deletedFiles: 0,
-			}
+		return {
+			success: true,
+			message: `Successfully wiped ${deletedDocs} document(s) and ${deletedFiles} file(s).`,
+			deletedDocs,
+			deletedFiles,
 		}
-	},
-)
+	} catch (error) {
+		console.error('!!!!!!!!!! Failed to wipe data !!!!!!!!!!', error)
+		const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred.'
+		return {
+			success: false,
+			message: `An error occurred during wipe: ${errorMessage}`,
+			deletedDocs: 0,
+			deletedFiles: 0,
+		}
+	}
+}

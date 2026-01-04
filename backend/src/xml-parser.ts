@@ -176,7 +176,7 @@ export function getFirstResponse(conversationXml: string): string | null {
 			if (tagContent) {
 				const decodedContent = decodeEntities(tagContent)
 				if (tagName === 'ToolCode') {
-					parts.push('```\n' + decodedContent + '\n```')
+					parts.push(`\`\`\`\n${decodedContent}\n\`\`\``)
 				} else {
 					parts.push(decodedContent)
 				}

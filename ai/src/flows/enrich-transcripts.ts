@@ -7,10 +7,9 @@
  * @fileOverview A flow to enrich a single conversation transcript with intelligent, AI-driven backlinks.
  */
 
-import type { ConversationTurn } from '@ai-chat/shared/types'
 import { ConversationTurnSchema } from '@ai-chat/shared/types/zod'
 import { z } from 'zod'
-import { ai } from '../core/genkit'
+import { ai, model } from '../core/openai'
 
 // Define the structure for a single conversation passed to the flow
 const EnrichTranscriptInputSchema = z.object({
@@ -35,15 +34,13 @@ export type EnrichTranscriptOutput = z.infer<typeof EnrichTranscriptOutputSchema
 export async function enrichTranscript(
 	input: EnrichTranscriptInput,
 ): Promise<EnrichTranscriptOutput> {
-	return enrichTranscriptFlow(input)
-}
+	// Retry mechanism for transient AI errors
+	const maxRetries = 3
+	let lastError: Error | null = null
 
-const backlinkingPrompt = ai.definePrompt({
-	name: 'intelligentBacklinkingPrompt',
-	model: 'googleai/gemini-1.5-flash-latest',
-	input: { schema: EnrichTranscriptInputSchema },
-	output: { schema: EnrichTranscriptOutputSchema },
-	prompt: `You are an expert at creating knowledge graphs. Your task is to analyze a conversation transcript and intelligently add backlinks to other related conversations.
+	for (let attempt = 0; attempt < maxRetries; attempt++) {
+		try {
+			const prompt = `You are an expert at creating knowledge graphs. Your task is to analyze a conversation transcript and intelligently add backlinks to other related conversations.
 
 You will be given a transcript and a list of all other available conversation titles. Read through the transcript and identify any key concepts, entities, or phrases that are directly related to one of the titles in the list.
 
@@ -54,50 +51,54 @@ RULES:
 - Be selective. Only link important concepts that have a strong connection to the other titles.
 - Do not invent new links. Only link to titles from the provided list.
 - Preserve the original structure of the transcript perfectly. The only change should be the addition of [[wikilinks]].
-- The output format must be a valid JSON object matching the schema.
+- The output format must be a valid JSON object matching the schema: { enrichedTranscript: ConversationTurn[] }
 
 LIST OF AVAILABLE CONVERSATION TITLES TO LINK TO:
-{{#each allTitles}}
-- {{this}}
-{{/each}}
+${input.allTitles.map((t) => `- ${t}`).join('\n')}
 
 CURRENT CONVERSATION TITLE (DO NOT LINK THIS):
-{{{currentTitle}}}
+${input.currentTitle}
 
 TRANSCRIPT TO ANALYZE AND ENRICH:
-{{{JSON.stringify transcript}}}
-`,
-})
+${JSON.stringify(input.transcript)}
+`
 
-const enrichTranscriptFlow = ai.defineFlow(
-	{
-		name: 'enrichTranscriptFlow',
-		inputSchema: EnrichTranscriptInputSchema,
-		outputSchema: EnrichTranscriptOutputSchema,
-	},
-	async (input) => {
-		// Retry mechanism for transient AI errors
-		const maxRetries = 3
-		let lastError: Error | null = null
+			const completion = await ai.chat.completions.create({
+				model: model,
+				messages: [
+					{
+						role: 'user',
+						content: prompt,
+					},
+				],
+				response_format: { type: 'json_object' },
+			})
 
-		for (let attempt = 0; attempt < maxRetries; attempt++) {
-			try {
-				const result = await backlinkingPrompt(input)
-				// Basic validation to ensure the output looks plausible
-				if (!result.output?.enrichedTranscript || result.output.enrichedTranscript.length === 0) {
-					throw new Error('AI returned empty or invalid transcript data.')
-				}
-				return result.output
-			} catch (err) {
-				lastError = err instanceof Error ? err : new Error(String(err))
-				console.warn('Attempt %d failed:', attempt + 1, lastError.message)
-				if (attempt < maxRetries - 1) {
-					await new Promise((resolve) => setTimeout(resolve, 1000 * (attempt + 1)))
-				}
+			const content = completion.choices[0]?.message?.content
+			if (!content) {
+				throw new Error('AI returned empty response.')
+			}
+
+			const parsed = JSON.parse(content)
+
+			// Basic validation to ensure the output looks plausible
+			if (
+				!parsed.enrichedTranscript ||
+				!Array.isArray(parsed.enrichedTranscript) ||
+				parsed.enrichedTranscript.length === 0
+			) {
+				throw new Error('AI returned empty or invalid transcript data.')
+			}
+			return parsed as EnrichTranscriptOutput
+		} catch (err) {
+			lastError = err instanceof Error ? err : new Error(String(err))
+			console.warn('Attempt %d failed:', attempt + 1, lastError.message)
+			if (attempt < maxRetries - 1) {
+				await new Promise((resolve) => setTimeout(resolve, 1000 * (attempt + 1)))
 			}
 		}
+	}
 
-		console.error('Backlinking AI call failed after retries.', lastError)
-		throw new Error('Failed to enrich transcript with backlinks.')
-	},
-)
+	console.error('Backlinking AI call failed after retries.', lastError)
+	throw new Error('Failed to enrich transcript with backlinks.')
+}

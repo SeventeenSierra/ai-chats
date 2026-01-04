@@ -1,0 +1,5 @@
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+# Run our comprehensive pre-push hook (Build, Security Audit, SBOM)
+./scripts/hooks/pre-push.sh

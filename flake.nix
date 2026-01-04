@@ -24,6 +24,11 @@
             pnpm
             tsx
 
+            # Native Build Config (for better-sqlite3)
+            gcc
+            gnumake
+            sqlite
+
             # Container runtime
             podman
             podman-compose
@@ -73,8 +78,8 @@
               echo "✓ Podman-native infrastructure"
             fi
 
-            echo "💡 Run 'pnpm dev' to start the dev server"
-            echo "💡 Run 'podman-compose up -d' for PostgreSQL/Garage"
+            echo "💡 Run 'pnpm dev' (Local First) to start the dev server"
+            echo "   (Docker is no longer required)"
           '';
         };
       }

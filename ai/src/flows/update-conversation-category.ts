@@ -9,7 +9,6 @@
 
 import { updateConversationCategory } from '@ai-chat/backend/queries'
 import { z } from 'zod'
-import { ai } from '../core/genkit'
 
 const UpdateConversationCategoryInputSchema = z.object({
 	conversationId: z.string(),
@@ -28,19 +27,15 @@ export async function updateConversationCategoryFlow(
 	return updateCategoryFlow(input)
 }
 
-const updateCategoryFlow = ai.defineFlow(
-	{
-		name: 'updateConversationCategoryFlow',
-		inputSchema: UpdateConversationCategoryInputSchema,
-		outputSchema: UpdateConversationCategoryOutputSchema,
-	},
-	async ({ conversationId, newCategory }) => {
-		try {
-			await updateConversationCategory(conversationId, newCategory)
-			return { success: true }
-		} catch (error) {
-			console.error('Failed to update category for conversation %s:', conversationId, error)
-			return { success: false }
-		}
-	},
-)
+const updateCategoryFlow = async ({
+	conversationId,
+	newCategory,
+}: UpdateConversationCategoryInput): Promise<UpdateConversationCategoryOutput> => {
+	try {
+		await updateConversationCategory(conversationId, newCategory)
+		return { success: true }
+	} catch (error) {
+		console.error('Failed to update category for conversation %s:', conversationId, error)
+		return { success: false }
+	}
+}

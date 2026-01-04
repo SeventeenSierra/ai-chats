@@ -1,0 +1,2878 @@
+[
+	{
+		"conversationId": "c_31a03ed33f536186",
+		"title": "Nixpack for Plasmic Platform",
+		"chipCount": 1,
+		"chips": [
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/0",
+				"index": "0"
+			}
+		]
+	},
+	{
+		"conversationId": "c_662497d3b7d04e3d",
+		"title": "NextJS Supabase Plasmic Auth Setup",
+		"chipCount": 1,
+		"chips": [
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/0",
+				"index": "0"
+			}
+		]
+	},
+	{
+		"conversationId": "c_aa525f3988c35f1f",
+		"title": "App Idea Requirements Discussion",
+		"chipCount": 1,
+		"chips": [
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/0",
+				"index": "0"
+			}
+		]
+	},
+	{
+		"conversationId": "c_287e36cad04224d9",
+		"title": "Pearson English Test Creation Plan",
+		"chipCount": 1,
+		"chips": [
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/0",
+				"index": "0"
+			}
+		]
+	},
+	{
+		"conversationId": "c_4de750c776856970",
+		"title": "Coolify Setup on Hostinger VPS",
+		"chipCount": 1,
+		"chips": [
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/0",
+				"index": "0"
+			}
+		]
+	},
+	{
+		"conversationId": "c_603d4bf03f37e77b",
+		"title": "Nominating for Guardian Award",
+		"chipCount": 1,
+		"chips": [
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/0",
+				"index": "0"
+			}
+		]
+	},
+	{
+		"conversationId": "c_f679cf3c7cc29c86",
+		"title": "Sentry and RSBuild Dependency Analysis",
+		"chipCount": 1,
+		"chips": [
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/0",
+				"index": "0"
+			}
+		]
+	},
+	{
+		"conversationId": "c_5f406d6c515b71b1",
+		"title": "Coolify Container Deployment Strategy",
+		"chipCount": 1,
+		"chips": [
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/0",
+				"index": "0"
+			}
+		]
+	},
+	{
+		"conversationId": "c_d6e2c58940b4db43",
+		"title": "hello, i would like for you to help me configure my alma linux 9 desktop that is installed on a vmware fusion that i'm running on my m4 ultra. i have previously created a script that i used to configure my mac and i'll give that to you later as a way to verify that we have done everything that i'm looking to do; but i would like to start from scratch in this effort. my main priority is to get up and running as quickly so I can start developing. I will give you my main tools and packages and preferences and we can go from there\n\n        this is a config file from a software that i use regularly; so these settings are necessary\n\n        FROM ubuntu:20.04\n\n        # Config\n        ENV TZ=America/Los_Angeles\n        RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone\n\n        # Install dependencies\n\n        # System setup\n        RUN apt update\n        RUN apt install -y sudo build-essential python3 python3-pip virtualenvwrapper git wget curl screen postgresql\n\n        ## Node.js\n        RUN curl -sL https://deb.nodesource.com/setup_14.x | sudo -E bash -\n        RUN apt-get install -y nodejs\n        RUN npm install -g yarn\n        RUN npm install -g typescript\n\n        ## pip\n        RUN pip3 install --upgrade git-review\n        RUN pip3 install nodeenv\n        RUN nodeenv -n 14.7.0 /root/.node/14.7.0/\n\n        # Entrypoint\n        RUN echo \"#!/bin/sh \\n\\\n        echo \"fs.inotify.max_user_watches before update\" \\n\\\n        cat /etc/sysctl.conf | grep fs.inotify \\n\\\n        echo \"______________________________________________updating inotify ____________________________________\" \\n\\\n        echo fs.inotify.max_user_watches=524288 | tee -a /etc/sysctl.conf && sysctl -p \\n\\\n        echo \"updated value is\" \\n\\\n        cat /etc/sysctl.conf | grep fs.inotify \\n\\\n        exec bash \\\n        \" >> /usr/local/bin/entrypoint.sh\n        RUN chmod +x /usr/local/bin/entrypoint.sh\n        RUN ln -s `which pip3` /usr/bin/pip\n\n        # Secrets config\n        ADD secrets.json /root/.plasmic/\n\n        # Expose server port\n        EXPOSE 3003\n\n        ENTRYPOINT [\"/usr/local/bin/entrypoint.sh\"]\n\n\n        i use vscode, zed, \n\n        I like things in dracula theme\n\n        i want to optimize for a javascript/react environment\n\n        i am a native mac user, so i want the ui to look and feel that way as much as possible for parity purposes\n\n        i am an infosec person for the federal government, so security first and by design is an imperative; unless it is absolutely necessary, do everything the most secure way as possible and only suggest doing things in a less secure way unless it is absolutely necessary and until we have tried it every other way first",
+		"chipCount": 1,
+		"chips": [
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/0",
+				"index": "0"
+			}
+		]
+	},
+	{
+		"conversationId": "c_b5ad530aad7a7772",
+		"title": "AlmaLinux Nix Configuration Guide",
+		"chipCount": 6,
+		"chips": [
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/0",
+				"index": "0"
+			},
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/1",
+				"index": "1"
+			},
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/2",
+				"index": "2"
+			},
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/3",
+				"index": "3"
+			},
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/4",
+				"index": "4"
+			},
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/5",
+				"index": "5"
+			}
+		]
+	},
+	{
+		"conversationId": "c_5ac260bb25d85732",
+		"title": "Streaming Setup for Husband's Tablet",
+		"chipCount": 1,
+		"chips": [
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/0",
+				"index": "0"
+			}
+		]
+	},
+	{
+		"conversationId": "c_ad2113b18750f006",
+		"title": "I am a cfp reviewer for the common ground track at Bsides Las Vegas; below are the instructions I was given. I would like for you to do your best to review talks that have gone through BSides Common ground talk already by reading through the archives and create a guide of what you think makes a good common ground talk. Also, create a guide of what I should look for in a submission. From that, please create a rubric of responses that I can use when I am reading through the abstracts. Assume I'm going to spend a 1:30 on each; I will spend 1:00 reading their abstract and :30 revising the templated rubric response. So having many sample rubric responses that I can revise given various different submission acceptance or rejection scenarios would be extremely helpful. \n\n        Hey there, BSides!\n\n\n        You’re currently one of the folks we hope to have help us make this year happen as part of the 2025 BSides Las Vegas Program Committee.\n\n        Accept/Decline\n\n        We understand people get busy, or have major life events suddenly thrust upon them during interesting times.  If for some reason you’re unable to participate this year, please let us know so we can seek alternative awesomeness to fill your particular pair of pointy shoes.  \n\n        Planned Dates:\n\n        Proving Ground Open:  2/10\n\n        All Other Tracks Open:  3/3\n\n        All Tracks (including PG) Close.  Reviews Start:  4/7\n\n        PG Acceptance/Pairings Announced:  4/21\n\n        All Reviews Due:  4/28\n\n        Track Selections Complete:  5/9\n\n        Initial Acceptance & Decline Letters Sent:  5/12\n\n        Confirmations Complete:  6/2\n\n        BSides Las Vegas Conference:  Monday 8/4, Tuesday 8/5, and Wednesday 8/6\n\n\n        Yes, you read that right.  This year BSides Las Vegas will be three days.  Well, 2.5.  We’re doing a full day on Monday, a full day on Tuesday, and a half day on Wednesday.  \n\n\n        Based on the conversations I’ve had with the BSides board and the Operations folks so far, our masking policy will also be revised this year.  We will NOT be requiring masks in the general conference areas, unless something major changes before the conference (Bird Flu, anyone?).  We WILL still require masks in the separate Skytalks space over in the Platinum.  \n\n\n        These masking updates are not officially released on the web site yet, but I’m hoping to get them carved in stone before we open the general CFP next month.\n\n\n        Review Process:\n\n        Team Access:\n\n        Pretalx is located here: https://pretalx.com/orga/event/security-bsides-las-vegas-2025/\n\n        New Members: you will receive an invitation via e-mail to join Pretalx, our conference platform.  Please accept it, and update your login credentials.\n\n        Returning Members: your account should be active with your previous login.  If you need help that the password reset can’t provide, please contact me directly.\n\n        After we have everyone's responses/accounts in place, we will offer a couple of live kick-off sessions before the review period starts for anyone who wants to learn about Pretalx, the conference, or how we do reviews. \n        Submission:  Authors submit proposals.  Track chairs will review the queue weekly, swap proposals between tracks as necessary, and notify authors if submitted proposals are incomplete/blatantly inadequate.\n\n        Review:  Once we close the CFP, you will have a set of proposals to review.  Please provide thoughtful and constructive feedback for each submission, focusing on originality, quality, and relevance to the track theme and the state of the security industry.  Your score and comments help us pick the best talks, and also help authors improve.\n\n        The “What do you think?” field is released to authors after the conference schedule is published.  Please use it.  We want declined proposals to have actionable and polite constructive feedback.  If you feel a talk was missing something, this is your opportunity to help the submitter get better at submitting.  \n\n        Comments in the  “Internal Comments for Review Committee” field are for the program committee only, and are never released.\n\n        This year, we’ve added a required “Outline” field.  Hopefully this will drive more authors to contribute a detailed outline like our example submissions.\n\n        Selection: Track and Program Chairs build a balanced, comprehensive program for each track and for the conference as a whole.  We rely heavily on your scores and comments, and may also reach out to authors for clarification/modification of their proposals, or to other experts with relevant knowledge to help make final determinations.\n\n        Acceptance: Acceptance (and decline) emails are sent based on the track and program chair selections.  Clear accepts and clear declines go out immediately, and we work our way from the top and bottom of the stack to the middle, until we have a full slate of presenters and a small pool of alternates who can cover for talks that have to drop out.\n\n        Feedback: Public reviewer comments are released for all submissions.  \n\n\n        Attending: \n\n        You’re part of this committee because you’re awesome, so COME TO THE CONFERENCE.  Reviewers who attend get a staff badge (which has special access to the breakfast and lunch buffets, and events like the staff party and speaker reception).  Come to Vegas and hang out with each other and our speakers so we can all grow together.\n\n        If you have questions reach out to cfp@bsideslv.org, or hit me up directly via @daemontamer on the BSides LV Slack, X, Bluesky, Mastodon (daemontamer@infosec.exchange) or however else you personally typically get hold of me.\n\n        Lastly, Dr. Russ Handorf has graciously agreed to pitch in as a program chair this year so that we can continue to have nice things at BSLV.  He’s russ.handorf@bsideslv.org and we’ll get him added to Slack channels and Google groups as we clean them up.\n\n        Sincerely,\n        Daemon Tamer",
+		"chipCount": 1,
+		"chips": [
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/0",
+				"index": "0"
+			}
+		]
+	},
+	{
+		"conversationId": "c_e4485fce8fc7a309",
+		"title": "DCSEC App Development Discussion",
+		"chipCount": 1,
+		"chips": [
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/0",
+				"index": "0"
+			}
+		]
+	},
+	{
+		"conversationId": "c_78ad246748d029a3",
+		"title": "CFP Feedback Statement Generation",
+		"chipCount": 2,
+		"chips": [
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/0",
+				"index": "0"
+			},
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/1",
+				"index": "1"
+			}
+		]
+	},
+	{
+		"conversationId": "c_dd584a0d823961a3",
+		"title": "Conference Talk Submission Statistics Unavailable",
+		"chipCount": 1,
+		"chips": [
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/0",
+				"index": "0"
+			}
+		]
+	},
+	{
+		"conversationId": "c_013cc387f778325c",
+		"title": "AI Context Window Summarization Strategy",
+		"chipCount": 1,
+		"chips": [
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/0",
+				"index": "0"
+			}
+		]
+	},
+	{
+		"conversationId": "c_7b4f7a6157e66257",
+		"title": "Plasmic Dev Server Troubleshooting Session",
+		"chipCount": 1,
+		"chips": [
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/0",
+				"index": "0"
+			}
+		]
+	},
+	{
+		"conversationId": "c_c365dfdfd23f81b0",
+		"title": "Clean Slate Success Plan Discussion",
+		"chipCount": 1,
+		"chips": [
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/0",
+				"index": "0"
+			}
+		]
+	},
+	{
+		"conversationId": "c_b0d03b7d2e2babba",
+		"title": "Untitled",
+		"chipCount": 1,
+		"chips": [
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/0",
+				"index": "0"
+			}
+		]
+	},
+	{
+		"conversationId": "c_5c5cd112a145d0b0",
+		"title": "Cybersecurity Professional's VC Dossier Analysis",
+		"chipCount": 1,
+		"chips": [
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/0",
+				"index": "0"
+			}
+		]
+	},
+	{
+		"conversationId": "c_7a910de0498b749f",
+		"title": "Researching Trevor Bryant's Career Background",
+		"chipCount": 2,
+		"chips": [
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/0",
+				"index": "0"
+			},
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/1",
+				"index": "1"
+			}
+		]
+	},
+	{
+		"conversationId": "c_b6d593534db3c41c",
+		"title": "Resume Data Extraction Failure",
+		"chipCount": 1,
+		"chips": [
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/0",
+				"index": "0"
+			}
+		]
+	},
+	{
+		"conversationId": "c_746b504a3a744a97",
+		"title": "Alyssa Feola's Cybersecurity Career Path",
+		"chipCount": 2,
+		"chips": [
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/0",
+				"index": "0"
+			},
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/1",
+				"index": "1"
+			}
+		]
+	},
+	{
+		"conversationId": "c_bfddf03c06e05f49",
+		"title": "Fictional Resumes for Personas",
+		"chipCount": 1,
+		"chips": [
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/0",
+				"index": "0"
+			}
+		]
+	},
+	{
+		"conversationId": "c_719c5367b51775fa",
+		"title": "Historical Resume Creation Plan Discussed",
+		"chipCount": 1,
+		"chips": [
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/0",
+				"index": "0"
+			}
+		]
+	},
+	{
+		"conversationId": "c_bc0309420968cb42",
+		"title": "Google Workspace Account Wrangling Guide",
+		"chipCount": 1,
+		"chips": [
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/0",
+				"index": "0"
+			}
+		]
+	},
+	{
+		"conversationId": "c_de7926556c3f11de",
+		"title": "SVG Background Design Research Plan",
+		"chipCount": 1,
+		"chips": [
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/0",
+				"index": "0"
+			}
+		]
+	},
+	{
+		"conversationId": "c_ae7a29ff89e73899",
+		"title": "Patenting Audio QR Code Cards",
+		"chipCount": 1,
+		"chips": [
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/0",
+				"index": "0"
+			}
+		]
+	},
+	{
+		"conversationId": "c_7764366182cffa53",
+		"title": "AI Detection Algorithm Research Plan",
+		"chipCount": 1,
+		"chips": [
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/0",
+				"index": "0"
+			}
+		]
+	},
+	{
+		"conversationId": "c_5cf3a95656bb2637",
+		"title": "App Prototype Request Denied",
+		"chipCount": 1,
+		"chips": [
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/0",
+				"index": "0"
+			}
+		]
+	},
+	{
+		"conversationId": "c_4f395d0282fb319d",
+		"title": "Monetized Blog SEO Plan",
+		"chipCount": 1,
+		"chips": [
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/0",
+				"index": "0"
+			}
+		]
+	},
+	{
+		"conversationId": "c_b42f36155d86121f",
+		"title": "Technology Subcategories Explained in Detail",
+		"chipCount": 1,
+		"chips": [
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/0",
+				"index": "0"
+			}
+		]
+	},
+	{
+		"conversationId": "c_d2d40d14d82eb495",
+		"title": "Describing Professionals' Physical Appearance",
+		"chipCount": 1,
+		"chips": [
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/0",
+				"index": "0"
+			}
+		]
+	},
+	{
+		"conversationId": "c_6bbc052e620bf558",
+		"title": "App Development and Online Presence Plan",
+		"chipCount": 6,
+		"chips": [
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/0",
+				"index": "0"
+			},
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/1",
+				"index": "1"
+			},
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/2",
+				"index": "2"
+			},
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/3",
+				"index": "3"
+			},
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/4",
+				"index": "4"
+			},
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/5",
+				"index": "5"
+			}
+		]
+	},
+	{
+		"conversationId": "c_618fa98ad348bbf1",
+		"title": "Blog Analysis and Feature Suggestions",
+		"chipCount": 1,
+		"chips": [
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/0",
+				"index": "0"
+			}
+		]
+	},
+	{
+		"conversationId": "c_649cd99419232d02",
+		"title": "Tech Blog Name Brainstorming Session",
+		"chipCount": 1,
+		"chips": [
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/0",
+				"index": "0"
+			}
+		]
+	},
+	{
+		"conversationId": "c_f4c16de8ee699c9d",
+		"title": "Blog Name Brainstorming: \"Bit\" Focused",
+		"chipCount": 1,
+		"chips": [
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/0",
+				"index": "0"
+			}
+		]
+	},
+	{
+		"conversationId": "c_8b5cba7f3a758f1c",
+		"title": "Tech Blog Research and Analysis",
+		"chipCount": 1,
+		"chips": [
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/0",
+				"index": "0"
+			}
+		]
+	},
+	{
+		"conversationId": "c_848d5182a9fa3512",
+		"title": "Blog Idea Generation Research Plan",
+		"chipCount": 1,
+		"chips": [
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/0",
+				"index": "0"
+			}
+		]
+	},
+	{
+		"conversationId": "c_33e210d6b4889443",
+		"title": "FISMA Compliance Tool Naming Ideas",
+		"chipCount": 1,
+		"chips": [
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/0",
+				"index": "0"
+			}
+		]
+	},
+	{
+		"conversationId": "c_a15b3620f519ed9b",
+		"title": "TTS Solutions Research Plan",
+		"chipCount": 1,
+		"chips": [
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/0",
+				"index": "0"
+			}
+		]
+	},
+	{
+		"conversationId": "c_e5565f174045d297",
+		"title": "(1) Research the U.S. General Services Administration's (GSA) Technology Transformation Services (TTS) to understand its overall mission and the role of its Solutions division.\n        (2) For cloud.gov, describe its function as a Platform-as-a-Service (PaaS) for federal agencies, including the problems it solves and its key features.\n        (3) Investigate login.gov to explain its purpose as a single sign-on and identity verification service for public access to government websites, detailing its security features.\n        (4) Detail the function of data.gov as the central catalog for U.S. government open data, explaining its goal of promoting transparency and innovation.\n        (5) Analyze search.gov, describing how it provides a hosted search engine solution for federal agency websites to improve public information discovery.\n        (6) Explain the Digital Analytics Program (DAP), including how it provides web analytics data to government agencies to help them understand user behavior and improve their digital services.\n        (7) Describe the purpose of usa.gov as the official web portal for the U.S. government \n        (8) Describe how these platforms work together for a new agency wanting to build an app",
+		"chipCount": 1,
+		"chips": [
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/0",
+				"index": "0"
+			}
+		]
+	},
+	{
+		"conversationId": "c_495b00e9186dc98b",
+		"title": "Prototyper Integration Guide Clarified",
+		"chipCount": 1,
+		"chips": [
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/0",
+				"index": "0"
+			}
+		]
+	},
+	{
+		"conversationId": "c_e206701f58700c27",
+		"title": "Selena's Life: A Whirlwind Story",
+		"chipCount": 5,
+		"chips": [
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/0",
+				"index": "0"
+			},
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/1",
+				"index": "1"
+			},
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/2",
+				"index": "2"
+			},
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/3",
+				"index": "3"
+			},
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/4",
+				"index": "4"
+			}
+		]
+	},
+	{
+		"conversationId": "c_7032127512582bac",
+		"title": "Salary Negotiation Briefing Analysis",
+		"chipCount": 1,
+		"chips": [
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/0",
+				"index": "0"
+			}
+		]
+	},
+	{
+		"conversationId": "c_3156192d93bf0cc2",
+		"title": "Research Plan on Journey Maps",
+		"chipCount": 1,
+		"chips": [
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/0",
+				"index": "0"
+			}
+		]
+	},
+	{
+		"conversationId": "c_0086369ba17d3aab",
+		"title": "JavaScript Slime Drip Modeling",
+		"chipCount": 1,
+		"chips": [
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/0",
+				"index": "0"
+			}
+		]
+	},
+	{
+		"conversationId": "c_a5271d3fff9a7dfc",
+		"title": "App Spec for Background Generator",
+		"chipCount": 1,
+		"chips": [
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/0",
+				"index": "0"
+			}
+		]
+	},
+	{
+		"conversationId": "c_d1c6bc2917df8bb7",
+		"title": "CodeQL Research for Secure Coding",
+		"chipCount": 1,
+		"chips": [
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/0",
+				"index": "0"
+			}
+		]
+	},
+	{
+		"conversationId": "c_fd23604609db737e",
+		"title": "IDE Security Tool Analysis for Vibe Coders",
+		"chipCount": 1,
+		"chips": [
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/0",
+				"index": "0"
+			}
+		]
+	},
+	{
+		"conversationId": "c_b1296ce4a266ed93",
+		"title": "React Components Research Plan",
+		"chipCount": 1,
+		"chips": [
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/0",
+				"index": "0"
+			}
+		]
+	},
+	{
+		"conversationId": "c_5760c2c2fb013783",
+		"title": "ok, i'm running through a process from scratch and i would like your support in creating the documentation; i have made the documentation elsewhere, but it is getting urruly; \n\n        this is the first step I took\n\n        Guide to Using REPO_STRUCTURE.md\n        1. Purpose\n        The REPO_STRUCTURE.md file is an auto-generated, definitive map of our monorepo's file and directory structure. Its primary purpose is to serve as a single source of truth for the layout of the project at any given time.\n        This document is not meant to be edited manually. It is updated automatically by running the pnpm docs:structure command, which ensures it always reflects the current state of the repository.\n\n        2. How We Use It\n        This file is a critical tool for both the human developer and the AI assistant, ensuring that both have a shared, accurate understanding of the project's structure.\n\n        For the Human Developer\n        Quick Reference: Use this file as a quick way to understand where different parts of the project are located without having to manually expand directories in your file explorer.\n        Onboarding: It's an invaluable tool for new team members to quickly get a high-level overview of the entire codebase.\n        For the AI Assistant (A Critical Workflow Step)\n        This is the most important use case for this file in our collaborative workflow.\n\n        The Problem: During development, especially during refactoring, the file system changes frequently. The AI assistant's internal \"memory\" of the file structure can quickly become outdated, leading it to try and move or access files that are no longer there, which causes errors.\n        The Solution: We will use REPO_STRUCTURE.md to synchronize the AI's understanding with the project's reality.\n        Before prompting the AI to perform any file system operations (like mv, rm, mkdir, or creating a new file in a specific location), you should first ensure the REPO_STRUCTURE.md file is up-to-date by running pnpm docs:structure.\n        Then, you will explicitly instruct the AI to read this file as part of your prompt.\n        Example Prompts for the AI:\n        \"First, please read the REPO_STRUCTURE.md file to get the current layout of the project. Once you have done that, please run the command to move the src directory into apps/main-app/.\"\n        \"Please review the REPO_STRUCTURE.md file. Based on the current structure, create a new file named colors.ts inside the packages/design-system/tokens directory.\"\n        By following this process, we ensure that the AI's actions are always based on the ground truth of the repository, which significantly reduces errors and streamlines our development process.\n\n        3. How to Create and Update the File\n        The REPO_STRUCTURE.md file is generated by a script in our root package.json.\n\n        Prerequisites\n        You must have the tree command-line utility installed in your development environment. This is handled by our project's dev.nix file.\n        Command\n        To create or update the file, run the following command from the root of the monorepo:\n\n        pnpm docs:structure\n        This command executes the tree utility, ignoring specified directories (like node_modules and .next), and saves the output to the REPO_STRUCTURE.md file, overwriting its previous content. It is best practice to run this command after making any significant changes to the project's file or directory structure.",
+		"chipCount": 4,
+		"chips": [
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/0",
+				"index": "0"
+			},
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/1",
+				"index": "1"
+			},
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/2",
+				"index": "2"
+			},
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/3",
+				"index": "3"
+			}
+		]
+	},
+	{
+		"conversationId": "c_05eb99d866a10eba",
+		"title": "Release Strategies for FedRAMP Software",
+		"chipCount": 1,
+		"chips": [
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/0",
+				"index": "0"
+			}
+		]
+	},
+	{
+		"conversationId": "c_fc1d1ad596aeb072",
+		"title": "Reset Branch and Migrate to Monorepo",
+		"chipCount": 5,
+		"chips": [
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/0",
+				"index": "0"
+			},
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/1",
+				"index": "1"
+			},
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/2",
+				"index": "2"
+			},
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/3",
+				"index": "3"
+			},
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/4",
+				"index": "4"
+			}
+		]
+	},
+	{
+		"conversationId": "c_ef87c17209de0fab",
+		"title": "JavaScript Project Prettier Analysis",
+		"chipCount": 1,
+		"chips": [
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/0",
+				"index": "0"
+			}
+		]
+	},
+	{
+		"conversationId": "c_8c79d348b6ba2b75",
+		"title": "Firebase and Deno Compatibility Research",
+		"chipCount": 1,
+		"chips": [
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/0",
+				"index": "0"
+			}
+		]
+	},
+	{
+		"conversationId": "c_8202e77e1fd3c181",
+		"title": "AI-Assisted Secure Software Development Workshop",
+		"chipCount": 2,
+		"chips": [
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/0",
+				"index": "0"
+			},
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/1",
+				"index": "1"
+			}
+		]
+	},
+	{
+		"conversationId": "c_34ea813ebb161ec2",
+		"title": "Workshop Material Proofreading Assistance",
+		"chipCount": 2,
+		"chips": [
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/0",
+				"index": "0"
+			},
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/1",
+				"index": "1"
+			}
+		]
+	},
+	{
+		"conversationId": "c_f0029fda4ab850e0",
+		"title": "Design Tokens and CSS Variables",
+		"chipCount": 8,
+		"chips": [
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/0",
+				"index": "0"
+			},
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/1",
+				"index": "1"
+			},
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/2",
+				"index": "2"
+			},
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/3",
+				"index": "3"
+			},
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/4",
+				"index": "4"
+			},
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/5",
+				"index": "5"
+			},
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/6",
+				"index": "6"
+			},
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/7",
+				"index": "7"
+			}
+		]
+	},
+	{
+		"conversationId": "c_1f61d67a6b9eacd1",
+		"title": "Design Token Migration Playbook Creation",
+		"chipCount": 5,
+		"chips": [
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/0",
+				"index": "0"
+			},
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/1",
+				"index": "1"
+			},
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/2",
+				"index": "2"
+			},
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/3",
+				"index": "3"
+			},
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/4",
+				"index": "4"
+			}
+		]
+	},
+	{
+		"conversationId": "c_709823545bf94749",
+		"title": "Design System for Security Compliance",
+		"chipCount": 1,
+		"chips": [
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/0",
+				"index": "0"
+			}
+		]
+	},
+	{
+		"conversationId": "c_499140be7198e534",
+		"title": "Design System Based on PatternFly",
+		"chipCount": 1,
+		"chips": [
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/0",
+				"index": "0"
+			}
+		]
+	},
+	{
+		"conversationId": "c_5a11159566ce0a98",
+		"title": "BentoFolio App Development Plan",
+		"chipCount": 1,
+		"chips": [
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/0",
+				"index": "0"
+			}
+		]
+	},
+	{
+		"conversationId": "c_509ad4c5b894d9b8",
+		"title": "DoD Supplier Cybersecurity Guide",
+		"chipCount": 1,
+		"chips": [
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/0",
+				"index": "0"
+			}
+		]
+	},
+	{
+		"conversationId": "c_50a1614ffb0d3605",
+		"title": "Open Source Design System Research Plan",
+		"chipCount": 1,
+		"chips": [
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/0",
+				"index": "0"
+			}
+		]
+	},
+	{
+		"conversationId": "c_f71e4681a636ea3b",
+		"title": "Redirected to Ollama Coolify",
+		"chipCount": 1,
+		"chips": [
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/0",
+				"index": "0"
+			}
+		]
+	},
+	{
+		"conversationId": "c_451b752299be04f5",
+		"title": "Coaching Business Offering Development",
+		"chipCount": 1,
+		"chips": [
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/0",
+				"index": "0"
+			}
+		]
+	},
+	{
+		"conversationId": "c_21c9e2324837da9e",
+		"title": "Coaching Business App Development Plan",
+		"chipCount": 1,
+		"chips": [
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/0",
+				"index": "0"
+			}
+		]
+	},
+	{
+		"conversationId": "c_17e427b5a1513fa9",
+		"title": "Obsidian Copilot Ollama Integration Help",
+		"chipCount": 1,
+		"chips": [
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/0",
+				"index": "0"
+			}
+		]
+	},
+	{
+		"conversationId": "c_41372a2cfb2928b3",
+		"title": "Structuring Project Metadata",
+		"chipCount": 3,
+		"chips": [
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/0",
+				"index": "0"
+			},
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/1",
+				"index": "1"
+			},
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/2",
+				"index": "2"
+			}
+		]
+	},
+	{
+		"conversationId": "c_91db66307e399465",
+		"title": "Obsidian Copilot Ollama Speed Tweaks",
+		"chipCount": 1,
+		"chips": [
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/0",
+				"index": "0"
+			}
+		]
+	},
+	{
+		"conversationId": "c_2ab152a8d9998c5a",
+		"title": "HIPAA, FedRAMP, and Firebase Security",
+		"chipCount": 1,
+		"chips": [
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/0",
+				"index": "0"
+			}
+		]
+	},
+	{
+		"conversationId": "c_7388b99f37870775",
+		"title": "AI Logo Design: Risks and Alternatives",
+		"chipCount": 1,
+		"chips": [
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/0",
+				"index": "0"
+			}
+		]
+	},
+	{
+		"conversationId": "c_4ecf9f773a1fbcff",
+		"title": "Logo Design YouTube Channel Guide",
+		"chipCount": 1,
+		"chips": [
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/0",
+				"index": "0"
+			}
+		]
+	},
+	{
+		"conversationId": "c_a2b014e535901819",
+		"title": "Project Plan for Secure Cloud Environment",
+		"chipCount": 1,
+		"chips": [
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/0",
+				"index": "0"
+			}
+		]
+	},
+	{
+		"conversationId": "c_989d1c249e1cc793",
+		"title": "Logo Design Editing and Usability",
+		"chipCount": 1,
+		"chips": [
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/0",
+				"index": "0"
+			}
+		]
+	},
+	{
+		"conversationId": "c_58c6349fed5add15",
+		"title": "Business Title Determination Request",
+		"chipCount": 1,
+		"chips": [
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/0",
+				"index": "0"
+			}
+		]
+	},
+	{
+		"conversationId": "c_378fd30752b8a3e7",
+		"title": "RepoRefactor App Blueprint Creation",
+		"chipCount": 1,
+		"chips": [
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/0",
+				"index": "0"
+			}
+		]
+	},
+	{
+		"conversationId": "c_8764e53a4e01d5be",
+		"title": "Aerospace Village Website Assets",
+		"chipCount": 1,
+		"chips": [
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/0",
+				"index": "0"
+			}
+		]
+	},
+	{
+		"conversationId": "c_374def3c3e3e115b",
+		"title": "Hacking Conference Sponsorship Analysis",
+		"chipCount": 1,
+		"chips": [
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/0",
+				"index": "0"
+			}
+		]
+	},
+	{
+		"conversationId": "c_53fd863c88027480",
+		"title": "Aerospace Village Partnership Prospectus Creation",
+		"chipCount": 1,
+		"chips": [
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/0",
+				"index": "0"
+			}
+		]
+	},
+	{
+		"conversationId": "c_041f4a54cb28b3fb",
+		"title": "Novelty Item E-commerce Site Setup",
+		"chipCount": 1,
+		"chips": [
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/0",
+				"index": "0"
+			}
+		]
+	},
+	{
+		"conversationId": "c_8f7a6dc6f232737f",
+		"title": "Gemini for Google Slides Slides",
+		"chipCount": 1,
+		"chips": [
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/0",
+				"index": "0"
+			}
+		]
+	},
+	{
+		"conversationId": "c_6d555035fd3eafb8",
+		"title": "Firebase Studio Software Development Prompt",
+		"chipCount": 5,
+		"chips": [
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/0",
+				"index": "0"
+			},
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/1",
+				"index": "1"
+			},
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/2",
+				"index": "2"
+			},
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/3",
+				"index": "3"
+			},
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/4",
+				"index": "4"
+			}
+		]
+	},
+	{
+		"conversationId": "c_cc941e2235b98c6a",
+		"title": "Driveway Marker Manufacturing Plan",
+		"chipCount": 1,
+		"chips": [
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/0",
+				"index": "0"
+			}
+		]
+	},
+	{
+		"conversationId": "c_1093b59cb229d34b",
+		"title": "Driveway Marker Prototype Plan",
+		"chipCount": 1,
+		"chips": [
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/0",
+				"index": "0"
+			}
+		]
+	},
+	{
+		"conversationId": "c_dd3ddd0444ca0f9c",
+		"title": "Corporate Presentation Template Generation",
+		"chipCount": 1,
+		"chips": [
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/0",
+				"index": "0"
+			}
+		]
+	},
+	{
+		"conversationId": "c_23f4e1fa4c66672b",
+		"title": "AI-Powered Investor Deck Visuals",
+		"chipCount": 1,
+		"chips": [
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/0",
+				"index": "0"
+			}
+		]
+	},
+	{
+		"conversationId": "c_35c10e4429fefa5a",
+		"title": "Funding Options and Founder Control",
+		"chipCount": 1,
+		"chips": [
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/0",
+				"index": "0"
+			}
+		]
+	},
+	{
+		"conversationId": "c_26bad5967643044b",
+		"title": "Software Supply Chain Attack Research",
+		"chipCount": 1,
+		"chips": [
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/0",
+				"index": "0"
+			}
+		]
+	},
+	{
+		"conversationId": "c_5cb69e3fb616b0cd",
+		"title": "Pitch Deck Cost Validation and Planning",
+		"chipCount": 1,
+		"chips": [
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/0",
+				"index": "0"
+			}
+		]
+	},
+	{
+		"conversationId": "c_90e2049876bacc5f",
+		"title": "Website Creation From Screenshots",
+		"chipCount": 8,
+		"chips": [
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/0",
+				"index": "0"
+			},
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/1",
+				"index": "1"
+			},
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/2",
+				"index": "2"
+			},
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/3",
+				"index": "3"
+			},
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/4",
+				"index": "4"
+			},
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/5",
+				"index": "5"
+			},
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/6",
+				"index": "6"
+			},
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/7",
+				"index": "7"
+			}
+		]
+	},
+	{
+		"conversationId": "c_671a7134d0b7c462",
+		"title": "Mockup vs. Current Build Comparison",
+		"chipCount": 2,
+		"chips": [
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/0",
+				"index": "0"
+			},
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/1",
+				"index": "1"
+			}
+		]
+	},
+	{
+		"conversationId": "c_11183f74bd500a05",
+		"title": "Building a Multi-Brand Creative Venture",
+		"chipCount": 3,
+		"chips": [
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/0",
+				"index": "0"
+			},
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/1",
+				"index": "1"
+			},
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/2",
+				"index": "2"
+			}
+		]
+	},
+	{
+		"conversationId": "c_148b81cbb51bb72c",
+		"title": "Fortify42 Competitive Analysis & Investor Deck",
+		"chipCount": 1,
+		"chips": [
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/0",
+				"index": "0"
+			}
+		]
+	},
+	{
+		"conversationId": "c_22290121b64c4ba1",
+		"title": "Hitchhiker's Guide Company Naming Copyright",
+		"chipCount": 1,
+		"chips": [
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/0",
+				"index": "0"
+			}
+		]
+	},
+	{
+		"conversationId": "c_0ff912423f0dc262",
+		"title": "AI Tool for Business Impact Analysis",
+		"chipCount": 1,
+		"chips": [
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/0",
+				"index": "0"
+			}
+		]
+	},
+	{
+		"conversationId": "c_64bbc6e7e3b029d5",
+		"title": "Roadmap Application Research Plan",
+		"chipCount": 1,
+		"chips": [
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/0",
+				"index": "0"
+			}
+		]
+	},
+	{
+		"conversationId": "c_8e1d2289f93cb78d",
+		"title": "Feature Prioritization Research Plan",
+		"chipCount": 1,
+		"chips": [
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/0",
+				"index": "0"
+			}
+		]
+	},
+	{
+		"conversationId": "c_dc2329ea35bd43a9",
+		"title": "AI Architecture Security Standards Update",
+		"chipCount": 1,
+		"chips": [
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/0",
+				"index": "0"
+			}
+		]
+	},
+	{
+		"conversationId": "c_13787501ac19fae1",
+		"title": "Secure Joint Software Development",
+		"chipCount": 1,
+		"chips": [
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/0",
+				"index": "0"
+			}
+		]
+	},
+	{
+		"conversationId": "c_0b9e9b25770adc5f",
+		"title": "Clarifying Firebase App Hosting Configuration",
+		"chipCount": 2,
+		"chips": [
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/0",
+				"index": "0"
+			},
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/1",
+				"index": "1"
+			}
+		]
+	},
+	{
+		"conversationId": "c_d0711aadbe21d2d9",
+		"title": "App for Resilient Product Roadmaps",
+		"chipCount": 6,
+		"chips": [
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/0",
+				"index": "0"
+			},
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/1",
+				"index": "1"
+			},
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/2",
+				"index": "2"
+			},
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/3",
+				"index": "3"
+			},
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/4",
+				"index": "4"
+			},
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/5",
+				"index": "5"
+			}
+		]
+	},
+	{
+		"conversationId": "c_97a219e486b53075",
+		"title": "Investor Pitch Deck Content Creation",
+		"chipCount": 1,
+		"chips": [
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/0",
+				"index": "0"
+			}
+		]
+	},
+	{
+		"conversationId": "c_c501e2cf6fe60932",
+		"title": "Audio Segmenter and Summarizer Tool",
+		"chipCount": 1,
+		"chips": [
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/0",
+				"index": "0"
+			}
+		]
+	},
+	{
+		"conversationId": "c_86953431ce2e8eea",
+		"title": "Dependency Hell and GitLab",
+		"chipCount": 1,
+		"chips": [
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/0",
+				"index": "0"
+			}
+		]
+	},
+	{
+		"conversationId": "c_2ed5cdfe5713077a",
+		"title": "Flutter to Web App Conversion",
+		"chipCount": 1,
+		"chips": [
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/0",
+				"index": "0"
+			}
+		]
+	},
+	{
+		"conversationId": "c_ad64964cd9ac0448",
+		"title": "New Project Setup Guide",
+		"chipCount": 1,
+		"chips": [
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/0",
+				"index": "0"
+			}
+		]
+	},
+	{
+		"conversationId": "c_3ded13d468544781",
+		"title": "AI Business Analysis and Development Workflow",
+		"chipCount": 1,
+		"chips": [
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/0",
+				"index": "0"
+			}
+		]
+	},
+	{
+		"conversationId": "c_9c55fccffadffb86",
+		"title": "Competitor Analysis for Compliance Platforms",
+		"chipCount": 1,
+		"chips": [
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/0",
+				"index": "0"
+			}
+		]
+	},
+	{
+		"conversationId": "c_c9045bc547fd1e90",
+		"title": "Access and Scheduling Follow-Up",
+		"chipCount": 1,
+		"chips": [
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/0",
+				"index": "0"
+			}
+		]
+	},
+	{
+		"conversationId": "c_ecc18c2947ef91fa",
+		"title": "Architecture Analysis: Cycle Integration Value",
+		"chipCount": 1,
+		"chips": [
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/0",
+				"index": "0"
+			}
+		]
+	},
+	{
+		"conversationId": "c_544df5bc89a391e7",
+		"title": "AI Agentic Files for Firebase Prototyper",
+		"chipCount": 28,
+		"chips": [
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/0",
+				"index": "0"
+			},
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/1",
+				"index": "1"
+			},
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/2",
+				"index": "2"
+			},
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/3",
+				"index": "3"
+			},
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/4",
+				"index": "4"
+			},
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/5",
+				"index": "5"
+			},
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/6",
+				"index": "6"
+			},
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/7",
+				"index": "7"
+			},
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/8",
+				"index": "8"
+			},
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/9",
+				"index": "9"
+			},
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/10",
+				"index": "10"
+			},
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/11",
+				"index": "11"
+			},
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/12",
+				"index": "12"
+			},
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/13",
+				"index": "13"
+			},
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/14",
+				"index": "14"
+			},
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/15",
+				"index": "15"
+			},
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/16",
+				"index": "16"
+			},
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/17",
+				"index": "17"
+			},
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/18",
+				"index": "18"
+			},
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/19",
+				"index": "19"
+			},
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/20",
+				"index": "20"
+			},
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/21",
+				"index": "21"
+			},
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/22",
+				"index": "22"
+			},
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/23",
+				"index": "23"
+			},
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/24",
+				"index": "24"
+			},
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/25",
+				"index": "25"
+			},
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/26",
+				"index": "26"
+			},
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/27",
+				"index": "27"
+			}
+		]
+	},
+	{
+		"conversationId": "c_88b87e9e68926211",
+		"title": "Firebase Studio and Agentic Swarm Coding",
+		"chipCount": 1,
+		"chips": [
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/0",
+				"index": "0"
+			}
+		]
+	},
+	{
+		"conversationId": "c_0d21baf934526669",
+		"title": "AI Software Development Curriculum Research",
+		"chipCount": 1,
+		"chips": [
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/0",
+				"index": "0"
+			}
+		]
+	},
+	{
+		"conversationId": "c_fac087ef94c088c1",
+		"title": "TypeScript vs. Vanilla JavaScript Typing",
+		"chipCount": 1,
+		"chips": [
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/0",
+				"index": "0"
+			}
+		]
+	},
+	{
+		"conversationId": "c_52a03977cd59ef0f",
+		"title": "Language Choice for Secure App Development",
+		"chipCount": 1,
+		"chips": [
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/0",
+				"index": "0"
+			}
+		]
+	},
+	{
+		"conversationId": "c_6a2fe2cc90082c49",
+		"title": "Firebase Emulators: Console vs. Studio",
+		"chipCount": 1,
+		"chips": [
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/0",
+				"index": "0"
+			}
+		]
+	},
+	{
+		"conversationId": "c_b27c209d457136f9",
+		"title": "Firebase Next.js App Development Plan",
+		"chipCount": 1,
+		"chips": [
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/0",
+				"index": "0"
+			}
+		]
+	},
+	{
+		"conversationId": "c_7e149d5d3e87a8ed",
+		"title": "Kakoru Secure Setup",
+		"chipCount": 7,
+		"chips": [
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/0",
+				"index": "0"
+			},
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/1",
+				"index": "1"
+			},
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/2",
+				"index": "2"
+			},
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/3",
+				"index": "3"
+			},
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/4",
+				"index": "4"
+			},
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/5",
+				"index": "5"
+			},
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/6",
+				"index": "6"
+			}
+		]
+	},
+	{
+		"conversationId": "c_751d735da7ab0515",
+		"title": "Secure CI/CD Architecture for AI",
+		"chipCount": 1,
+		"chips": [
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/0",
+				"index": "0"
+			}
+		]
+	},
+	{
+		"conversationId": "c_6abd4482325dcedc",
+		"title": "Debugging Firebase Deployment Command",
+		"chipCount": 1,
+		"chips": [
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/0",
+				"index": "0"
+			}
+		]
+	},
+	{
+		"conversationId": "c_3cf67e01d70f3f64",
+		"title": "Enhancing Architecture with Model Context",
+		"chipCount": 1,
+		"chips": [
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/0",
+				"index": "0"
+			}
+		]
+	},
+	{
+		"conversationId": "c_72cc6a2d01664168",
+		"title": "Building a Mexican Train Dominoes Game",
+		"chipCount": 2,
+		"chips": [
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/0",
+				"index": "0"
+			},
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/1",
+				"index": "1"
+			}
+		]
+	},
+	{
+		"conversationId": "c_408bd3a128ac7556",
+		"title": "Secure GitHub MCP with Firebase",
+		"chipCount": 1,
+		"chips": [
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/0",
+				"index": "0"
+			}
+		]
+	},
+	{
+		"conversationId": "c_4bdb5a974e2e6021",
+		"title": "Updating AI Starter Kit",
+		"chipCount": 6,
+		"chips": [
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/0",
+				"index": "0"
+			},
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/1",
+				"index": "1"
+			},
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/2",
+				"index": "2"
+			},
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/3",
+				"index": "3"
+			},
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/4",
+				"index": "4"
+			},
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/5",
+				"index": "5"
+			}
+		]
+	},
+	{
+		"conversationId": "c_401211b63b54f3e2",
+		"title": "Research Plan for Tool Settings",
+		"chipCount": 1,
+		"chips": [
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/0",
+				"index": "0"
+			}
+		]
+	},
+	{
+		"conversationId": "c_e1563851adef7d9e",
+		"title": "Design System Update and Integration",
+		"chipCount": 2,
+		"chips": [
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/0",
+				"index": "0"
+			},
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/1",
+				"index": "1"
+			}
+		]
+	},
+	{
+		"conversationId": "c_305e0cc94b918dc3",
+		"title": "AI Team Setup for MCP Server",
+		"chipCount": 23,
+		"chips": [
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/0",
+				"index": "0"
+			},
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/1",
+				"index": "1"
+			},
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/2",
+				"index": "2"
+			},
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/3",
+				"index": "3"
+			},
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/4",
+				"index": "4"
+			},
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/5",
+				"index": "5"
+			},
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/6",
+				"index": "6"
+			},
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/7",
+				"index": "7"
+			},
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/8",
+				"index": "8"
+			},
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/9",
+				"index": "9"
+			},
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/10",
+				"index": "10"
+			},
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/11",
+				"index": "11"
+			},
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/12",
+				"index": "12"
+			},
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/13",
+				"index": "13"
+			},
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/14",
+				"index": "14"
+			},
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/15",
+				"index": "15"
+			},
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/16",
+				"index": "16"
+			},
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/17",
+				"index": "17"
+			},
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/18",
+				"index": "18"
+			},
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/19",
+				"index": "19"
+			},
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/20",
+				"index": "20"
+			},
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/21",
+				"index": "21"
+			},
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/22",
+				"index": "22"
+			}
+		]
+	},
+	{
+		"conversationId": "c_69f54ddac583e5a8",
+		"title": "AI-Driven Secure App Development Team",
+		"chipCount": 1,
+		"chips": [
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/0",
+				"index": "0"
+			}
+		]
+	},
+	{
+		"conversationId": "c_645ccd5f5d75df8f",
+		"title": "Building Server-Driven UI Applications",
+		"chipCount": 1,
+		"chips": [
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/0",
+				"index": "0"
+			}
+		]
+	},
+	{
+		"conversationId": "c_0cda1805b34b3f93",
+		"title": "Game Setup Route vs. Modal",
+		"chipCount": 1,
+		"chips": [
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/0",
+				"index": "0"
+			}
+		]
+	},
+	{
+		"conversationId": "c_32fca36e39b010bd",
+		"title": "Debugging Firebase Cloud Functions Deployment",
+		"chipCount": 1,
+		"chips": [
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/0",
+				"index": "0"
+			}
+		]
+	},
+	{
+		"conversationId": "c_d24a44bb7d0ab356",
+		"title": "Dossier on Feola and Madden",
+		"chipCount": 2,
+		"chips": [
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/0",
+				"index": "0"
+			},
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/1",
+				"index": "1"
+			}
+		]
+	},
+	{
+		"conversationId": "c_73de8c1d50609cbc",
+		"title": "Firebase Error: Allowed Origins Configuration",
+		"chipCount": 1,
+		"chips": [
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/0",
+				"index": "0"
+			}
+		]
+	},
+	{
+		"conversationId": "c_25470161a0cc3f50",
+		"title": "DevOps Compliance for Regulated Repos",
+		"chipCount": 3,
+		"chips": [
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/0",
+				"index": "0"
+			},
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/1",
+				"index": "1"
+			},
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/2",
+				"index": "2"
+			}
+		]
+	},
+	{
+		"conversationId": "c_bb28aef8ea3031fa",
+		"title": "Brand Design Course Curriculum Overview",
+		"chipCount": 1,
+		"chips": [
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/0",
+				"index": "0"
+			}
+		]
+	},
+	{
+		"conversationId": "c_7bb5211c4e3a8097",
+		"title": "AI Benchmarking Suite for RFPs",
+		"chipCount": 1,
+		"chips": [
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/0",
+				"index": "0"
+			}
+		]
+	},
+	{
+		"conversationId": "c_071ac4458b2a5684",
+		"title": "Standardizing Repositories to Gold Standard",
+		"chipCount": 3,
+		"chips": [
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/0",
+				"index": "0"
+			},
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/1",
+				"index": "1"
+			},
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/2",
+				"index": "2"
+			}
+		]
+	},
+	{
+		"conversationId": "c_b8b87661a1ec4aea",
+		"title": "Improving Openspec with Kiro's Style",
+		"chipCount": 1,
+		"chips": [
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/0",
+				"index": "0"
+			}
+		]
+	},
+	{
+		"conversationId": "c_045e4702d8e6e065",
+		"title": "Building a Box-Like Grant App",
+		"chipCount": 1,
+		"chips": [
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/0",
+				"index": "0"
+			}
+		]
+	},
+	{
+		"conversationId": "c_2f12e21a112d1b71",
+		"title": "Jupyter Notebook Box-like App",
+		"chipCount": 1,
+		"chips": [
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/0",
+				"index": "0"
+			}
+		]
+	},
+	{
+		"conversationId": "c_c59daf831486af09",
+		"title": "OScal Open Source Projects Research",
+		"chipCount": 1,
+		"chips": [
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/0",
+				"index": "0"
+			}
+		]
+	},
+	{
+		"conversationId": "c_0903cb4dfeeb4407",
+		"title": "OpenSpec for Spec-Driven Development",
+		"chipCount": 1,
+		"chips": [
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/0",
+				"index": "0"
+			}
+		]
+	},
+	{
+		"conversationId": "c_b9566408dee0ae93",
+		"title": "Firebase Genkit vs. Strands AI",
+		"chipCount": 2,
+		"chips": [
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/0",
+				"index": "0"
+			},
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/1",
+				"index": "1"
+			}
+		]
+	},
+	{
+		"conversationId": "c_dc85a99261aa27b4",
+		"title": "Design System Architecture & Strategy",
+		"chipCount": 1,
+		"chips": [
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/0",
+				"index": "0"
+			}
+		]
+	},
+	{
+		"conversationId": "c_88b9c1fd1fd6625a",
+		"title": "AI Design System Importer Research Plan",
+		"chipCount": 1,
+		"chips": [
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/0",
+				"index": "0"
+			}
+		]
+	},
+	{
+		"conversationId": "c_dc82b535a1db0b5a",
+		"title": "Google Slides Branding with AI",
+		"chipCount": 1,
+		"chips": [
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/0",
+				"index": "0"
+			}
+		]
+	},
+	{
+		"conversationId": "c_1ebfc723b8eec80f",
+		"title": "AI Cost Comparison for Developers",
+		"chipCount": 1,
+		"chips": [
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/0",
+				"index": "0"
+			}
+		]
+	},
+	{
+		"conversationId": "c_f3b7a2470f809cbc",
+		"title": "AWS Marketplace Agent Mode Explained",
+		"chipCount": 1,
+		"chips": [
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/0",
+				"index": "0"
+			}
+		]
+	},
+	{
+		"conversationId": "c_049dc3a98c4211d8",
+		"title": "Digitizing RFP Response Process",
+		"chipCount": 1,
+		"chips": [
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/0",
+				"index": "0"
+			}
+		]
+	},
+	{
+		"conversationId": "c_5754bf4f191c91d8",
+		"title": "Monorepo Audit: Strategy Drift and Lessons",
+		"chipCount": 1,
+		"chips": [
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/0",
+				"index": "0"
+			}
+		]
+	},
+	{
+		"conversationId": "c_8caf974def771b54",
+		"title": "Zero-Trust Developer Security Upgrade",
+		"chipCount": 1,
+		"chips": [
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/0",
+				"index": "0"
+			}
+		]
+	},
+	{
+		"conversationId": "c_9ec23a94ba9c5890",
+		"title": "AI Code Generation Research Plan",
+		"chipCount": 1,
+		"chips": [
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/0",
+				"index": "0"
+			}
+		]
+	},
+	{
+		"conversationId": "c_6429aa76f7f2acc5",
+		"title": "Open Source Government Data Stack",
+		"chipCount": 1,
+		"chips": [
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/0",
+				"index": "0"
+			}
+		]
+	},
+	{
+		"conversationId": "c_bad2179b5d143b1a",
+		"title": "FAR-Compliant Federal Proposal Data",
+		"chipCount": 1,
+		"chips": [
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/0",
+				"index": "0"
+			}
+		]
+	},
+	{
+		"conversationId": "c_4bb8d69f597343d2",
+		"title": "Secure AI Development for Sensitive Data",
+		"chipCount": 1,
+		"chips": [
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/0",
+				"index": "0"
+			}
+		]
+	},
+	{
+		"conversationId": "c_c3622e769702e8b5",
+		"title": "Monetizing an RFP Validation App",
+		"chipCount": 1,
+		"chips": [
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/0",
+				"index": "0"
+			}
+		]
+	},
+	{
+		"conversationId": "c_fcb6cdbeb7c62c69",
+		"title": "Replicating Firebase Studio VS Code Integration",
+		"chipCount": 1,
+		"chips": [
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/0",
+				"index": "0"
+			}
+		]
+	},
+	{
+		"conversationId": "c_98e7f83c3ffe74e8",
+		"title": "Agentic Capability Transfer Model",
+		"chipCount": 1,
+		"chips": [
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/0",
+				"index": "0"
+			}
+		]
+	},
+	{
+		"conversationId": "c_6f8adb679fb81e66",
+		"title": "Agentic Framework Comparison for Compliance",
+		"chipCount": 4,
+		"chips": [
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/0",
+				"index": "0"
+			},
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/1",
+				"index": "1"
+			},
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/2",
+				"index": "2"
+			},
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/3",
+				"index": "3"
+			}
+		]
+	},
+	{
+		"conversationId": "c_d1cd53ad302d9df7",
+		"title": "UDS-Core Deployment and Cloud Pathways",
+		"chipCount": 1,
+		"chips": [
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/0",
+				"index": "0"
+			}
+		]
+	},
+	{
+		"conversationId": "c_2a496c6edc55b316",
+		"title": "Monorepo Architecture and Migration Plan",
+		"chipCount": 3,
+		"chips": [
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/0",
+				"index": "0"
+			},
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/1",
+				"index": "1"
+			},
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/2",
+				"index": "2"
+			}
+		]
+	},
+	{
+		"conversationId": "c_6b6dea8fa42ae120",
+		"title": "Cluster Director and UDS Core",
+		"chipCount": 3,
+		"chips": [
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/0",
+				"index": "0"
+			},
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/1",
+				"index": "1"
+			},
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/2",
+				"index": "2"
+			}
+		]
+	},
+	{
+		"conversationId": "c_8e79b7b534179a58",
+		"title": "Business Strategy and Plan Development",
+		"chipCount": 1,
+		"chips": [
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/0",
+				"index": "0"
+			}
+		]
+	},
+	{
+		"conversationId": "c_a2360b949a6074a3",
+		"title": "Password Manager Criteria For Developers",
+		"chipCount": 1,
+		"chips": [
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/0",
+				"index": "0"
+			}
+		]
+	},
+	{
+		"conversationId": "c_88abfc340af2d719",
+		"title": "IAM Plan for NIST Compliance",
+		"chipCount": 1,
+		"chips": [
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/0",
+				"index": "0"
+			}
+		]
+	},
+	{
+		"conversationId": "c_de7146561fcbd507",
+		"title": "Automating CMMC Compliance in Google",
+		"chipCount": 1,
+		"chips": [
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/0",
+				"index": "0"
+			}
+		]
+	},
+	{
+		"conversationId": "c_ec0cd61fab30e109",
+		"title": "does google have a way of automatically documenting an oscal ssp while doing cmmc compliance; if not what are some other ways to do so",
+		"chipCount": 1,
+		"chips": [
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/0",
+				"index": "0"
+			}
+		]
+	},
+	{
+		"conversationId": "c_f1bd5ce493aeb558",
+		"title": "CMMC Mac Cleanup and Password Manager",
+		"chipCount": 1,
+		"chips": [
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/0",
+				"index": "0"
+			}
+		]
+	},
+	{
+		"conversationId": "c_54d670d5302cd966",
+		"title": "CMMC Implementation Guide Mapping",
+		"chipCount": 1,
+		"chips": [
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/0",
+				"index": "0"
+			}
+		]
+	},
+	{
+		"conversationId": "c_149766dad2440dd4",
+		"title": "AGPL Friction and \"Ring-Fencing\"",
+		"chipCount": 1,
+		"chips": [
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/0",
+				"index": "0"
+			}
+		]
+	},
+	{
+		"conversationId": "c_70ea1d59bdc4ed62",
+		"title": "Proposal Prepper Collaboration and Licensing",
+		"chipCount": 1,
+		"chips": [
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/0",
+				"index": "0"
+			}
+		]
+	},
+	{
+		"conversationId": "c_373aa86c18c44ba9",
+		"title": "AI-Assisted Software Development Consultancy",
+		"chipCount": 1,
+		"chips": [
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/0",
+				"index": "0"
+			}
+		]
+	},
+	{
+		"conversationId": "c_ff89129958a30175",
+		"title": "Researching 3PAO Cyberspace Security Guides",
+		"chipCount": 1,
+		"chips": [
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/0",
+				"index": "0"
+			}
+		]
+	},
+	{
+		"conversationId": "c_7bb08101c416a5b0",
+		"title": "Go, Web Components, and Secure Development",
+		"chipCount": 1,
+		"chips": [
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/0",
+				"index": "0"
+			}
+		]
+	},
+	{
+		"conversationId": "c_b08b00c2fb72d9f6",
+		"title": "Design System Iconography Research Plan",
+		"chipCount": 2,
+		"chips": [
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/0",
+				"index": "0"
+			},
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/1",
+				"index": "1"
+			}
+		]
+	},
+	{
+		"conversationId": "c_237bad7ca59a1fa6",
+		"title": "Monorepo Strategy for AI Consultancy",
+		"chipCount": 1,
+		"chips": [
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/0",
+				"index": "0"
+			}
+		]
+	},
+	{
+		"conversationId": "c_0e9cf78c4cb925f5",
+		"title": "Go's GC Tax and Cost Optimization",
+		"chipCount": 1,
+		"chips": [
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/0",
+				"index": "0"
+			}
+		]
+	},
+	{
+		"conversationId": "c_51f82d2dd0e04286",
+		"title": "Accessing Government Data for Proposals",
+		"chipCount": 2,
+		"chips": [
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/0",
+				"index": "0"
+			},
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/1",
+				"index": "1"
+			}
+		]
+	},
+	{
+		"conversationId": "c_bbc23208804adf3c",
+		"title": "Business Expense Planning and Audit",
+		"chipCount": 1,
+		"chips": [
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/0",
+				"index": "0"
+			}
+		]
+	},
+	{
+		"conversationId": "c_b1c13191dd698628",
+		"title": "Building a Gemini Knowledge Hub",
+		"chipCount": 1,
+		"chips": [
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/0",
+				"index": "0"
+			}
+		]
+	},
+	{
+		"conversationId": "c_684db82fac9ace3a",
+		"title": "IP Indemnity Comparison Research Plan",
+		"chipCount": 1,
+		"chips": [
+			{
+				"type": "immersive_entry_chip",
+				"placeholderUrl": "http://googleusercontent.com/immersive_entry_chip/0",
+				"index": "0"
+			}
+		]
+	}
+]

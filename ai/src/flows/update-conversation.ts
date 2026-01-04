@@ -10,7 +10,6 @@
 import { updateConversationById } from '@ai-chat/backend/queries'
 import { ConversationTurnSchema } from '@ai-chat/shared/types/zod'
 import { z } from 'zod'
-import { ai } from '../core/genkit'
 
 const UpdateConversationInputSchema = z.object({
 	id: z.string(),
@@ -33,26 +32,19 @@ export async function updateConversation(
 	return updateConversationFlow(input)
 }
 
-const updateConversationFlow = ai.defineFlow(
-	{
-		name: 'updateConversationFlow',
-		inputSchema: UpdateConversationInputSchema,
-		outputSchema: UpdateConversationOutputSchema,
-	},
-	async ({ id, ...updateData }) => {
-		try {
-			await updateConversationById(id, {
-				transcript: updateData.transcript,
-				summary: updateData.summary,
-				summarizedAt: updateData.summarizedAt,
-				categorizedAt: updateData.categorizedAt,
-				backlinkedAt: updateData.backlinkedAt,
-				status: updateData.status,
-			})
-			return { success: true }
-		} catch (error) {
-			console.error('Failed to update conversation %s:', id, error)
-			return { success: false }
-		}
-	},
-)
+const updateConversationFlow = async ({ id, ...updateData }: UpdateConversationInput) => {
+	try {
+		await updateConversationById(id, {
+			transcript: updateData.transcript,
+			summary: updateData.summary,
+			summarizedAt: updateData.summarizedAt,
+			categorizedAt: updateData.categorizedAt,
+			backlinkedAt: updateData.backlinkedAt,
+			status: updateData.status,
+		})
+		return { success: true }
+	} catch (error) {
+		console.error('Failed to update conversation %s:', id, error)
+		return { success: false }
+	}
+}

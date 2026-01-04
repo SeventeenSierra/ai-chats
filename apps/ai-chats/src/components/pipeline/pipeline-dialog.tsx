@@ -3,16 +3,9 @@
 
 'use client'
 
-import { Loader, Sparkles, Split, XCircle } from 'lucide-react'
-import Link from 'next/link'
 import * as React from 'react'
 import { ImportDialog } from '@/components/conversations/import-dialog'
 import { PipelineProgress } from '@/components/pipeline/pipeline-progress'
-import {
-	PipelineStageCard,
-	PipelineStageCardSkeleton,
-} from '@/components/pipeline/pipeline-stage-card'
-import { Button } from '@/components/ui/button'
 import {
 	Dialog,
 	DialogContent,
@@ -20,7 +13,6 @@ import {
 	DialogHeader,
 	DialogTitle,
 } from '@/components/ui/dialog'
-import { Progress } from '@/components/ui/progress'
 import { Toaster } from '@/components/ui/toaster'
 import { useToast } from '@/hooks/use-toast'
 import {
@@ -238,20 +230,20 @@ export function PipelineDialog({ open, onOpenChange }: PipelineDialogProps) {
 		}
 	}
 
-	const isJobRunning = isSplitting || isProcessing || isFetching || isBacklinking
-	const isStage1Complete = !!uploadedFile
-	const isStage2Complete = stagedFileCount > 0 && !isSplitting
-	const isStage3Complete = processedFileCount > 0 && !isProcessing
+	const _isJobRunning = isSplitting || isProcessing || isFetching || isBacklinking
+	const _isStage1Complete = !!uploadedFile
+	const _isStage2Complete = stagedFileCount > 0 && !isSplitting
+	const _isStage3Complete = processedFileCount > 0 && !isProcessing
 
 	// Stage 4 is "complete" for the UI if all processed files have had their transcripts fetched.
-	const isStage4Complete =
+	const _isStage4Complete =
 		fetchedTranscriptCount > 0 && fetchedTranscriptCount === processedFileCount && !isFetching
 
 	// Backlinking is available as long as there is at least one fetched transcript that has not been backlinked.
-	const canBacklink = fetchedTranscriptCount > backlinkedCount
+	const _canBacklink = fetchedTranscriptCount > backlinkedCount
 
 	// Stage 5 is "complete" if all fetched transcripts have been backlinked.
-	const isStage5Complete =
+	const _isStage5Complete =
 		fetchedTranscriptCount > 0 && backlinkedCount === fetchedTranscriptCount && !isBacklinking
 
 	return (

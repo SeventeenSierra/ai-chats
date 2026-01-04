@@ -14,12 +14,10 @@
 		"dev": "pnpm -r --parallel run dev",
 		"build": "pnpm -r run build",
 		"lint": "pnpm -r run lint",
+		"test": "pnpm -r run test",
 		"typecheck": "pnpm -r run typecheck",
 		"check-license": "./scripts/check-license-headers.sh",
 		"prepare": "husky"
-	},
-	"lint-staged": {
-		"*.{ts,tsx}": "pnpm typecheck"
 	},
 	"pnpm": {
 		"overrides": {
@@ -34,12 +32,17 @@
 				"x64",
 				"arm64"
 			]
-		}
+		},
+		"onlyBuiltDependencies": [
+			"better-sqlite3",
+			"esbuild",
+			"sharp",
+			"prisma"
+		]
 	},
 	"devDependencies": {
 		"@commitlint/cli": "^20.3.0",
 		"@commitlint/config-conventional": "^20.3.0",
-		"husky": "^9.1.7",
-		"lint-staged": "^16.2.7"
+		"husky": "^9.1.7"
 	}
 }

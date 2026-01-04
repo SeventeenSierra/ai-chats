@@ -11,7 +11,6 @@ import { downloadFromStorage } from '@ai-chat/backend/storage'
 import { parseConversationTranscript } from '@ai-chat/backend/xml-parser'
 import { ConversationTurnSchema } from '@ai-chat/shared/types/zod'
 import { z } from 'zod'
-import { ai } from '../core/genkit'
 
 const GetTranscriptInputSchema = z.object({
 	storageFilename: z
@@ -29,28 +28,23 @@ export async function getTranscript(input: GetTranscriptInput): Promise<GetTrans
 	return getTranscriptFlow(input)
 }
 
-const getTranscriptFlow = ai.defineFlow(
-	{
-		name: 'getTranscriptFlow',
-		inputSchema: GetTranscriptInputSchema,
-		outputSchema: GetTranscriptOutputSchema,
-	},
-	async ({ storageFilename }) => {
-		try {
-			if (!storageFilename) {
-				throw new Error('Storage filename is required.')
-			}
-
-			console.log(`Fetching transcript for: ${storageFilename}`)
-			const xmlContent = await downloadFromStorage(`staging/${storageFilename}`)
-
-			const transcript = parseConversationTranscript(xmlContent)
-
-			return { transcript }
-		} catch (error) {
-			console.error('Failed to get transcript for %s:', storageFilename, error)
-			const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred.'
-			throw new Error(`Could not fetch or parse transcript: ${errorMessage}`)
+const getTranscriptFlow = async ({
+	storageFilename,
+}: GetTranscriptInput): Promise<GetTranscriptOutput> => {
+	try {
+		if (!storageFilename) {
+			throw new Error('Storage filename is required.')
 		}
-	},
-)
+
+		console.log(`Fetching transcript for: ${storageFilename}`)
+		const xmlContent = (await downloadFromStorage(`staging/${storageFilename}`)).toString('utf-8')
+
+		const transcript = parseConversationTranscript(xmlContent)
+
+		return { transcript }
+	} catch (error) {
+		console.error('Failed to get transcript for %s:', storageFilename, error)
+		const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred.'
+		throw new Error(`Could not fetch or parse transcript: ${errorMessage}`)
+	}
+}

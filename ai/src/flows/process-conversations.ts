@@ -10,7 +10,6 @@
 import { saveConversation } from '@ai-chat/backend/queries'
 import { downloadFromStorage, listFromStorage } from '@ai-chat/backend/storage'
 import { z } from 'zod'
-import { ai } from '../core/genkit'
 import { analyzeAndExtractConversation } from './analyze-and-extract-conversation'
 import { getImportJobStatus, updateImportStatus } from './update-import-status'
 
@@ -49,111 +48,107 @@ export async function processConversations(
  *    d. Updates the job progress after each file is processed.
  * 4. Marks the job as 'completed' upon success.
  */
-const processConversationsFlow = ai.defineFlow(
-	{
-		name: 'processConversationsFlow',
-		inputSchema: ProcessConversationsInputSchema,
-		outputSchema: ProcessConversationsOutputSchema,
-	},
-	async ({ jobId }) => {
-		try {
-			// List all files in staging directory
-			const stagedFiles = await listFromStorage('staging/')
-			const fileCount = stagedFiles.length
+const processConversationsFlow = async (
+	input: ProcessConversationsInput,
+): Promise<ProcessConversationsOutput> => {
+	const { jobId } = input
+	try {
+		// List all files in staging directory
+		const stagedFiles = await listFromStorage('staging/')
+		const fileCount = stagedFiles.length
 
-			console.log(`[Job ${jobId}] Found ${fileCount} staged files to process.`)
+		console.log(`[Job ${jobId}] Found ${fileCount} staged files to process.`)
 
-			if (fileCount === 0) {
-				await updateImportStatus({
-					jobId,
-					status: 'completed',
-					message: 'No staged files to process.',
-				})
-				return { success: true, message: 'No staged files to process.', processedCount: 0 }
-			}
-
-			await updateImportStatus({
-				jobId,
-				status: 'processing',
-				message: `Found ${fileCount} files. Starting metadata extraction...`,
-				total: fileCount,
-				processed: 0,
-				progress: 0,
-			})
-
-			let processedCount = 0
-
-			for (const [index, filePath] of stagedFiles.entries()) {
-				// Check if job was cancelled
-				const jobStatus = await getImportJobStatus(jobId)
-				if (jobStatus?.status === 'cancelled') {
-					console.log(`Job ${jobId} cancelled. Stopping processing.`)
-					return { success: false, message: 'Import was cancelled.', processedCount }
-				}
-
-				try {
-					// Extract filename from path (e.g., 'staging/filename.xml' -> 'filename.xml')
-					const filename = filePath.replace('staging/', '')
-
-					// Download file content from S3
-					const xmlContent = await downloadFromStorage(filePath)
-
-					const extractedData = await analyzeAndExtractConversation({ xmlContent })
-
-					// Save to PostgreSQL with storage filename
-					await saveConversation({
-						...extractedData,
-						storageFilename: filename,
-					})
-
-					if (extractedData.status !== 'quarantined') {
-						processedCount++
-					}
-				} catch (fileError) {
-					console.error('[Job %s] Error processing file %s:', jobId, filePath, fileError)
-					// Continue processing other files
-				}
-
-				const progress = Math.round(((index + 1) / fileCount) * 100)
-				const message = `Extracting metadata from conversation ${index + 1} of ${fileCount}...`
-				await updateImportStatus({
-					jobId,
-					status: 'processing',
-					message,
-					total: fileCount,
-					processed: index + 1,
-					progress,
-				})
-			}
-
-			const finalMessage = `Successfully processed ${processedCount} conversation(s).`
+		if (fileCount === 0) {
 			await updateImportStatus({
 				jobId,
 				status: 'completed',
-				message: finalMessage,
-				total: fileCount,
-				processed: processedCount,
-				progress: 100,
+				message: 'No staged files to process.',
 			})
+			return { success: true, message: 'No staged files to process.', processedCount: 0 }
+		}
 
-			return {
-				success: true,
-				message: finalMessage,
-				processedCount,
+		await updateImportStatus({
+			jobId,
+			status: 'processing',
+			message: `Found ${fileCount} files. Starting metadata extraction...`,
+			total: fileCount,
+			processed: 0,
+			progress: 0,
+		})
+
+		let processedCount = 0
+
+		for (const [index, filePath] of stagedFiles.entries()) {
+			// Check if job was cancelled
+			const jobStatus = await getImportJobStatus(jobId)
+			if (jobStatus?.status === 'cancelled') {
+				console.log(`Job ${jobId} cancelled. Stopping processing.`)
+				return { success: false, message: 'Import was cancelled.', processedCount }
 			}
-		} catch (error) {
-			console.error('!!!!!!!!!! [Job %s] Failed to process staged files !!!!!!!!!!', jobId, error)
-			const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred.'
+
+			try {
+				// Extract filename from path (e.g., 'staging/filename.xml' -> 'filename.xml')
+				const filename = filePath.replace('staging/', '')
+
+				// Download file content from S3
+				const xmlContent = (await downloadFromStorage(filePath)).toString('utf-8')
+
+				const extractedData = await analyzeAndExtractConversation({ xmlContent })
+
+				// Save to PostgreSQL with storage filename
+				await saveConversation({
+					...extractedData,
+					storageFilename: filename,
+				})
+
+				if (extractedData.status !== 'quarantined') {
+					processedCount++
+				}
+			} catch (fileError) {
+				console.error('[Job %s] Error processing file %s:', jobId, filePath, fileError)
+				// Continue processing other files
+			}
+
+			const progress = Math.round(((index + 1) / fileCount) * 100)
+			const message = `Extracting metadata from conversation ${index + 1} of ${fileCount}...`
 			await updateImportStatus({
 				jobId,
-				status: 'failed',
-				message: `Processing failed: ${errorMessage}`,
+				status: 'processing',
+				message,
+				total: fileCount,
+				processed: index + 1,
+				progress,
 			})
-			return {
-				success: false,
-				message: `An error occurred: ${errorMessage}`,
-				processedCount: 0,
-			}
 		}
-	},
-)
+
+		const finalMessage = `Successfully processed ${processedCount} conversation(s).`
+		await updateImportStatus({
+			jobId,
+			status: 'completed',
+			message: finalMessage,
+			total: fileCount,
+			processed: processedCount,
+			progress: 100,
+		})
+
+		return {
+			success: true,
+			message: finalMessage,
+			processedCount,
+		}
+	} catch (error) {
+		console.error('!!!!!!!!!! [Job %s] Failed to process staged files !!!!!!!!!!', jobId, error)
+		const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred.'
+		await updateImportStatus({
+			jobId,
+			status: 'failed',
+			message: `Processing failed: ${errorMessage}`,
+		})
+		return {
+			success: false,
+			message: `An error occurred: ${errorMessage}`,
+			processedCount: 0,
+		}
+	}
+}

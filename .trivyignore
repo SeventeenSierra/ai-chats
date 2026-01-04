@@ -19,3 +19,6 @@
 # Risk: LOW - requires malicious filename control which we don't expose
 # Status: Monitoring for node:22-slim image update
 CVE-2025-64756
+
+# Ignore local environment files which may contain secrets for dev
+.env*

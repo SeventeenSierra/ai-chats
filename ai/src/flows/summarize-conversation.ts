@@ -12,8 +12,8 @@
  * - SummarizeConversationOutput - The return type for the summarizeConversation function.
  */
 
-import { z } from 'genkit'
-import { ai } from '../core/genkit'
+import { z } from 'zod'
+import { ai, model } from '../core/openai'
 
 const SummarizeConversationInputSchema = z.object({
 	transcript: z.string().describe('The conversation transcript to be summarized.'),
@@ -25,30 +25,29 @@ const SummarizeConversationOutputSchema = z.object({
 })
 export type SummarizeConversationOutput = z.infer<typeof SummarizeConversationOutputSchema>
 
+const summarizeConversationPrompt = `Summarize the following conversation transcript in a concise manner:
+
+Transcript:
+`
+
 export async function summarizeConversation(
 	input: SummarizeConversationInput,
 ): Promise<SummarizeConversationOutput> {
-	return summarizeConversationFlow(input)
+	try {
+		const completion = await ai.chat.completions.create({
+			model: model,
+			messages: [
+				{
+					role: 'user',
+					content: summarizeConversationPrompt + input.transcript,
+				},
+			],
+		})
+
+		const summary = completion.choices[0]?.message?.content || 'No summary generated.'
+		return { summary }
+	} catch (error) {
+		console.error('Error generating summary:', error)
+		throw new Error('Failed to generate summary.')
+	}
 }
-
-const summarizeConversationPrompt = ai.definePrompt({
-	name: 'summarizeConversationPrompt',
-	input: { schema: SummarizeConversationInputSchema },
-	output: { schema: SummarizeConversationOutputSchema },
-	prompt: `Summarize the following conversation transcript in a concise manner:
-
-Transcript:
-{{{transcript}}}`,
-})
-
-const summarizeConversationFlow = ai.defineFlow(
-	{
-		name: 'summarizeConversationFlow',
-		inputSchema: SummarizeConversationInputSchema,
-		outputSchema: SummarizeConversationOutputSchema,
-	},
-	async (input) => {
-		const { output } = await summarizeConversationPrompt(input)
-		return output!
-	},
-)

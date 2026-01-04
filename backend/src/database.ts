@@ -1,31 +1,21 @@
-// SPDX-License-Identifier: PolyForm-Strict-1.0.0
-// SPDX-FileCopyrightText: 2025 Seventeen Sierra LLC
+import fs from 'node:fs'
+import path from 'node:path'
+import Database from 'better-sqlite3'
 
-import { Pool } from 'pg'
+let _db: Database.Database | null = null
 
-let _pool: Pool | null = null
-
-function getPool(): Pool {
-	if (!_pool) {
-		if (!process.env.DATABASE_URL) {
-			throw new Error('DATABASE_URL is not defined in environment variables')
+export function getDb(): Database.Database {
+	if (!_db) {
+		const DATA_DIR = process.env.GEMINI_DATA_DIR
+			? path.resolve(process.env.GEMINI_DATA_DIR)
+			: path.resolve(process.cwd(), 'data')
+		const dbPath = path.join(DATA_DIR, 'gemini.db')
+		const dir = path.dirname(dbPath)
+		if (!fs.existsSync(dir)) {
+			fs.mkdirSync(dir, { recursive: true })
 		}
-		_pool = new Pool({
-			connectionString: process.env.DATABASE_URL,
-		})
+		_db = new Database(dbPath)
+		_db.pragma('journal_mode = WAL')
 	}
-	return _pool
+	return _db
 }
-
-// Export a proxy that lazily initializes the pool
-export const pool = new Proxy({} as Pool, {
-	get(_, prop) {
-		const actualPool = getPool()
-		const value = actualPool[prop as keyof Pool]
-		if (typeof value === 'function') {
-			return value.bind(actualPool)
-		}
-		return value
-	},
-})
-
