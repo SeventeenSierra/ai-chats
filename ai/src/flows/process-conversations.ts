@@ -91,7 +91,7 @@ const processConversationsFlow = async (
 				// Extract filename from path (e.g., 'staging/filename.xml' -> 'filename.xml')
 				const filename = filePath.replace('staging/', '')
 
-				// Download file content from S3
+				// Download file content from storage
 				const xmlContent = (await downloadFromStorage(filePath)).toString('utf-8')
 
 				const extractedData = await analyzeAndExtractConversation({ xmlContent })

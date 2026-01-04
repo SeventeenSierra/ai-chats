@@ -21,7 +21,6 @@
 	},
 	"dependencies": {
 		"@ai-chat/shared": "workspace:*",
-		"@aws-sdk/client-s3": "^3.958.0",
 		"better-sqlite3": "^12.5.0",
 		"dotenv": "^17.2.3",
 		"jszip": "^3.10.1",
