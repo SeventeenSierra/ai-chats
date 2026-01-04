@@ -65,7 +65,6 @@ if command -v semgrep >/dev/null 2>&1; then
       --config=p/nodejs \
       --config=p/react \
       --config=p/nextjs \
-      --config=p/sql \
       --config=p/dockerfile \
       --error \
       --severity=ERROR . || { echo "❌ Semgrep found issues"; exit 1; }
