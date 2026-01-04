@@ -17,7 +17,7 @@
         };
       in
       {
-        devShells.default = pkgs.mkShellNoCC {
+        devShells.default = pkgs.mkShell {
           buildInputs = with pkgs; [
             # Node.js and pnpm
             nodejs_22

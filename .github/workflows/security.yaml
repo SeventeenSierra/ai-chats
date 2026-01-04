@@ -67,19 +67,14 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: pnpm/action-setup@v2
-        with:
-          version: '10.24.0'
-
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '22'
-
-      - name: Install Dependencies
-        run: pnpm install --frozen-lockfile
+      - uses: DeterminateSystems/nix-installer-action@v16
+      
+      - uses: DeterminateSystems/magic-nix-cache-action@v8
 
       - name: Audit
-        run: pnpm audit --audit-level=high || true
+        run: |
+          nix develop --command pnpm install --frozen-lockfile
+          nix develop --command pnpm audit --audit-level=high || true
 
   trivy:
     name: Trivy (Filesystem)
