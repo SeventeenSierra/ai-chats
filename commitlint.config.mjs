@@ -36,13 +36,12 @@ export default {
                 "lib",       // Library code
                 "ui",        // UI components
                 "db",        // Database
-                "storage",   // Garage S3
+                "storage",   // Local storage
 
                 // Infrastructure
                 "deps",      // Dependencies
                 "config",    // Configuration
                 "ci",        // GitHub Actions
-                "docker",    // Container config
 
                 // Other
                 "docs",      // Documentation
