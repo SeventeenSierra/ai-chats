@@ -124,8 +124,13 @@ fi
 pause_between_scans "🐳 Hadolint"
 echo "🐳 Running Hadolint..."
 if command -v hadolint >/dev/null 2>&1; then
-    find . -name "Dockerfile" -o -name "*.dockerfile" -o -name "*.Containerfile" 2>/dev/null | xargs hadolint || { echo "❌ Hadolint issues"; exit 1; }
-    echo "✅ Hadolint passed"
+    DOCKERFILES=$(find . -name "Dockerfile" -o -name "*.dockerfile" -o -name "*.Containerfile" 2>/dev/null)
+    if [ -n "$DOCKERFILES" ]; then
+        echo "$DOCKERFILES" | xargs hadolint || { echo "❌ Hadolint issues"; exit 1; }
+        echo "✅ Hadolint passed"
+    else
+        echo "⏭️  No Dockerfiles found, skipping Hadolint"
+    fi
 else
     echo "⚠️  Hadolint not installed"
 fi

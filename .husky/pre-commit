@@ -1,5 +1,4 @@
-#!/usr/bin/env sh
-. "$(dirname -- "$0")/_/husky.sh"
+#!/bin/sh
 
 # 1. Run our lightweight pre-commit hook (Branch Name, Lint, Typecheck)
 ./scripts/hooks/pre-commit.sh
