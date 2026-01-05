@@ -3,22 +3,9 @@
 
 'use client'
 
-import {
-	Download,
-	LayoutDashboard,
-	Loader,
-	Menu,
-	MessageSquare,
-	Moon,
-	MoreVertical,
-	Sun,
-	Trash2,
-	Upload,
-	Waypoints,
-} from 'lucide-react'
+import { LayoutDashboard, Menu, MessageSquare } from 'lucide-react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { useTheme } from 'next-themes'
 import * as React from 'react'
 import {
 	AlertDialog,
@@ -31,16 +18,6 @@ import {
 	AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
 import { Button, buttonVariants } from '@/components/ui/button'
-import {
-	DropdownMenu,
-	DropdownMenuContent,
-	DropdownMenuItem,
-	DropdownMenuSeparator,
-	DropdownMenuSub,
-	DropdownMenuSubContent,
-	DropdownMenuSubTrigger,
-	DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu'
 import { useToast } from '@/hooks/use-toast'
 import { downloadAllAction } from '@/lib/actions'
 import { ImportDialog } from '../conversations/import-dialog'
@@ -50,27 +27,34 @@ import { useSidebar } from '../ui/sidebar'
 
 type AppHeaderProps = {
 	onWipe: () => void
-	isWiping: boolean
-	isJobRunning: boolean
+	_isWiping: boolean
+	_isJobRunning: boolean
+	isPipelineOpen: boolean
+	setPipelineOpen: (open: boolean) => void
 }
 
-export default function AppHeader({ onWipe, isWiping, isJobRunning }: AppHeaderProps) {
+export default function AppHeader({
+	onWipe,
+	_isWiping,
+	_isJobRunning,
+	isPipelineOpen,
+	setPipelineOpen,
+}: AppHeaderProps) {
 	const { toggleSidebar } = useSidebar()
 	const pathname = usePathname()
-	const { setTheme } = useTheme()
 	const { toast } = useToast()
 
-	const [isPipelineOpen, setIsPipelineOpen] = React.useState(false)
-	const [isImportOpen, setIsImportOpen] = React.useState(false)
+	// Pipeline state is now controlled by parent
+	const [isImportDialogHeaderOpen, setIsImportDialogHeaderOpen] = React.useState(false) // Renamed to avoid collision if we accept prop later
 	const [isWipeAlertOpen, setIsWipeAlertOpen] = React.useState(false)
-	const [isDownloading, setIsDownloading] = React.useState(false)
+	const [_isDownloading, setIsDownloading] = React.useState(false)
 
 	const handleWipe = async () => {
 		await onWipe()
 		setIsWipeAlertOpen(false)
 	}
 
-	const handleDownloadAll = async () => {
+	const _handleDownloadAll = async () => {
 		setIsDownloading(true)
 		toast({ title: 'Zipping...', description: 'Preparing your conversations for download.' })
 		try {
@@ -137,68 +121,17 @@ export default function AppHeader({ onWipe, isWiping, isJobRunning }: AppHeaderP
 				</nav>
 
 				<div className="flex items-center gap-2 justify-end">
-					<DropdownMenu>
-						<DropdownMenuTrigger asChild>
-							<Button variant="ghost" size="icon">
-								<MoreVertical className="h-5 w-5" />
-								<span className="sr-only">Open menu</span>
-							</Button>
-						</DropdownMenuTrigger>
-						<DropdownMenuContent align="end">
-							<DropdownMenuItem onClick={() => setIsImportOpen(true)}>
-								<Upload className="mr-2 h-4 w-4" />
-								<span>Quick Import</span>
-							</DropdownMenuItem>
-							<DropdownMenuItem onClick={() => setIsPipelineOpen(true)}>
-								<Waypoints className="mr-2 h-4 w-4" />
-								<span>Pipeline</span>
-							</DropdownMenuItem>
-							<DropdownMenuItem onClick={handleDownloadAll} disabled={isDownloading}>
-								{isDownloading ? (
-									<Loader className="mr-2 h-4 w-4 animate-spin" />
-								) : (
-									<Download className="mr-2 h-4 w-4" />
-								)}
-								<span>Download All</span>
-							</DropdownMenuItem>
-							<DropdownMenuSeparator />
-							<DropdownMenuSub>
-								<DropdownMenuSubTrigger>
-									<Sun className="h-[1.2rem] w-[1.2rem] rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
-									<Moon className="absolute h-[1.2rem] w-[1.2rem] rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
-									<span className="ml-2">Toggle Theme</span>
-								</DropdownMenuSubTrigger>
-								<DropdownMenuSubContent>
-									<DropdownMenuItem onClick={() => setTheme('light')}>Light</DropdownMenuItem>
-									<DropdownMenuItem onClick={() => setTheme('dark')}>Dark</DropdownMenuItem>
-									<DropdownMenuItem onClick={() => setTheme('system')}>System</DropdownMenuItem>
-								</DropdownMenuSubContent>
-							</DropdownMenuSub>
-							<DropdownMenuSeparator />
-							<DropdownMenuItem
-								onClick={() => setIsWipeAlertOpen(true)}
-								disabled={isWiping || isJobRunning}
-								className="text-destructive focus:text-destructive focus:bg-destructive/10"
-							>
-								{isWiping ? (
-									<Loader className="mr-2 h-4 w-4 animate-spin" />
-								) : (
-									<Trash2 className="mr-2 h-4 w-4" />
-								)}
-								<span>Wipe Data</span>
-							</DropdownMenuItem>
-						</DropdownMenuContent>
-					</DropdownMenu>
+					{/* Minimal header - Settings are in the sidebar */}
 				</div>
 			</header>
 
 			{/* Dialogs controlled by the header */}
-			<PipelineDialog open={isPipelineOpen} onOpenChange={setIsPipelineOpen} />
+			<PipelineDialog open={isPipelineOpen} onOpenChange={setPipelineOpen} />
 			<ImportDialog
-				open={isImportOpen}
-				onOpenChange={setIsImportOpen}
+				open={isImportDialogHeaderOpen}
+				onOpenChange={setIsImportDialogHeaderOpen}
 				onFileUploaded={() => {
-					setIsImportOpen(false)
+					setIsImportDialogHeaderOpen(false)
 					window.location.reload()
 				}}
 			/>

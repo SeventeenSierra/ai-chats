@@ -9,4 +9,4 @@ export const ai = new OpenAI({
 	apiKey: process.env.AI_API_KEY || 'ollama', // Ollama doesn't strictly need this, but OpenAI client does
 })
 
-export const model = process.env.AI_MODEL || 'llama3:latest'
+export const model = process.env.AI_MODEL || 'llama3.2:1b'

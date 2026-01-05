@@ -57,6 +57,7 @@ export default function DashboardPage() {
 	const [quarantinedCount, setQuarantinedCount] = React.useState(0)
 	const [categories, setCategories] = React.useState<AppCategory[]>([])
 	const [isLoading, setIsLoading] = React.useState(true)
+	const [isPipelineOpen, setIsPipelineOpen] = React.useState(false)
 
 	const { toast } = useToast()
 
@@ -114,7 +115,13 @@ export default function DashboardPage() {
 
 	return (
 		<div className="flex flex-col h-screen w-screen bg-muted/40">
-			<AppHeader onWipe={handleWipe} isWiping={isWiping} isJobRunning={false} />
+			<AppHeader
+				onWipe={handleWipe}
+				_isWiping={isWiping}
+				_isJobRunning={false}
+				isPipelineOpen={isPipelineOpen}
+				setPipelineOpen={setIsPipelineOpen}
+			/>
 			<main className="flex-grow p-4 md:p-8 overflow-y-auto">
 				<div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
 					<StatCard

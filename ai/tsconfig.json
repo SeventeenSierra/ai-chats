@@ -20,7 +20,8 @@
 			"@/lib/database": ["../backend/src/database.ts"],
 			"@/lib/storage": ["../backend/src/storage.ts"],
 			"@/lib/db-queries": ["../backend/src/db-queries.ts"],
-			"@/lib/xml-parser": ["../backend/src/xml-parser.ts"]
+			"@/lib/xml-parser": ["../backend/src/xml-parser.ts"],
+			"@ai-chat/shared/*": ["../shared/src/*"]
 		}
 	},
 	"include": ["src/**/*.ts"],

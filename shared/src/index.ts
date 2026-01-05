@@ -7,4 +7,4 @@ export * from './hooks'
 export * from './types'
 
 // Re-export utils
-export { cn } from './utils'
+export { cn, runWithConcurrency } from './utils'

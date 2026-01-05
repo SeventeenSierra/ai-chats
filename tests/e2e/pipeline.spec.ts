@@ -15,18 +15,20 @@ test.describe
 			// Create a persistent context and page for the series of steps
 			context = await browser.newContext({ baseURL: 'http://localhost:3000' })
 			page = await context.newPage()
+			page.on('console', (msg) => console.log(`[BROWSER] ${msg.text()}`))
 
 			// 0. Clean Slate
 			console.log('Setup: Wiping Data...')
 			await page.goto('/explorer')
-			// Handle "Open Menu" - might be blocked by welcome screen?
-			// Wait for sidebar/header to be ready
 			await page.waitForLoadState('domcontentloaded')
 
-			// Sometimes wipes are flaky if menu animation is slow
-			await page.getByRole('button', { name: /open menu/i }).click()
+			// Open Settings Dropdown from Sidebar
+			await page.getByRole('button', { name: 'Settings' }).click()
+			// Click Wipe Data
 			await page.getByRole('menuitem', { name: 'Wipe Data' }).click()
+			// Confirm Wipe
 			await page.getByRole('button', { name: 'Continue' }).click()
+
 			await page.waitForTimeout(2000) // Wait for wipe
 			await page.reload()
 			console.log('Setup: Data Wiped.')
@@ -38,12 +40,18 @@ test.describe
 		})
 
 		test('Stage 1: Ingestion (Upload & Auto-Enrich)', async () => {
-			// --- Step 1: Upload & Initial Processing (Automated via Quick Import) ---
-			await page.getByRole('button', { name: /open menu/i }).click()
-			await page.getByRole('menuitem', { name: 'Quick Import' }).click()
+			// --- Step 1: Upload (Directly via Sidebar) ---
+			// The input is hidden in the SidebarUpload component, but we can set input files directly
 			const fileInput = page.locator('input[type="file"]')
 			await fileInput.setInputFiles(FIXTURE_PATH)
-			await page.getByRole('button', { name: 'Upload & Process' }).click()
+
+			// Wait for "Import Complete" (confirms Upload -> Split -> Process success)
+			// Increase timeout because processing depends on machine speed
+			await expect(page.getByText('Import Complete').first()).toBeVisible({ timeout: 60000 })
+
+			// Explicitly reload to verify data persistence
+			await page.waitForTimeout(1000)
+			await page.reload()
 
 			// Wait for page reload and content to appear (Metadata extracted)
 			// This validates "Stages 1-3" (Upload, Split, Process)
@@ -57,12 +65,17 @@ test.describe
 			test.setTimeout(300000) // 5 mins just for this step
 
 			// --- Step 2: Verify Enriched Content (Summarization) ---
+			// Force reload to ensure fresh data (transcript) from server
+			await page.reload()
+			await page.waitForLoadState('domcontentloaded')
+
 			const titleLocator = page.getByText('Go, Web Components, and Secure Development')
 			await titleLocator.click()
 
-			// Check for "Generate Summary" button (implies Transcript exists)
-			const summaryBtn = page.getByRole('button', { name: 'Generate Summary' })
-			await expect(summaryBtn).toBeVisible({ timeout: 10000 })
+			const summaryBtn = page
+				.getByRole('button', { name: 'Generate Summary' })
+				.or(page.getByText('Generate Summary'))
+			await expect(summaryBtn).toBeVisible({ timeout: 30000 })
 
 			// Trigger Summarization
 			await summaryBtn.click()

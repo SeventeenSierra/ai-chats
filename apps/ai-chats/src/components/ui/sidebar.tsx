@@ -5,7 +5,6 @@
 
 import { usePathname } from 'next/navigation'
 import * as React from 'react'
-import { Badge } from '@/components/ui/badge'
 import { useIsMobile } from '@/hooks/use-mobile'
 import { cn } from '@/lib/utils'
 
@@ -67,18 +66,37 @@ export const Sidebar = ({ children }: { children: React.ReactNode }) => {
 				isOpen ? 'translate-x-0' : '-translate-x-full',
 			)}
 		>
-			<div className="flex flex-col h-full">
-				<div className="flex-1 overflow-hidden">{children}</div>
-				<div className="p-4 border-t flex justify-center bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-					<Badge variant="outline" className="text-xs font-normal text-muted-foreground">
-						Version 1.0.0
-					</Badge>
-				</div>
-			</div>
+			<div className="flex flex-col h-full">{children}</div>
 		</aside>
 	)
 }
 
-export const SidebarContent = ({ children }: { children: React.ReactNode }) => {
-	return <div className="flex flex-col h-full overflow-y-auto">{children}</div>
+export const SidebarHeader = ({
+	children,
+	className,
+}: {
+	children: React.ReactNode
+	className?: string
+}) => {
+	return <div className={cn('', className)}>{children}</div>
+}
+
+export const SidebarContent = ({
+	children,
+	className,
+}: {
+	children: React.ReactNode
+	className?: string
+}) => {
+	return <div className={cn('flex flex-col flex-1 overflow-y-auto', className)}>{children}</div>
+}
+
+export const SidebarFooter = ({
+	children,
+	className,
+}: {
+	children: React.ReactNode
+	className?: string
+}) => {
+	return <div className={cn('', className)}>{children}</div>
 }
