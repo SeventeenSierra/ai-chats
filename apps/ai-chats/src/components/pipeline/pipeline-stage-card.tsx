@@ -10,6 +10,7 @@ type PipelineStageCardProps = {
 	description: string
 	status: 'pending' | 'complete'
 	isDisabled?: boolean
+	icon?: React.ReactNode
 	children: React.ReactNode
 }
 
@@ -17,15 +18,19 @@ export function PipelineStageCard({
 	title,
 	description,
 	isDisabled = false,
+	icon,
 	children,
 }: PipelineStageCardProps) {
 	return (
 		<Card className={cn(isDisabled && 'bg-muted/50 border-dashed')}>
 			<CardHeader>
 				<div className="flex items-start justify-between">
-					<div className="flex-1">
-						<CardTitle className="text-xl font-headline">{title}</CardTitle>
-						<CardDescription>{description}</CardDescription>
+					<div className="flex-1 flex gap-3">
+						{icon && <div className="mt-1 text-primary">{icon}</div>}
+						<div>
+							<CardTitle className="text-xl font-headline">{title}</CardTitle>
+							<CardDescription>{description}</CardDescription>
+						</div>
 					</div>
 				</div>
 			</CardHeader>

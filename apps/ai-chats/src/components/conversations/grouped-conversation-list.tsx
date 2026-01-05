@@ -155,54 +155,60 @@ export function GroupedConversationList({
 	}
 
 	return (
-		<div className="flex flex-col h-full bg-background">
-			<div className="p-4 border-b space-y-4">
-				<div className="flex items-center justify-between">
-					<div>
-						<h2 className="text-lg font-semibold tracking-tight">Explorer</h2>
-						<p className="text-sm text-muted-foreground">Review, filter, and process.</p>
-					</div>
-					<div className="flex items-center gap-2">
-						{isAnythingSelected ? (
-							<Button onClick={onProcessSelected} size="sm" disabled={isGrouping}>
-								{isGrouping ? (
-									<Loader className="mr-2 h-4 w-4 animate-spin" />
-								) : (
-									<BrainCircuit className="mr-2 h-4 w-4" />
-								)}
-								Process ({selectedIds.size})
-							</Button>
-						) : hasUnprocessed ? (
-							<Button onClick={onProcessAll} size="sm" disabled={isGrouping}>
-								{isGrouping ? (
-									<Loader className="mr-2 h-4 w-4 animate-spin" />
-								) : (
-									<Sparkles className="mr-2 h-4 w-4" />
-								)}
-								Process All
-							</Button>
-						) : null}
-					</div>
-				</div>
+		<div className="flex flex-col h-full w-full bg-background overflow-hidden">
+			<div className="p-3 border-b space-y-3 shrink-0">
 				<ConversationFilters {...filterProps} />
+				{/* Collapsible Actions Area */}
 				{allConversations.length > 0 && (
-					<div className="flex items-center gap-2">
-						<Checkbox
-							id="select-all"
-							checked={isEverythingSelected}
-							onCheckedChange={(checked) => onToggleSelectAll(!!checked)}
-						/>
-						<label htmlFor="select-all" className="text-sm font-medium">
-							Select all ({allConversations.length})
-						</label>
+					<div className="flex items-center justify-between gap-2 pt-2 border-t">
+						<div className="flex items-center gap-2">
+							<Checkbox
+								id="select-all"
+								checked={isEverythingSelected}
+								onCheckedChange={(checked) => onToggleSelectAll(!!checked)}
+							/>
+							<label htmlFor="select-all" className="text-xs text-muted-foreground">
+								Select all ({allConversations.length})
+							</label>
+						</div>
+						<div className="flex items-center gap-1">
+							{isAnythingSelected ? (
+								<Button
+									onClick={onProcessSelected}
+									size="sm"
+									variant="outline"
+									disabled={isGrouping}
+								>
+									{isGrouping ? (
+										<Loader className="mr-1.5 h-3 w-3 animate-spin" />
+									) : (
+										<BrainCircuit className="mr-1.5 h-3 w-3" />
+									)}
+									Process ({selectedIds.size})
+								</Button>
+							) : hasUnprocessed ? (
+								<Button onClick={onProcessAll} size="sm" variant="outline" disabled={isGrouping}>
+									{isGrouping ? (
+										<Loader className="mr-1.5 h-3 w-3 animate-spin" />
+									) : (
+										<Sparkles className="mr-1.5 h-3 w-3" />
+									)}
+									Process All
+								</Button>
+							) : null}
+						</div>
 					</div>
 				)}
 			</div>
-			<ScrollArea className="flex-grow">
+			<ScrollArea className="flex-grow overflow-hidden">
 				{allConversations.length === 0 && !isLoading ? (
 					<EmptyState />
 				) : (
-					<Accordion type="multiple" className="w-full p-2" defaultValue={[defaultOpenValue]}>
+					<Accordion
+						type="multiple"
+						className="w-full p-2 overflow-hidden"
+						defaultValue={[defaultOpenValue]}
+					>
 						{groupedConversations.map((group, index) => {
 							// If a group has no conversations left after filtering on the page level, don't render it.
 							if (group.conversations.length === 0) {
@@ -229,8 +235,8 @@ export function GroupedConversationList({
 											<Badge variant="secondary">{group.conversations.length}</Badge>
 										</div>
 									</AccordionTrigger>
-									<AccordionContent>
-										<div className="space-y-1">
+									<AccordionContent className="overflow-hidden">
+										<div className="space-y-1 overflow-hidden">
 											{group.conversations.map((convo) => (
 												<ConversationListItem
 													key={convo.id}
@@ -243,7 +249,7 @@ export function GroupedConversationList({
 														checked={selectedIds.has(convo.id)}
 														onClick={(e) => handleCheckboxClick(e, convo.id)}
 														aria-label={`Select ${convo.title}`}
-														className="mt-1"
+														className="mt-0.5"
 													/>
 												</ConversationListItem>
 											))}

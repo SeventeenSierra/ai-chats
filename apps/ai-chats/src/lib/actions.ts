@@ -65,18 +65,48 @@ export async function getTranscriptAction(
 	}
 }
 
+/**
+ * Enrich a single conversation by fetching and saving its transcript.
+ */
+export async function enrichSingleConversationAction(
+	conversationId: string,
+	storageFilename: string,
+): Promise<{ success: boolean; transcript?: ConversationTurn[]; error?: string }> {
+	if (!storageFilename) {
+		return { success: false, error: 'No storage filename provided to fetch transcript.' }
+	}
+	try {
+		const result = await getTranscript({ storageFilename })
+		if (result.transcript) {
+			await updateConversation({
+				id: conversationId,
+				transcript: result.transcript,
+			})
+			return { success: true, transcript: result.transcript }
+		}
+		return { success: false, error: 'No transcript returned.' }
+	} catch (error) {
+		console.error('Enrich single conversation error:', error)
+		const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred.'
+		return { success: false, error: `Failed to enrich transcript: ${errorMessage}` }
+	}
+}
+
 export async function splitFileAction(
 	filename: string,
 	jobId: string,
 ): Promise<{ success: boolean; message: string; fileCount?: number }> {
 	try {
-		splitImportedFile({ filename, jobId })
-		return { success: true, message: 'File splitting started.' }
+		const result = await splitImportedFile({ filename, jobId })
+		if (!result.success) {
+			throw new Error(result.message)
+		}
+		return { success: true, message: 'File splitting complete.', fileCount: result.fileCount }
 	} catch (error) {
 		console.error('Split file error:', error)
 		return {
 			success: false,
-			message: 'Failed to start file splitting. Please try again.',
+			message: error instanceof Error ? error.message : 'Failed to split file.',
 		}
 	}
 }
@@ -85,13 +115,16 @@ export async function processConversationsAction(
 	jobId: string,
 ): Promise<{ success: boolean; message: string }> {
 	try {
-		processConversations({ jobId })
-		return { success: true, message: 'Conversation processing started.' }
+		const result = await processConversations({ jobId })
+		if (!result.success) {
+			throw new Error(result.message)
+		}
+		return { success: true, message: 'Conversation processing complete.' }
 	} catch (error) {
 		console.error('Process conversations error:', error)
 		return {
 			success: false,
-			message: 'Failed to start conversation processing. Please try again.',
+			message: error instanceof Error ? error.message : 'Failed to process conversations.',
 		}
 	}
 }
@@ -100,13 +133,13 @@ export async function fetchTranscriptsAction(
 	jobId: string,
 ): Promise<{ success: boolean; message: string }> {
 	try {
-		fetchAndSaveTranscripts({ jobId })
-		return { success: true, message: 'Transcript fetching started.' }
+		await fetchAndSaveTranscripts({ jobId })
+		return { success: true, message: 'Transcript fetching complete.' }
 	} catch (error) {
 		console.error('Fetch transcripts error:', error)
 		return {
 			success: false,
-			message: 'Failed to start transcript fetching. Please try again.',
+			message: error instanceof Error ? error.message : 'Failed to fetch transcripts.',
 		}
 	}
 }
@@ -115,13 +148,13 @@ export async function addBacklinksAction(
 	jobId: string,
 ): Promise<{ success: boolean; message: string }> {
 	try {
-		addBacklinksToTranscripts({ jobId })
-		return { success: true, message: 'Transcript backlinking started.' }
+		await addBacklinksToTranscripts({ jobId })
+		return { success: true, message: 'Transcript backlinking complete.' }
 	} catch (error) {
 		console.error('Add backlinks error:', error)
 		return {
 			success: false,
-			message: 'Failed to start transcript backlinking. Please try again.',
+			message: error instanceof Error ? error.message : 'Failed to add backlinks.',
 		}
 	}
 }
@@ -143,6 +176,8 @@ export async function wipeDataAction(): Promise<{
 	}
 }
 
+import { runWithConcurrency } from '@ai-chat/shared'
+
 /**
  * New, more robust grouping action that processes conversations one by one.
  */
@@ -160,10 +195,15 @@ export async function groupConversationsAction(
 		console.error('Could not pre-fetch existing categories', error)
 	}
 
-	for (const convo of conversationsToProcess) {
+	// Limit concurrency to 1 to prevent local AI overload
+	const processingTasks = conversationsToProcess.map((convo) => async () => {
 		try {
 			const { category } = await categorizeSingleConversation({
-				conversation: { id: convo.id, title: convo.title },
+				conversation: {
+					id: convo.id,
+					title: convo.title,
+					summary: convo.summary,
+				},
 				existingCategories: existingCategories,
 			})
 
@@ -177,7 +217,9 @@ export async function groupConversationsAction(
 			console.error('Failed to categorize conversation %s: "%s"', convo.id, convo.title, error)
 			// We can choose to continue or stop on error. For robustness, we'll continue.
 		}
-	}
+	})
+
+	await runWithConcurrency(processingTasks, 1)
 	return { success: true }
 }
 

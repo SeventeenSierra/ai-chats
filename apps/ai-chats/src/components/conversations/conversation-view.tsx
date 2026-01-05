@@ -37,7 +37,13 @@ import {
 	SelectValue,
 } from '@/components/ui/select'
 import { useToast } from '@/hooks/use-toast'
-import { archiveConversationAction, exportToMarkdownAction, getSummaryAction } from '@/lib/actions'
+import {
+	archiveConversationAction,
+	enrichSingleConversationAction,
+	exportToMarkdownAction,
+	getSummaryAction,
+	groupConversationsAction,
+} from '@/lib/actions'
 import { cn } from '@/lib/utils'
 import type { AppCategory, Conversation, ConversationTurn } from '@/types'
 import { Badge } from '../ui/badge'
@@ -192,9 +198,37 @@ function SummarySection({
 	onDataChange: () => void
 }) {
 	const [isSummarizing, setIsSummarizing] = React.useState(false)
+	const [isEnriching, setIsEnriching] = React.useState(false)
+	const [isCategorizing, setIsCategorizing] = React.useState(false)
 	const { toast } = useToast()
 	const transcript = conversation.transcript
 	const summary = conversation.summary
+	const needsCategory = !conversation.category || conversation.category === 'Unprocessed'
+
+	const handleEnrich = async () => {
+		if (!conversation.storageFilename) {
+			toast({
+				variant: 'destructive',
+				title: 'Error',
+				description: 'No storage file available for this conversation.',
+			})
+			return
+		}
+		setIsEnriching(true)
+		toast({ title: 'Fetching Transcript', description: 'Loading the full conversation...' })
+
+		const result = await enrichSingleConversationAction(
+			conversation.id,
+			conversation.storageFilename,
+		)
+		if (result.success) {
+			toast({ title: 'Transcript Loaded', description: 'Full transcript is now available.' })
+			onDataChange()
+		} else {
+			toast({ variant: 'destructive', title: 'Error', description: result.error })
+		}
+		setIsEnriching(false)
+	}
 
 	const handleSummarize = async () => {
 		if (!transcript || transcript.length === 0) {
@@ -226,6 +260,28 @@ function SummarySection({
 		setIsSummarizing(false)
 	}
 
+	const handleCategorize = async () => {
+		if (!transcript || transcript.length === 0) {
+			toast({
+				variant: 'destructive',
+				title: 'Error',
+				description: 'Cannot categorize without a transcript.',
+			})
+			return
+		}
+		setIsCategorizing(true)
+		toast({ title: 'Categorizing', description: 'AI is analyzing the conversation...' })
+
+		const result = await groupConversationsAction([conversation])
+		if (result.success) {
+			toast({ title: 'Categorized', description: 'AI has assigned a category.' })
+			onDataChange()
+		} else {
+			toast({ variant: 'destructive', title: 'Error', description: result.error })
+		}
+		setIsCategorizing(false)
+	}
+
 	return (
 		<div className="p-4 border-t">
 			<h3 className="font-semibold mb-2">AI Summary</h3>
@@ -238,14 +294,35 @@ function SummarySection({
 					<p className="text-sm text-muted-foreground">
 						No summary available for this conversation.
 					</p>
-					<Button onClick={handleSummarize} disabled={isSummarizing} size="sm">
-						<BrainCircuit className="mr-2 h-4 w-4" />
-						Generate Summary
-					</Button>
+					<div className="flex justify-center gap-2 flex-wrap">
+						<Button onClick={handleSummarize} disabled={isSummarizing} size="sm">
+							<BrainCircuit className="mr-2 h-4 w-4" />
+							Generate Summary
+						</Button>
+						{needsCategory && (
+							<Button
+								onClick={handleCategorize}
+								disabled={isCategorizing}
+								size="sm"
+								variant="outline"
+							>
+								<Folder className="mr-2 h-4 w-4" />
+								{isCategorizing ? 'Categorizing...' : 'Auto-Categorize'}
+							</Button>
+						)}
+					</div>
 				</div>
 			) : (
-				<div className="p-4 text-center text-sm text-muted-foreground">
-					This conversation has not been enriched with its full transcript.
+				<div className="text-center py-4 space-y-2">
+					<p className="text-sm text-muted-foreground">
+						This conversation has not been enriched with its full transcript.
+					</p>
+					{conversation.storageFilename && (
+						<Button onClick={handleEnrich} disabled={isEnriching} size="sm">
+							<FileText className="mr-2 h-4 w-4" />
+							{isEnriching ? 'Fetching...' : 'Fetch Transcript'}
+						</Button>
+					)}
 				</div>
 			)}
 		</div>

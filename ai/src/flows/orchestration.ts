@@ -6,6 +6,7 @@ import {
 	getConversationsToBacklink,
 	getConversationsToFetch,
 } from '@ai-chat/backend'
+import { runWithConcurrency } from '@ai-chat/shared'
 import { enrichTranscript } from './enrich-transcripts'
 import { getTranscript } from './get-transcript'
 import { updateConversation } from './update-conversation'
@@ -34,16 +35,20 @@ export async function fetchAndSaveTranscripts({ jobId }: { jobId: string }) {
 			message: `Found ${totalToProcess} transcripts to fetch.`,
 		})
 
-		for (const [index, convo] of conversationsToFetch.entries()) {
+		// Local AI/Network limit (more permissive for fetching, strictly 1 for AI if used here)
+		// Fetching is network bound, so we can do more, say 5.
+		const fetchTasks = conversationsToFetch.map((convo, index) => async () => {
 			try {
 				if (!convo.storageFilename) {
 					console.warn(
 						`Skipping conversation ${convo.id} because it is missing a storage filename.`,
 					)
-					continue
+					return
 				}
 
-				const { transcript } = await getTranscript({ storageFilename: convo.storageFilename })
+				const { transcript } = await getTranscript({
+					storageFilename: convo.storageFilename,
+				})
 				if (!transcript) {
 					throw new Error(`Failed to fetch transcript for ${convo.id}`)
 				}
@@ -56,7 +61,7 @@ export async function fetchAndSaveTranscripts({ jobId }: { jobId: string }) {
 				await updateImportStatus({
 					jobId,
 					status: 'processing',
-					processed: index + 1,
+					processed: index + 1, // Note: index isn't atomic here, but good enough for progress for now
 					total: totalToProcess,
 					progress: Math.round(((index + 1) / totalToProcess) * 100),
 					message: `Fetched transcript ${index + 1} of ${totalToProcess}...`,
@@ -64,7 +69,9 @@ export async function fetchAndSaveTranscripts({ jobId }: { jobId: string }) {
 			} catch (fetchError) {
 				console.error('Error fetching transcript for conversation %s:', convo.id, fetchError)
 			}
-		}
+		})
+
+		await runWithConcurrency(fetchTasks, 5)
 		await updateImportStatus({
 			jobId,
 			status: 'completed',
@@ -108,11 +115,12 @@ export async function addBacklinksToTranscripts({ jobId }: { jobId: string }) {
 			message: `Found ${totalToProcess} conversations to backlink.`,
 		})
 
-		for (const [index, convo] of conversationsToBacklink.entries()) {
+		// AI Backlinking - Strictly 1 concurrent
+		const backlinkTasks = conversationsToBacklink.map((convo, index) => async () => {
 			try {
 				if (!convo.transcript) {
 					console.warn(`Skipping backlinking for ${convo.id} due to missing transcript.`)
-					continue
+					return
 				}
 
 				const { enrichedTranscript } = await enrichTranscript({
@@ -138,7 +146,9 @@ export async function addBacklinksToTranscripts({ jobId }: { jobId: string }) {
 			} catch (enrichError) {
 				console.error('Error backlinking conversation %s:', convo.id, enrichError)
 			}
-		}
+		})
+
+		await runWithConcurrency(backlinkTasks, 1)
 
 		await updateImportStatus({
 			jobId,

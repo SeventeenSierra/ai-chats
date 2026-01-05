@@ -14,6 +14,7 @@ import { z } from 'zod'
 const ConversationInputSchema = z.object({
 	id: z.string(),
 	title: z.string(),
+	summary: z.string().optional(),
 })
 
 // Define the input schema for the flow
@@ -59,12 +60,18 @@ const categorizeSingleConversationFlow = async (
 			? input.existingCategories.map((c) => `- ${c}`).join('\n')
 			: '(No categories exist yet)'
 
+	// Include summary if available to improve context
+	const conversationContext = `
+- Title: "${input.conversation.title}"
+${input.conversation.summary ? `- Summary: "${input.conversation.summary}"` : ''}
+`.trim()
+
 	const prompt = `You are an expert project manager. Your task is to assign a single conversation to a category.
 
-You will be given the conversation's title and a list of categories that already exist.
+You will be given the conversation's title${input.conversation.summary ? ', summary,' : ''} and a list of categories that already exist.
 
-Analyze the conversation title:
-- Title: "${input.conversation.title}"
+Analyze the conversation:
+${conversationContext}
 
 Here are the existing categories:
 ${existingCategoriesList}
@@ -76,7 +83,8 @@ RULES:
 4.  Your response MUST be the name of the category, and nothing else.
 `
 
-	for (let attempt = 0; attempt < maxRetries; attempt++) {
+	// Retry mechanism with exponential backoff
+	for (let attempt = 1; attempt <= maxRetries; attempt++) {
 		try {
 			const completion = await ai.chat.completions.create({
 				model: model,
@@ -103,15 +111,15 @@ RULES:
 			return { category }
 		} catch (err) {
 			lastError = err instanceof Error ? err : new Error(String(err))
-			// Check for connection refusal (Ollama not running)
-			if (lastError.message.includes('ECONNREFUSED') || lastError.message.includes('FetchError')) {
-				console.warn('⚠️ AI Service Unavailable (Ollama). Skipping categorization.')
-				return { category: 'Unprocessed' }
-			}
 
-			console.warn('Attempt %d failed:', attempt + 1, lastError.message)
-			if (attempt < maxRetries - 1) {
-				await new Promise((resolve) => setTimeout(resolve, 1000 * (attempt + 1)))
+			// If it's the last attempt or a fatal error, we might stop, but we loop for now.
+			const isLastAttempt = attempt === maxRetries
+			if (!isLastAttempt) {
+				const delay = 2 ** attempt * 1000 + Math.random() * 500 // Exponential backoff + jitter
+				console.warn(
+					`Attempt ${attempt} failed: ${lastError.message}. Retrying in ${Math.round(delay)}ms...`,
+				)
+				await new Promise((resolve) => setTimeout(resolve, delay))
 			}
 		}
 	}

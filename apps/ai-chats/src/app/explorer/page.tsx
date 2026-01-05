@@ -9,13 +9,17 @@ import ConversationList from '@/components/conversations/conversation-list'
 import ConversationView from '@/components/conversations/conversation-view'
 import { GroupedConversationList } from '@/components/conversations/grouped-conversation-list'
 import AppHeader from '@/components/layout/header'
-import { Sidebar, SidebarContent, useSidebar } from '@/components/ui/sidebar'
+import { SidebarSettings } from '@/components/sidebar/sidebar-settings'
+import { SidebarUpload } from '@/components/sidebar/sidebar-upload'
+import { Sidebar, SidebarContent, SidebarFooter, useSidebar } from '@/components/ui/sidebar'
 import { Toaster } from '@/components/ui/toaster'
 import { useIsMobile } from '@/hooks/use-mobile'
 import { useToast } from '@/hooks/use-toast'
 import {
 	addCategoryAction,
+	enrichSingleConversationAction,
 	getConversationByIdAction,
+	getSummaryAction,
 	groupConversationsAction,
 	renameCategoryAction,
 	updateConversationCategoryAction,
@@ -105,6 +109,7 @@ export default function ExplorerPage() {
 	const [isWiping, setIsWiping] = React.useState(false)
 	const [isGrouping, setIsGrouping] = React.useState(false)
 	const [selectedIds, setSelectedIds] = React.useState<Set<string>>(new Set())
+	const [isPipelineOpen, setIsPipelineOpen] = React.useState(false)
 
 	// Search, Filter, Sort State
 	const [searchTerm, setSearchTerm] = React.useState('')
@@ -118,6 +123,13 @@ export default function ExplorerPage() {
 		status: 'active',
 		noCategoryOnly: false,
 		deepResearchOnly: false,
+	})
+
+	// Per-conversation action loading states
+	const [_actionLoadingIds, setActionLoadingIds] = React.useState({
+		enriching: new Set<string>(),
+		summarizing: new Set<string>(),
+		categorizing: new Set<string>(),
 	})
 
 	const { toast } = useToast()
@@ -156,18 +168,20 @@ export default function ExplorerPage() {
 	)
 
 	// Separate effect to sync selected conversation when list updates
+	// Also re-fetches full details to get transcript after data changes
 	React.useEffect(() => {
 		if (selectedConversation && allConversations.length > 0) {
 			const updated = allConversations.find((c) => c.id === selectedConversation.id)
-			if (updated && updated !== selectedConversation) {
-				// Only update if actually different reference/content to avoid loops
-				// Check if actually modified to avoid shallow cycle?
-				// For now, simpler: Just let the user re-select or assume optimistics work.
-				// Actually, the original logic was trying to keep the selected view fresh.
-				setSelectedConversation(updated)
+			if (updated) {
+				// Always re-fetch full details to get transcript (list doesn't include it)
+				getConversationByIdAction(updated.id).then((result) => {
+					if (result.conversation) {
+						setSelectedConversation(result.conversation)
+					}
+				})
 			}
 		}
-	}, [allConversations, selectedConversation]) // Only run when list actually changes
+	}, [allConversations, selectedConversation]) // Only run when list changes, removed selectedConversation to avoid loop
 
 	React.useEffect(() => {
 		fetchAndSetConversations(true)
@@ -415,6 +429,131 @@ export default function ExplorerPage() {
 		}
 	}
 
+	// Per-conversation action handlers
+	const _handleEnrichConversation = async (conversation: Conversation) => {
+		if (!conversation.storageFilename) {
+			toast({
+				variant: 'destructive',
+				title: 'Error',
+				description: 'No storage file for this conversation.',
+			})
+			return
+		}
+
+		setActionLoadingIds((prev) => ({
+			...prev,
+			enriching: new Set(prev.enriching).add(conversation.id),
+		}))
+
+		try {
+			const result = await enrichSingleConversationAction(
+				conversation.id,
+				conversation.storageFilename,
+			)
+			if (result.success) {
+				toast({
+					title: 'Transcript Fetched',
+					description: 'Conversation enriched with full transcript.',
+				})
+				await fetchAndSetConversations()
+			} else {
+				toast({ variant: 'destructive', title: 'Enrich Failed', description: result.error })
+			}
+		} catch (_error) {
+			toast({
+				variant: 'destructive',
+				title: 'Error',
+				description: 'Failed to enrich conversation.',
+			})
+		} finally {
+			setActionLoadingIds((prev) => {
+				const newSet = new Set(prev.enriching)
+				newSet.delete(conversation.id)
+				return { ...prev, enriching: newSet }
+			})
+		}
+	}
+
+	const _handleSummarizeConversation = async (conversation: Conversation) => {
+		if (!conversation.transcript || conversation.transcript.length === 0) {
+			toast({
+				variant: 'destructive',
+				title: 'Error',
+				description: 'Conversation needs transcript first.',
+			})
+			return
+		}
+
+		setActionLoadingIds((prev) => ({
+			...prev,
+			summarizing: new Set(prev.summarizing).add(conversation.id),
+		}))
+
+		try {
+			const transcriptString = conversation.transcript
+				.map((turn) => `${turn.author}:\n${turn.parts.map((p) => p.content).join('\n')}`)
+				.join('\n\n')
+
+			const result = await getSummaryAction(conversation.id, transcriptString)
+			if (result.summary) {
+				toast({ title: 'Summary Generated', description: 'AI summary has been saved.' })
+				await fetchAndSetConversations()
+			} else {
+				toast({ variant: 'destructive', title: 'Summarize Failed', description: result.error })
+			}
+		} catch (_error) {
+			toast({
+				variant: 'destructive',
+				title: 'Error',
+				description: 'Failed to summarize conversation.',
+			})
+		} finally {
+			setActionLoadingIds((prev) => {
+				const newSet = new Set(prev.summarizing)
+				newSet.delete(conversation.id)
+				return { ...prev, summarizing: newSet }
+			})
+		}
+	}
+
+	const _handleCategorizeConversation = async (conversation: Conversation) => {
+		if (!conversation.transcript || conversation.transcript.length === 0) {
+			toast({
+				variant: 'destructive',
+				title: 'Error',
+				description: 'Conversation needs transcript first.',
+			})
+			return
+		}
+
+		setActionLoadingIds((prev) => ({
+			...prev,
+			categorizing: new Set(prev.categorizing).add(conversation.id),
+		}))
+
+		try {
+			const result = await groupConversationsAction([conversation])
+			if (result.success) {
+				toast({ title: 'Categorized', description: 'AI has assigned a category.' })
+				await fetchAndSetConversations()
+			} else {
+				toast({ variant: 'destructive', title: 'Categorize Failed', description: result.error })
+			}
+		} catch (_error) {
+			toast({
+				variant: 'destructive',
+				title: 'Error',
+				description: 'Failed to categorize conversation.',
+			})
+		} finally {
+			setActionLoadingIds((prev) => {
+				const newSet = new Set(prev.categorizing)
+				newSet.delete(conversation.id)
+				return { ...prev, categorizing: newSet }
+			})
+		}
+	}
+
 	const handleAddCategory = async (categoryName: string) => {
 		const result = await addCategoryAction(categoryName)
 		if (result.success) {
@@ -440,9 +579,16 @@ export default function ExplorerPage() {
 
 	return (
 		<div className="h-screen w-screen flex flex-col bg-muted/40 overflow-hidden">
-			<AppHeader onWipe={handleWipe} isWiping={isWiping} isJobRunning={isGrouping} />
+			<AppHeader
+				onWipe={handleWipe}
+				_isWiping={isWiping}
+				_isJobRunning={isGrouping}
+				isPipelineOpen={isPipelineOpen}
+				setPipelineOpen={setIsPipelineOpen}
+			/>
 			<div className="flex flex-grow overflow-hidden">
 				<Sidebar>
+					<SidebarUpload onFileUploaded={fetchAndSetConversations} />
 					<SidebarContent>
 						{groupBy === 'category' ? (
 							<GroupedConversationList
@@ -495,6 +641,9 @@ export default function ExplorerPage() {
 							/>
 						)}
 					</SidebarContent>
+					<SidebarFooter className="border-t p-0">
+						<SidebarSettings onWipe={handleWipe} isWiping={isWiping} />
+					</SidebarFooter>
 				</Sidebar>
 
 				<main

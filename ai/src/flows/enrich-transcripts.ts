@@ -38,7 +38,7 @@ export async function enrichTranscript(
 	const maxRetries = 3
 	let lastError: Error | null = null
 
-	for (let attempt = 0; attempt < maxRetries; attempt++) {
+	for (let attempt = 1; attempt <= maxRetries; attempt++) {
 		try {
 			const prompt = `You are an expert at creating knowledge graphs. Your task is to analyze a conversation transcript and intelligently add backlinks to other related conversations.
 
@@ -92,9 +92,14 @@ ${JSON.stringify(input.transcript)}
 			return parsed as EnrichTranscriptOutput
 		} catch (err) {
 			lastError = err instanceof Error ? err : new Error(String(err))
-			console.warn('Attempt %d failed:', attempt + 1, lastError.message)
-			if (attempt < maxRetries - 1) {
-				await new Promise((resolve) => setTimeout(resolve, 1000 * (attempt + 1)))
+
+			const isLastAttempt = attempt === maxRetries
+			if (!isLastAttempt) {
+				const delay = 2 ** attempt * 1000 + Math.random() * 500
+				console.warn(
+					`Attempt ${attempt} failed: ${lastError.message}. Retrying in ${Math.round(delay)}ms...`,
+				)
+				await new Promise((resolve) => setTimeout(resolve, delay))
 			}
 		}
 	}
