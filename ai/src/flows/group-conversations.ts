@@ -9,7 +9,6 @@
  */
 
 import { z } from 'zod'
-import { ai } from '../core/genkit'
 
 // Define the structure for a single conversation passed to the flow
 const ConversationInputSchema = z.object({
@@ -46,64 +45,78 @@ export async function categorizeSingleConversation(
 	return categorizeSingleConversationFlow(input)
 }
 
-const categorizationPrompt = ai.definePrompt({
-	name: 'singleConversationCategorizationPrompt',
-	model: 'googleai/gemini-1.5-flash-latest',
-	input: { schema: CategorizeSingleConversationInputSchema },
-	output: { schema: CategorizeSingleConversationOutputSchema },
-	prompt: `You are an expert project manager. Your task is to assign a single conversation to a category.
+import { ai, model } from '../core/openai'
+
+const categorizeSingleConversationFlow = async (
+	input: CategorizeSingleConversationInput,
+): Promise<CategorizeSingleConversationOutput> => {
+	// Retry mechanism for transient AI errors
+	const maxRetries = 3
+	let lastError: Error | null = null
+
+	const existingCategoriesList =
+		input.existingCategories.length > 0
+			? input.existingCategories.map((c) => `- ${c}`).join('\n')
+			: '(No categories exist yet)'
+
+	const prompt = `You are an expert project manager. Your task is to assign a single conversation to a category.
 
 You will be given the conversation's title and a list of categories that already exist.
 
 Analyze the conversation title:
-- Title: "{{conversation.title}}"
+- Title: "${input.conversation.title}"
 
 Here are the existing categories:
-{{#if existingCategories}}
-  {{#each existingCategories}}
-  - {{this}}
-  {{/each}}
-{{else}}
-(No categories exist yet)
-{{/if}}
+${existingCategoriesList}
 
 RULES:
 1.  Read the title and decide if it fits well into one of the EXISTING categories.
 2.  If it fits, return that exact category name.
 3.  If it does not fit well, create a NEW, short, descriptive category name for it. For example, "UI Development" or "API Integration".
 4.  Your response MUST be the name of the category, and nothing else.
-`,
-})
+`
 
-const categorizeSingleConversationFlow = ai.defineFlow(
-	{
-		name: 'categorizeSingleConversationFlow',
-		inputSchema: CategorizeSingleConversationInputSchema,
-		outputSchema: CategorizeSingleConversationOutputSchema,
-	},
-	async (input) => {
-		// Retry mechanism for transient AI errors
-		const maxRetries = 3
-		let lastError: Error | null = null
+	for (let attempt = 0; attempt < maxRetries; attempt++) {
+		try {
+			const completion = await ai.chat.completions.create({
+				model: model,
+				messages: [
+					{
+						role: 'user',
+						content: prompt,
+					},
+				],
+			})
 
-		for (let attempt = 0; attempt < maxRetries; attempt++) {
-			try {
-				const result = await categorizationPrompt(input)
-				// Validate that the AI returned a plausible, non-empty category.
-				if (!result.output?.category) {
-					throw new Error('AI returned empty or invalid category data.')
-				}
-				return result.output
-			} catch (err) {
-				lastError = err instanceof Error ? err : new Error(String(err))
-				console.warn('Attempt %d failed:', attempt + 1, lastError.message)
-				if (attempt < maxRetries - 1) {
-					await new Promise((resolve) => setTimeout(resolve, 1000 * (attempt + 1)))
-				}
+			const content = completion.choices[0].message.content?.trim()
+			if (!content) throw new Error('No content received from AI')
+
+			// Try to interpret the content as a category name directly.
+			// The prompt says "Your response MUST be the name of the category, and nothing else."
+			// We can strip quotes if present.
+			const category = content.replace(/^["']|["']$/g, '').trim()
+
+			if (!category) {
+				throw new Error('AI returned empty category name.')
+			}
+
+			return { category }
+		} catch (err) {
+			lastError = err instanceof Error ? err : new Error(String(err))
+			// Check for connection refusal (Ollama not running)
+			if (lastError.message.includes('ECONNREFUSED') || lastError.message.includes('FetchError')) {
+				console.warn('⚠️ AI Service Unavailable (Ollama). Skipping categorization.')
+				return { category: 'Unprocessed' }
+			}
+
+			console.warn('Attempt %d failed:', attempt + 1, lastError.message)
+			if (attempt < maxRetries - 1) {
+				await new Promise((resolve) => setTimeout(resolve, 1000 * (attempt + 1)))
 			}
 		}
+	}
 
-		console.error('AI categorization failed after retries.', lastError)
-		throw new Error('AI categorization failed to return valid output.')
-	},
-)
+	console.error('AI categorization failed after retries.', lastError)
+	// Fallback instead of exploding
+	return { category: 'Unprocessed' }
+}

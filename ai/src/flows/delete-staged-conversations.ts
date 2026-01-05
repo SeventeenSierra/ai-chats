@@ -10,7 +10,6 @@
 
 import { deleteAllConversations } from '@ai-chat/backend/queries'
 import { z } from 'zod'
-import { ai } from '../core/genkit'
 
 const DeleteStagedConversationsInputSchema = z.object({})
 export type DeleteStagedConversationsInput = z.infer<typeof DeleteStagedConversationsInputSchema>
@@ -22,25 +21,18 @@ const DeleteStagedConversationsOutputSchema = z.object({
 export type DeleteStagedConversationsOutput = z.infer<typeof DeleteStagedConversationsOutputSchema>
 
 export async function deleteStagedConversations(
-	input: DeleteStagedConversationsInput,
+	_input: DeleteStagedConversationsInput,
 ): Promise<DeleteStagedConversationsOutput> {
-	return deleteStagedConversationsFlow(input)
+	return deleteStagedConversationsFlow()
 }
 
-const deleteStagedConversationsFlow = ai.defineFlow(
-	{
-		name: 'deleteStagedConversationsFlow',
-		inputSchema: DeleteStagedConversationsInputSchema,
-		outputSchema: DeleteStagedConversationsOutputSchema,
-	},
-	async () => {
-		try {
-			const deletedCount = await deleteAllConversations()
-			console.log(`Deleted ${deletedCount} conversation(s) from database.`)
-			return { success: true, deletedCount }
-		} catch (error) {
-			console.error('Failed to delete conversations from database:', error)
-			return { success: false, deletedCount: 0 }
-		}
-	},
-)
+const deleteStagedConversationsFlow = async (): Promise<DeleteStagedConversationsOutput> => {
+	try {
+		const deletedCount = await deleteAllConversations()
+		console.log(`Deleted ${deletedCount} conversation(s) from database.`)
+		return { success: true, deletedCount }
+	} catch (error) {
+		console.error('Failed to delete conversations from database:', error)
+		return { success: false, deletedCount: 0 }
+	}
+}

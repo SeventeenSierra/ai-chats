@@ -58,3 +58,10 @@ seed-data/*
 !seed-data/package.json
 !seed-data/tsconfig.json
 .git-filter-repo-replacements
+
+# Generated data and fixtures
+data/
+tests/fixtures/
+!tests/fixtures/seeds/
+test-results/
+test_upload.xml

@@ -36,10 +36,9 @@ Use these scopes for conventional commits:
 | `lib` | Library code (database, storage, xml-parser) |
 | `ui` | UI components |
 | `db` | Database schema and queries |
-| `storage` | S3/Garage storage |
+| `storage` | Local filesystem storage |
 | `deps` | Dependencies |
 | `config` | Configuration files |
 | `ci` | CI/CD and workflows |
 | `docs` | Documentation |
 | `services` | Genkit AI flows |
-| `infra` | Infrastructure (Docker, migrations) |

@@ -7,13 +7,22 @@ Thank you for your interest in contributing to Gemini Oracle! We welcome contrib
 1.  **Fork and Clone**: Fork the repository and clone it locally.
 2.  **Environment Setup**: We use Nix for a reproducible development environment. Run `nix develop` to enter the shell.
 3.  **Dependencies**: Run `pnpm install` to install dependencies.
-4.  **Branching**: Create a feature branch for your changes (`git checkout -b feature/my-feature`).
+4.  **Branching**: Create a feature branch for your changes using standard prefixes:
+    *   `feat/`: New features (e.g., `feat/user-auth`)
+    *   `fix/`: Bug fixes (e.g., `fix/login-error`)
+    *   `chore/`: Maintenance (e.g., `chore/dependency-updates`)
+    *   `docs/`, `infra/`, `refactor/`, `style/`, `test/`, `ci/`, `build/`, `revert/`
+    *   *Note: Pre-commit hooks will validate your branch name.*
 5.  **Coding Standards**:
     *   We use **Biome** for linting and formatting. Run `pnpm lint` and `pnpm format` before committing.
     *   Follow the **Conventional Commits** specification for commit messages.
     *   Sign off on all commits (DCO) using `git commit -s`.
-6.  **Testing**: Run `pnpm test` to ensure tests pass.
-7.  **Pull Request**: Open a Pull Request against the `main` branch.
+6.  **Git Hooks**:
+    *   **Pre-commit**: Validates branch name, runs linting and typechecking. (Fast)
+    *   **Pre-push**: Runs full build, security audit (npm audit, Semgrep, Trivy, Gitleaks, Hadolint), and SBOM generation. (Strict)
+    *   *Tip: You can skip hooks with `git commit --no-verify` or `git push --no-verify` in emergencies, but CI will likely fail.*
+7.  **Testing**: Run `pnpm test` to ensure tests pass.
+8.  **Pull Request**: Open a Pull Request against the `main` branch.
 
 ## Licensing
 

@@ -44,7 +44,7 @@ export async function POST(request: NextRequest) {
 				const storageFilename = `${id}.xml`
 
 				// Save to storage
-				await uploadToStorage(storageFilename, conversationXml)
+				await uploadToStorage(storageFilename, Buffer.from(conversationXml), 'text/xml')
 
 				// Save metadata to database
 				await saveConversation({

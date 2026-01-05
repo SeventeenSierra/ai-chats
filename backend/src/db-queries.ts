@@ -4,11 +4,11 @@
 'use server'
 
 import type { AppCategory, Conversation } from '@ai-chat/shared/types'
-import { pool } from './database'
+import { getDb } from './database'
 
 export async function getConversations(): Promise<Conversation[]> {
 	try {
-		const result = await pool.query(`
+		const stmt = getDb().prepare(`
       SELECT 
         id, title, created_at as "createdAt", status, 
         has_rich_content as "hasRichContent", 
@@ -26,7 +26,12 @@ export async function getConversations(): Promise<Conversation[]> {
       ORDER BY created_at DESC 
       LIMIT 500
     `)
-		return result.rows
+		const rows = stmt.all() as any[]
+		return rows.map((row) => ({
+			...row,
+			hasRichContent: Boolean(row.hasRichContent),
+			isDeepResearch: Boolean(row.isDeepResearch),
+		}))
 	} catch (error) {
 		console.error('Error fetching conversations:', error)
 		return []
@@ -35,16 +40,16 @@ export async function getConversations(): Promise<Conversation[]> {
 
 export async function getCategories(): Promise<AppCategory[]> {
 	try {
-		const result = await pool.query(`
+		const stmt = getDb().prepare(`
       SELECT 
         c.name, 
-        COALESCE(COUNT(conv.id), 0)::int as count
+        COALESCE(COUNT(conv.id), 0) as count
       FROM categories c
       LEFT JOIN conversations conv ON conv.category = c.name
       GROUP BY c.name
       ORDER BY c.name
     `)
-		return result.rows
+		return stmt.all() as AppCategory[]
 	} catch (error) {
 		console.error('Error fetching categories:', error)
 		return []
@@ -52,36 +57,22 @@ export async function getCategories(): Promise<AppCategory[]> {
 }
 
 export async function updateConversationCategory(id: string, newCategory: string): Promise<void> {
-	const client = await pool.connect()
-	try {
-		await client.query('BEGIN')
-
+	const db = getDb()
+	const tx = db.transaction(() => {
 		// Ensure category exists
-		await client.query(
-			`
-      INSERT INTO categories (name) VALUES ($1) 
-      ON CONFLICT (name) DO NOTHING
-    `,
-			[newCategory],
-		)
+		db.prepare(`INSERT OR IGNORE INTO categories (name) VALUES (?)`).run(newCategory)
 
 		// Update conversation
-		await client.query(
-			`
-      UPDATE conversations 
-      SET category = $1, categorized_at = NOW() 
-      WHERE id = $2
-    `,
-			[newCategory, id],
-		)
+		db.prepare(
+			`UPDATE conversations SET category = ?, categorized_at = datetime('now') WHERE id = ?`,
+		).run(newCategory, id)
+	})
 
-		await client.query('COMMIT')
+	try {
+		tx()
 	} catch (error) {
-		await client.query('ROLLBACK')
 		console.error('Error updating conversation category:', error)
 		throw new Error('Failed to update category.')
-	} finally {
-		client.release()
 	}
 }
 
@@ -91,14 +82,9 @@ export async function addCategory(name: string): Promise<void> {
 	}
 
 	try {
-		await pool.query(
-			`
-      INSERT INTO categories (name) VALUES ($1)
-    `,
-			[name],
-		)
-	} catch (error: unknown) {
-		if ((error as { code?: string }).code === '23505') {
+		getDb().prepare(`INSERT INTO categories (name) VALUES (?)`).run(name)
+	} catch (error: any) {
+		if (error.code === 'SQLITE_CONSTRAINT_PRIMARYKEY') {
 			throw new Error(`Category "${name}" already exists.`)
 		}
 		throw error
@@ -110,81 +96,60 @@ export async function renameCategory(oldName: string, newName: string): Promise<
 		throw new Error('Invalid category names provided for rename.')
 	}
 
-	const client = await pool.connect()
-	try {
-		await client.query('BEGIN')
-
+	const db = getDb()
+	const tx = db.transaction(() => {
 		// Create new category
-		await client.query(
-			`
-      INSERT INTO categories (name) VALUES ($1)
-    `,
-			[newName],
-		)
+		db.prepare(`INSERT OR IGNORE INTO categories (name) VALUES (?)`).run(newName)
 
 		// Update conversations
-		await client.query(
-			`
-      UPDATE conversations 
-      SET category = $1, categorized_at = NOW() 
-      WHERE category = $2
-    `,
-			[newName, oldName],
-		)
+		db.prepare(
+			`UPDATE conversations SET category = ?, categorized_at = datetime('now') WHERE category = ?`,
+		).run(newName, oldName)
 
 		// Delete old category
-		await client.query(
-			`
-      DELETE FROM categories WHERE name = $1
-    `,
-			[oldName],
-		)
+		db.prepare(`DELETE FROM categories WHERE name = ?`).run(oldName)
+	})
 
-		await client.query('COMMIT')
-	} catch (error) {
-		await client.query('ROLLBACK')
-		throw error
-	} finally {
-		client.release()
-	}
+	tx()
 }
 
 export async function saveConversation(
 	conversation: Partial<Conversation> & { id: string },
 ): Promise<void> {
-	await pool.query(
-		`
+	const stmt = getDb().prepare(`
     INSERT INTO conversations (
       id, title, created_at, status, has_rich_content,
       first_prompt, first_response, turn_count, char_count,
-      storage_filename, category, is_deep_research
-    ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
-    ON CONFLICT (id) DO UPDATE SET
-      title = EXCLUDED.title,
-      category = EXCLUDED.category,
-      summary = EXCLUDED.summary,
-      is_deep_research = EXCLUDED.is_deep_research
-  `,
-		[
-			conversation.id,
-			conversation.title || 'Untitled',
-			conversation.createdAt || new Date().toISOString(),
-			conversation.status || 'processed',
-			conversation.hasRichContent || false,
-			conversation.firstPrompt || null,
-			conversation.firstResponse || null,
-			conversation.turnCount || 0,
-			conversation.charCount || 0,
-			conversation.storageFilename || null,
-			conversation.category || null,
-			conversation.isDeepResearch || false,
-		],
+      storage_filename, category, is_deep_research, transcript
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    ON CONFLICT(id) DO UPDATE SET
+      title = excluded.title,
+      category = excluded.category,
+      summary = excluded.summary,
+      is_deep_research = excluded.is_deep_research,
+      transcript = COALESCE(excluded.transcript, conversations.transcript)
+  `)
+
+	stmt.run(
+		conversation.id,
+		conversation.title || 'Untitled',
+		conversation.createdAt || new Date().toISOString(),
+		conversation.status || 'processed',
+		conversation.hasRichContent ? 1 : 0,
+		conversation.firstPrompt || null,
+		conversation.firstResponse || null,
+		conversation.turnCount || 0,
+		conversation.charCount || 0,
+		conversation.storageFilename || null,
+		conversation.category || null,
+		conversation.isDeepResearch ? 1 : 0,
+		conversation.transcript ? JSON.stringify(conversation.transcript) : null,
 	)
 }
 
 export async function getConversationsToFetch(): Promise<Conversation[]> {
 	try {
-		const result = await pool.query(`
+		const stmt = getDb().prepare(`
       SELECT 
         id, title, created_at as "createdAt", status, 
         has_rich_content as "hasRichContent",
@@ -196,7 +161,11 @@ export async function getConversationsToFetch(): Promise<Conversation[]> {
       WHERE storage_filename IS NOT NULL
       ORDER BY created_at DESC
     `)
-		return result.rows
+		const rows = stmt.all() as any[]
+		return rows.map((row) => ({
+			...row,
+			hasRichContent: Boolean(row.hasRichContent),
+		}))
 	} catch (error) {
 		console.error('Error fetching conversations to fetch:', error)
 		return []
@@ -205,7 +174,7 @@ export async function getConversationsToFetch(): Promise<Conversation[]> {
 
 export async function getConversationsToBacklink(): Promise<Conversation[]> {
 	try {
-		const result = await pool.query(`
+		const stmt = getDb().prepare(`
       SELECT 
         id, title, created_at as "createdAt", status,
         storage_filename as "storageFilename",
@@ -214,7 +183,7 @@ export async function getConversationsToBacklink(): Promise<Conversation[]> {
       WHERE backlinked_at IS NULL
       ORDER BY created_at DESC
     `)
-		return result.rows
+		return stmt.all() as Conversation[]
 	} catch (error) {
 		console.error('Error fetching conversations to backlink:', error)
 		return []
@@ -233,31 +202,30 @@ export async function updateConversationById(
 	},
 ): Promise<void> {
 	const setClauses: string[] = []
-	const values: unknown[] = []
-	let paramIndex = 1
+	const values: any[] = []
 
 	if (updates.transcript !== undefined) {
-		setClauses.push(`transcript = $${paramIndex++}`)
+		setClauses.push(`transcript = ?`)
 		values.push(JSON.stringify(updates.transcript))
 	}
 	if (updates.summary !== undefined) {
-		setClauses.push(`summary = $${paramIndex++}`)
+		setClauses.push(`summary = ?`)
 		values.push(updates.summary)
 	}
 	if (updates.summarizedAt !== undefined) {
-		setClauses.push(`summarized_at = $${paramIndex++}`)
+		setClauses.push(`summarized_at = ?`)
 		values.push(updates.summarizedAt)
 	}
 	if (updates.categorizedAt !== undefined) {
-		setClauses.push(`categorized_at = $${paramIndex++}`)
+		setClauses.push(`categorized_at = ?`)
 		values.push(updates.categorizedAt)
 	}
 	if (updates.backlinkedAt !== undefined) {
-		setClauses.push(`backlinked_at = $${paramIndex++}`)
+		setClauses.push(`backlinked_at = ?`)
 		values.push(updates.backlinkedAt)
 	}
 	if (updates.status !== undefined) {
-		setClauses.push(`status = $${paramIndex++}`)
+		setClauses.push(`status = ?`)
 		values.push(updates.status)
 	}
 
@@ -266,20 +234,20 @@ export async function updateConversationById(
 	}
 
 	values.push(id)
-	await pool.query(
-		`UPDATE conversations SET ${setClauses.join(', ')} WHERE id = $${paramIndex}`,
-		values,
-	)
+	const sql = `UPDATE conversations SET ${setClauses.join(', ')} WHERE id = ?`
+	getDb()
+		.prepare(sql)
+		.run(...values)
 }
 
 export async function deleteAllConversations(): Promise<number> {
-	const result = await pool.query('DELETE FROM conversations')
-	return result.rowCount || 0
+	const result = getDb().prepare('DELETE FROM conversations').run()
+	return result.changes
 }
 
 export async function getConversationsWithTranscript(): Promise<Conversation[]> {
 	try {
-		const result = await pool.query(`
+		const stmt = getDb().prepare(`
       SELECT 
         id, title, created_at as "createdAt", status,
         storage_filename as "storageFilename",
@@ -288,7 +256,11 @@ export async function getConversationsWithTranscript(): Promise<Conversation[]> 
       WHERE transcript IS NOT NULL
       ORDER BY created_at DESC
     `)
-		return result.rows
+		const rows = stmt.all() as any[]
+		return rows.map((row) => ({
+			...row,
+			transcript: row.transcript ? JSON.parse(row.transcript) : undefined,
+		}))
 	} catch (error) {
 		console.error('Error fetching conversations with transcript:', error)
 		return []
@@ -296,8 +268,43 @@ export async function getConversationsWithTranscript(): Promise<Conversation[]> 
 }
 
 export async function getQuarantinedCount(): Promise<number> {
-	const result = await pool.query(`
-    SELECT COUNT(*)::int as count FROM conversations WHERE status = 'quarantined'
-  `)
-	return result.rows[0].count
+	const result = getDb()
+		.prepare(`SELECT COUNT(*) as count FROM conversations WHERE status = 'quarantined'`)
+		.get() as { count: number }
+	return result.count
+}
+
+export async function getConversationById(id: string): Promise<Conversation | null> {
+	try {
+		const stmt = getDb().prepare(`
+      SELECT 
+        id, title, created_at as "createdAt", status, 
+        has_rich_content as "hasRichContent", 
+        first_prompt as "firstPrompt",
+        first_response as "firstResponse",
+        turn_count as "turnCount", 
+        char_count as "charCount",
+        storage_filename as "storageFilename",
+        category, summary,
+        summarized_at as "summarizedAt",
+        categorized_at as "categorizedAt",
+        backlinked_at as "backlinkedAt",
+        is_deep_research as "isDeepResearch",
+        transcript
+      FROM conversations 
+      WHERE id = ?
+    `)
+		const row = stmt.get(id) as any
+		if (!row) return null
+
+		return {
+			...row,
+			hasRichContent: Boolean(row.hasRichContent),
+			isDeepResearch: Boolean(row.isDeepResearch),
+			transcript: row.transcript ? JSON.parse(row.transcript) : undefined,
+		}
+	} catch (error) {
+		console.error('Error fetching conversation by ID:', error)
+		return null
+	}
 }

@@ -212,7 +212,7 @@ export function GroupedConversationList({
 							return (
 								// biome-ignore lint/suspicious/noArrayIndexKey: group index needed for accordion value stability
 								<AccordionItem
-									value={`group-${group.name}`}
+									value={`group-${index}`}
 									key={group.name}
 									className={cn(
 										'border-b rounded-lg transition-colors',

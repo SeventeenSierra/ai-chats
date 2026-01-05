@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025 Seventeen Sierra LLC
 
-import { uploadToStorage } from '@ai-chat/backend'
+import path from 'node:path'
+import { uploadFile } from '@ai-chat/backend'
 import { type NextRequest, NextResponse } from 'next/server'
 
 export async function POST(request: NextRequest) {
@@ -14,10 +15,10 @@ export async function POST(request: NextRequest) {
 		}
 
 		const content = await file.text()
-		const filename = `${Date.now()}-${file.name}`
+		const filename = `${Date.now()}-${path.basename(file.name)}`
 
 		// Upload to S3 in uploads/ prefix
-		await uploadToStorage(`uploads/${filename}`, content)
+		await uploadFile(`uploads/${filename}`, Buffer.from(content), 'text/xml')
 
 		return NextResponse.json({
 			success: true,

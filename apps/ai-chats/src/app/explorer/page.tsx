@@ -15,6 +15,7 @@ import { useIsMobile } from '@/hooks/use-mobile'
 import { useToast } from '@/hooks/use-toast'
 import {
 	addCategoryAction,
+	getConversationByIdAction,
 	groupConversationsAction,
 	renameCategoryAction,
 	updateConversationCategoryAction,
@@ -134,17 +135,10 @@ export default function ExplorerPage() {
 				setCategories(data.categories)
 
 				// If a conversation was selected, find its updated version and set it
-				if (selectedConversation) {
-					const updatedSelected = data.conversations.find(
-						(c: { id: string }) => c.id === selectedConversation.id,
-					)
-					if (updatedSelected) {
-						setSelectedConversation(updatedSelected as Conversation)
-					} else {
-						// The selected conversation might have been deleted, so clear it
-						setSelectedConversation(null)
-					}
-				}
+				setAllConversations(data.conversations)
+				setCategories(data.categories)
+
+				// Selected conversation update is handled by a separate effect
 			} catch (error) {
 				console.error('Failed to fetch conversations:', error)
 				toast({
@@ -158,8 +152,22 @@ export default function ExplorerPage() {
 				setIsFetchingConversations(false)
 			}
 		},
-		[toast, selectedConversation],
+		[toast], // Removed selectedConversation dependency
 	)
+
+	// Separate effect to sync selected conversation when list updates
+	React.useEffect(() => {
+		if (selectedConversation && allConversations.length > 0) {
+			const updated = allConversations.find((c) => c.id === selectedConversation.id)
+			if (updated && updated !== selectedConversation) {
+				// Only update if actually different reference/content to avoid loops
+				// Check if actually modified to avoid shallow cycle?
+				// For now, simpler: Just let the user re-select or assume optimistics work.
+				// Actually, the original logic was trying to keep the selected view fresh.
+				setSelectedConversation(updated)
+			}
+		}
+	}, [allConversations, selectedConversation]) // Only run when list actually changes
 
 	React.useEffect(() => {
 		fetchAndSetConversations(true)
@@ -281,10 +289,18 @@ export default function ExplorerPage() {
 		}
 	}
 
-	const handleSelectConversation = (conversation: Conversation) => {
+	const handleSelectConversation = async (conversation: Conversation) => {
 		setSelectedConversation(conversation)
 		if (isMobile && isSidebarOpen) {
 			toggleSidebar()
+		}
+
+		// Fetch full details (including transcript) if missing
+		if (!conversation.transcript) {
+			const result = await getConversationByIdAction(conversation.id)
+			if (result.conversation) {
+				setSelectedConversation(result.conversation)
+			}
 		}
 	}
 

@@ -1,76 +1,90 @@
-// SPDX-License-Identifier: PolyForm-Strict-1.0.0
-// SPDX-FileCopyrightText: 2025 Seventeen Sierra LLC
+import { existsSync, mkdirSync } from 'node:fs'
+import fs from 'node:fs/promises'
+import path from 'node:path'
 
-import {
-	DeleteObjectCommand,
-	GetObjectCommand,
-	ListObjectsV2Command,
-	PutObjectCommand,
-	S3Client,
-} from '@aws-sdk/client-s3'
+const STORAGE_DIR = process.env.GEMINI_DATA_DIR
+	? path.join(path.resolve(process.env.GEMINI_DATA_DIR), 'storage')
+	: path.resolve(process.cwd(), 'data/storage')
 
-let _s3Client: S3Client | null = null
+// Ensure storage directory exists
+if (!existsSync(STORAGE_DIR)) {
+	mkdirSync(STORAGE_DIR, { recursive: true })
+}
 
-function getS3Client(): S3Client {
-	if (!_s3Client) {
-		if (!process.env.S3_ACCESS_KEY || !process.env.S3_SECRET_KEY) {
-			throw new Error('S3_ACCESS_KEY or S3_SECRET_KEY is not defined in environment variables')
-		}
-		_s3Client = new S3Client({
-			endpoint: process.env.S3_ENDPOINT_URL || 'http://localhost:3900',
-			region: 'us-east-1',
-			credentials: {
-				accessKeyId: process.env.S3_ACCESS_KEY,
-				secretAccessKey: process.env.S3_SECRET_KEY,
-			},
-			forcePathStyle: true,
-		})
+export async function uploadFile(
+	key: string,
+	buffer: Buffer,
+	_contentType: string,
+): Promise<string> {
+	const filePath = path.resolve(STORAGE_DIR, key)
+	if (!filePath.startsWith(STORAGE_DIR)) {
+		throw new Error('Access denied: Path traversal attempted')
 	}
-	return _s3Client
+	const dir = path.dirname(filePath)
+
+	await fs.mkdir(dir, { recursive: true })
+	await fs.writeFile(filePath, buffer)
+	return key
 }
 
-function getBucketName(): string {
-	return process.env.S3_BUCKET_NAME || 'conversations'
+export async function downloadFile(key: string): Promise<Buffer> {
+	const filePath = path.resolve(STORAGE_DIR, key)
+	if (!filePath.startsWith(STORAGE_DIR)) {
+		throw new Error('Access denied: Path traversal attempted')
+	}
+	try {
+		return await fs.readFile(filePath)
+	} catch (error: any) {
+		if (error.code === 'ENOENT') {
+			throw new Error(`File not found: ${key}`)
+		}
+		throw error
+	}
 }
 
-export async function uploadToStorage(key: string, content: string): Promise<void> {
-	await getS3Client().send(
-		new PutObjectCommand({
-			Bucket: getBucketName(),
-			Key: key,
-			Body: content,
-			ContentType: 'application/xml',
-		}),
-	)
+export async function deleteFile(key: string): Promise<void> {
+	const filePath = path.resolve(STORAGE_DIR, key)
+	if (!filePath.startsWith(STORAGE_DIR)) {
+		throw new Error('Access denied: Path traversal attempted')
+	}
+	try {
+		await fs.unlink(filePath)
+	} catch (error: any) {
+		if (error.code !== 'ENOENT') {
+			throw error
+		}
+	}
 }
 
-export async function downloadFromStorage(key: string): Promise<string> {
-	const response = await getS3Client().send(
-		new GetObjectCommand({
-			Bucket: getBucketName(),
-			Key: key,
-		}),
-	)
-	return (await response.Body?.transformToString()) || ''
+// Mock signed URL by returning a local API path
+export async function getSignedUrl(key: string): Promise<string> {
+	return `/api/storage/${key}`
 }
 
-export async function deleteFromStorage(key: string): Promise<void> {
-	await getS3Client().send(
-		new DeleteObjectCommand({
-			Bucket: getBucketName(),
-			Key: key,
-		}),
-	)
+export async function listFiles(prefix?: string): Promise<string[]> {
+	try {
+		// If prefix implies a directory (ends with /), list that directory
+		if (prefix?.endsWith('/')) {
+			const targetDir = path.join(STORAGE_DIR, prefix)
+			// PATH TRAVERSAL FIX: Ensure targetDir is still within STORAGE_DIR
+			if (!path.resolve(targetDir).startsWith(STORAGE_DIR)) {
+				return [] // Fail silently or throw, silent is safer for listing
+			}
+			if (!existsSync(targetDir)) return []
+			const files = await fs.readdir(targetDir)
+			// Return paths relative to STORAGE_DIR, e.g. "staging/file.xml"
+			return files.map((f) => path.join(prefix, f))
+		}
+
+		const files = await fs.readdir(STORAGE_DIR)
+		return prefix ? files.filter((f) => f.startsWith(prefix)) : files
+	} catch (_error) {
+		return []
+	}
 }
 
-export async function listFromStorage(prefix: string): Promise<string[]> {
-	const response = await getS3Client().send(
-		new ListObjectsV2Command({
-			Bucket: getBucketName(),
-			Prefix: prefix,
-		}),
-	)
-	return (response.Contents || []).map((item) => item.Key || '').filter(Boolean)
-}
-
-export { getS3Client as s3Client, getBucketName as BUCKET_NAME }
+// Aliases for compatibility
+export const downloadFromStorage = downloadFile
+export const listFromStorage = listFiles
+export const deleteFromStorage = deleteFile
+export const uploadToStorage = uploadFile

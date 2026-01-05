@@ -5,38 +5,41 @@ name: CI
 
 on:
   push:
-    branches: [main, develop]
+    branches:
+      - main
+      - develop
+      - 'feat/**'
+      - 'fix/**'
+      - 'chore/**'
+      - 'refactor/**'
+      - 'docs/**'
+      - 'infra/**'
   pull_request:
-    branches: [main, develop]
+    branches:
+      - main
+      - develop
 
 permissions:
   contents: read
 
 jobs:
-  lint-and-build:
+  nix-ci:
     runs-on: ubuntu-latest
-
+    permissions:
+      contents: read
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 22
-          cache: pnpm
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-
-      - name: Typecheck
-        run: pnpm typecheck
-
-      - name: Lint
-        run: pnpm lint
-
-      - name: Build
-        run: pnpm build
+      - uses: actions/checkout@v4
+      
+      - uses: DeterminateSystems/nix-installer-action@v16
+      
+      - uses: DeterminateSystems/magic-nix-cache-action@v8
+      
+      - name: Check Flake
+        run: nix flake check
+      
+      - name: Build & Lint (via Nix)
+        run: |
+          nix develop --command pnpm install
+          nix develop --command pnpm lint
+          nix develop --command pnpm typecheck
+          nix develop --command pnpm build

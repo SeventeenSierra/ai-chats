@@ -1,0 +1,4 @@
+#!/bin/sh
+
+# Run our comprehensive pre-push hook (Build, Security Audit, SBOM)
+./scripts/hooks/pre-push.sh

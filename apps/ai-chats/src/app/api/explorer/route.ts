@@ -3,6 +3,7 @@
 
 import { getCategories, getConversations } from '@ai-chat/backend'
 
+export const dynamic = 'force-dynamic'
 export async function GET() {
 	const [conversations, categories] = await Promise.all([getConversations(), getCategories()])
 

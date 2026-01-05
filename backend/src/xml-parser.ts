@@ -59,9 +59,13 @@ export function splitConversationsXml(xmlString: string): string[] {
  * @returns The conversation ID or null if not found.
  */
 export function getConversationId(conversationXml: string): string | null {
-	const idRegex = /<ConversationId>([^<]*)<\/ConversationId>/
-	const match = conversationXml.match(idRegex)
-	return match ? match[1] : null
+	const startTag = '<ConversationId>'
+	const endTag = '</ConversationId>'
+	const start = conversationXml.indexOf(startTag)
+	if (start === -1) return null
+	const end = conversationXml.indexOf(endTag, start)
+	if (end === -1) return null
+	return conversationXml.slice(start + startTag.length, end)
 }
 
 /**
@@ -92,9 +96,13 @@ export function getConversationTitle(conversationXml: string): string | null {
  * @returns The ISO 8601 timestamp string or null if not found.
  */
 export function getConversationTimestamp(conversationXml: string): string | null {
-	const timestampRegex = /<Timestamp>([^<]*)<\/Timestamp>/
-	const match = conversationXml.match(timestampRegex)
-	return match ? match[1] : null
+	const startTag = '<Timestamp>'
+	const endTag = '</Timestamp>'
+	const start = conversationXml.indexOf(startTag)
+	if (start === -1) return null
+	const end = conversationXml.indexOf(endTag, start)
+	if (end === -1) return null
+	return conversationXml.slice(start + startTag.length, end)
 }
 
 /**
@@ -176,7 +184,7 @@ export function getFirstResponse(conversationXml: string): string | null {
 			if (tagContent) {
 				const decodedContent = decodeEntities(tagContent)
 				if (tagName === 'ToolCode') {
-					parts.push('```\n' + decodedContent + '\n```')
+					parts.push(`\`\`\`\n${decodedContent}\n\`\`\``)
 				} else {
 					parts.push(decodedContent)
 				}
@@ -198,10 +206,17 @@ export function getFirstResponse(conversationXml: string): string | null {
  * @returns The number of turns.
  */
 export function getTurnCount(conversationXml: string): number {
-	const turnRegex = /<ConversationTurn>/g
-	const matches = conversationXml.match(turnRegex)
+	const tag = '<ConversationTurn>'
+	let count = 0
+	let pos = 0
+	while (true) {
+		pos = conversationXml.indexOf(tag, pos)
+		if (pos === -1) break
+		count++
+		pos += tag.length
+	}
 	// Each <ConversationTurn> has a prompt and a response, so we count it as 2 turns.
-	return (matches ? matches.length : 0) * 2
+	return count * 2
 }
 
 /**

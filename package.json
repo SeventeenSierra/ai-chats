@@ -12,14 +12,13 @@
 	},
 	"scripts": {
 		"dev": "pnpm -r --parallel run dev",
+		"dev:all": "concurrently \"podman run --rm --name ai-chats-ollama -p 11434:11434 -v ollama_data:/root/.ollama ollama/ollama:latest\" \"pnpm -r --parallel run dev\" --names \"AI,WEB\" -c \"yellow,blue\"",
 		"build": "pnpm -r run build",
 		"lint": "pnpm -r run lint",
+		"test": "pnpm -r run test",
 		"typecheck": "pnpm -r run typecheck",
 		"check-license": "./scripts/check-license-headers.sh",
 		"prepare": "husky"
-	},
-	"lint-staged": {
-		"*.{ts,tsx}": "pnpm typecheck"
 	},
 	"pnpm": {
 		"overrides": {
@@ -34,12 +33,19 @@
 				"x64",
 				"arm64"
 			]
-		}
+		},
+		"onlyBuiltDependencies": [
+			"better-sqlite3",
+			"esbuild",
+			"sharp",
+			"prisma"
+		]
 	},
 	"devDependencies": {
 		"@commitlint/cli": "^20.3.0",
 		"@commitlint/config-conventional": "^20.3.0",
-		"husky": "^9.1.7",
-		"lint-staged": "^16.2.7"
+		"@playwright/test": "^1.57.0",
+		"concurrently": "^9.1.2",
+		"husky": "^9.1.7"
 	}
 }

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025 Seventeen Sierra LLC
 
-import { listFromStorage, pool } from '@ai-chat/backend'
+import { getDb, listFromStorage } from '@ai-chat/backend'
 import { NextResponse } from 'next/server'
 
 export async function GET() {
@@ -11,7 +11,9 @@ export async function GET() {
 
 	try {
 		// Check database
-		await pool.query('SELECT 1')
+		const db = getDb()
+		const row = db.prepare('SELECT 1 as val').get()
+		if (!row) throw new Error('Database check failed')
 		status.database = 'ok'
 	} catch (error) {
 		console.error('Database health check failed:', error)

@@ -7,10 +7,9 @@ A pnpm monorepo for importing, exploring, and analyzing your Google Gemini conve
 | Package | Description |
 |---------|-------------|
 | `ai-chat--web` | Next.js 16 frontend |
-| `ai-chat--backend` | PostgreSQL + S3 storage operations |
+| `ai-chat--backend` | SQLite + Local storage operations |
 | `ai-chat--services` | Genkit AI flows |
 | `ai-chat--middleware` | Shared types and schemas |
-| `ai-chat--infra` | Docker, database migrations |
 | `ai-chat--docs` | Documentation |
 | `ai-chat--tests` | Test suite (Vitest) |
 | `ai-chat--seed-data` | Demo conversation data |
@@ -18,22 +17,19 @@ A pnpm monorepo for importing, exploring, and analyzing your Google Gemini conve
 ## Tech Stack
 
 - **Frontend**: Next.js 16, React 19, Tailwind CSS
-- **Database**: PostgreSQL (via Podman)
-- **Storage**: Garage (S3-compatible, via Podman)
+- **Database**: SQLite (better-sqlite3)
+- **Storage**: Local Filesystem
 - **AI**: Genkit with Google AI
 - **Package Manager**: pnpm
 
 ## Getting Started
 
 ```bash
-# Start infrastructure
-podman-compose up -d postgres garage
-
-# Install dependencies
-pnpm install
+# Install dependencies (requires Nix environment)
+nix develop --command pnpm install
 
 # Run development server
-pnpm dev
+nix develop --command pnpm dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000) in your browser.

@@ -10,7 +10,6 @@
 
 import { deleteFromStorage } from '@ai-chat/backend/storage'
 import { z } from 'zod'
-import { ai } from '../core/genkit'
 
 const DeleteUploadedFileInputSchema = z.object({
 	filename: z.string(),
@@ -26,22 +25,17 @@ export async function deleteUploadedFile(
 	return deleteUploadedFileFlow(input)
 }
 
-const deleteUploadedFileFlow = ai.defineFlow(
-	{
-		name: 'deleteUploadedFileFlow',
-		inputSchema: DeleteUploadedFileInputSchema,
-		outputSchema: DeleteUploadedFileOutputSchema,
-	},
-	async ({ filename }) => {
-		try {
-			await deleteFromStorage(`uploads/${filename}`)
-			console.log(`Deleted uploaded file: ${filename}`)
-			return { success: true }
-		} catch (error) {
-			console.error('Failed to delete uploaded file %s:', filename, error)
-			// Even if it fails (e.g., file not found), we can consider it a "success"
-			// from the user's perspective of wanting the file gone.
-			return { success: false }
-		}
-	},
-)
+const deleteUploadedFileFlow = async ({
+	filename,
+}: DeleteUploadedFileInput): Promise<DeleteUploadedFileOutput> => {
+	try {
+		await deleteFromStorage(`uploads/${filename}`)
+		console.log(`Deleted uploaded file: ${filename}`)
+		return { success: true }
+	} catch (error) {
+		console.error('Failed to delete uploaded file %s:', filename, error)
+		// Even if it fails (e.g., file not found), we can consider it a "success"
+		// from the user's perspective of wanting the file gone.
+		return { success: false }
+	}
+}

@@ -376,3 +376,17 @@ export async function getConversationsAction(): Promise<
 		return []
 	}
 }
+
+import { getConversationById } from '@ai-chat/backend/queries'
+
+export async function getConversationByIdAction(
+	id: string,
+): Promise<{ conversation?: Conversation | null; error?: string }> {
+	try {
+		const conversation = await getConversationById(id)
+		return { conversation }
+	} catch (error) {
+		console.error('Get conversation by ID error:', error)
+		return { error: 'Failed to fetch conversation details.' }
+	}
+}
