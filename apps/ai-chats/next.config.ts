@@ -12,6 +12,11 @@ const nextConfig: NextConfig = {
 			},
 		],
 	},
+	experimental: {
+		serverActions: {
+			bodySizeLimit: '50mb',
+		},
+	},
 	// Ignore watching the staging and transcripts directories during development
 	// to prevent server restarts during file processing.
 

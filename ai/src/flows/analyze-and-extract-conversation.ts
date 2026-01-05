@@ -16,6 +16,7 @@ import {
 	getFirstResponse,
 	getTurnCount,
 	hasRichContent,
+	parseConversationTranscript,
 } from '@ai-chat/backend/xml-parser'
 import type { Conversation } from '@ai-chat/shared/types'
 import { z } from 'zod'
@@ -29,7 +30,7 @@ const AnalyzeAndExtractInputSchema = z.object({
 export type AnalyzeAndExtractInput = z.infer<typeof AnalyzeAndExtractInputSchema>
 
 // The output is now a full Conversation object with a 'quarantined' status for bad data.
-export type AnalyzeAndExtractOutput = Omit<Conversation, 'transcript' | 'summary' | 'category'>
+export type AnalyzeAndExtractOutput = Omit<Conversation, 'summary' | 'category'>
 
 const LONG_TITLE_THRESHOLD = 150
 
@@ -59,12 +60,14 @@ export async function analyzeAndExtractConversation(
 			firstResponse: '',
 			turnCount: 0,
 			charCount: charCount,
+			transcript: [],
 		}
 	}
 
 	const extractedTitle = getConversationTitle(xmlContent)
 	const title = extractedTitle || 'Untitled Conversation'
 	const createdAt = getConversationTimestamp(xmlContent) || new Date().toISOString()
+	const transcript = parseConversationTranscript(xmlContent)
 
 	// Quarantine conversations with excessively long titles.
 	if (title.length > LONG_TITLE_THRESHOLD) {
@@ -78,6 +81,7 @@ export async function analyzeAndExtractConversation(
 			firstResponse: getFirstResponse(xmlContent) || '',
 			turnCount: getTurnCount(xmlContent),
 			charCount: charCount,
+			transcript,
 		}
 	}
 
@@ -91,5 +95,6 @@ export async function analyzeAndExtractConversation(
 		firstResponse: getFirstResponse(xmlContent) || '',
 		turnCount: getTurnCount(xmlContent),
 		charCount: charCount,
+		transcript,
 	}
 }

@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025 Seventeen Sierra LLC
 
+import path from 'node:path'
 import { uploadFile } from '@ai-chat/backend'
 import { type NextRequest, NextResponse } from 'next/server'
-import path from 'path'
 
 export async function POST(request: NextRequest) {
 	try {

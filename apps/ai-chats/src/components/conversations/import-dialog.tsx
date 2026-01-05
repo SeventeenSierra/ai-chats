@@ -23,75 +23,92 @@ type ImportDialogProps = {
 	onFileUploaded: () => void
 }
 
+import {
+	deleteStagedConversationsAction,
+	deleteStagedFilesAction,
+	processConversationsAction,
+	splitFileAction,
+} from '@/lib/actions'
+
 export function ImportDialog({ open, onOpenChange, onFileUploaded }: ImportDialogProps) {
 	const [file, setFile] = React.useState<File | null>(null)
-	const [isUploading, setIsUploading] = React.useState(false)
-	const [importResult, setImportResult] = React.useState<{
-		imported: number
-		errors: number
-		total: number
-	} | null>(null)
+	const [status, setStatus] = React.useState<'idle' | 'uploading' | 'splitting' | 'processing'>(
+		'idle',
+	)
 	const { toast } = useToast()
 
 	const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
 		const files = event.target.files
 		if (files && files.length > 0) {
 			setFile(files[0])
-			setImportResult(null)
 		}
 	}
 
-	const handleUpload = async () => {
-		if (!file) {
-			toast({
-				variant: 'destructive',
-				title: 'No file selected',
-				description: 'Please choose a file to import.',
-			})
-			return
-		}
-
-		setIsUploading(true)
-		setImportResult(null)
+	const handleUploadAndProcess = async () => {
+		if (!file) return
 
 		try {
-			// Upload file to S3 via API route
+			// 0. Cleanup previous state (Optional but safer for "Quick" import)
+			await deleteStagedFilesAction()
+			await deleteStagedConversationsAction()
+
+			// 1. Upload
+			setStatus('uploading')
 			const formData = new FormData()
 			formData.append('file', file)
 
-			const response = await fetch('/api/upload', {
-				method: 'POST',
-				body: formData,
-			})
-
+			const response = await fetch('/api/upload', { method: 'POST', body: formData })
 			const result = await response.json()
 
-			if (result.success) {
-				toast({
-					title: 'Upload Complete',
-					description: `File uploaded as ${result.filename}. Ready for processing.`,
-				})
-				onFileUploaded()
-			} else {
-				throw new Error(result.error || 'Upload failed')
-			}
+			if (!result.success) throw new Error(result.error || 'Upload failed')
+
+			const filename = result.filename
+
+			// 2. Split
+			setStatus('splitting')
+			toast({ title: 'Splitting...', description: 'Analyzing conversation structure.' })
+			const splitJobId = `split-${Date.now()}`
+			await splitFileAction(filename, splitJobId)
+			// Note: splitFileAction is sync/async?
+			// In actions.ts it returns { success, message } but calls splitImportedFile.
+			// splitImportedFile might be synchronousFS operations?
+			// If it's async background, we might need to wait or poll.
+			// BUT actions.ts implementation shows it calls the function directly inside try/catch.
+			// Let's assume it waits for the operation (or at least triggers it).
+			// Actually, looking at actions.ts, it calls `splitImportedFile` (sync?).
+			// If it returns immediately, we need to poll?
+			// User put polling in PipelineDialog.
+			// For simplicity here, I'll rely on the server action awaiting the logic if possible.
+			// If actions.ts logic is async (it is), we should await it properly.
+
+			// 3. Process
+			setStatus('processing')
+			toast({ title: 'Processing...', description: 'Extracting metadata to database.' })
+			const processJobId = `process-${Date.now()}`
+			await processConversationsAction(processJobId) // This is also async in backend
+
+			toast({
+				title: 'Import Complete',
+				description: `Conversations from ${filename} are ready!`,
+			})
+			onFileUploaded()
 		} catch (error) {
-			console.error('Upload error:', error)
+			console.error('Import error:', error)
 			toast({
 				variant: 'destructive',
-				title: 'Upload Failed',
-				description: error instanceof Error ? error.message : 'Could not upload the file.',
+				title: 'Import Failed',
+				description: error instanceof Error ? error.message : 'Could not complete the process.',
 			})
+			setStatus('idle')
 		} finally {
-			setIsUploading(false)
+			setStatus('idle')
 		}
 	}
 
 	React.useEffect(() => {
 		if (open) {
 			setFile(null)
-			setIsUploading(false)
-			setImportResult(null)
+			setStatus('idle')
 		}
 	}, [open])
 
@@ -99,16 +116,15 @@ export function ImportDialog({ open, onOpenChange, onFileUploaded }: ImportDialo
 		<Dialog open={open} onOpenChange={onOpenChange}>
 			<DialogContent
 				onInteractOutside={(e) => {
-					if (isUploading) {
+					if (status !== 'idle') {
 						e.preventDefault()
 					}
 				}}
 			>
 				<DialogHeader>
-					<DialogTitle>Upload Conversation File</DialogTitle>
+					<DialogTitle>Quick Import</DialogTitle>
 					<DialogDescription>
-						Upload your Gemini XML export file. This will place it in the upload directory, ready
-						for splitting.
+						Upload and automatically process your Gemini XML export.
 					</DialogDescription>
 				</DialogHeader>
 
@@ -116,31 +132,28 @@ export function ImportDialog({ open, onOpenChange, onFileUploaded }: ImportDialo
 					<Input
 						type="file"
 						onChange={handleFileChange}
-						disabled={isUploading}
+						disabled={status !== 'idle'}
 						accept=".json,.xml"
 					/>
-					{importResult && (
-						<div className="text-sm text-muted-foreground">
-							✓ Imported {importResult.imported} of {importResult.total} conversations
-							{importResult.errors > 0 && ` (${importResult.errors} errors)`}
+					{status !== 'idle' && (
+						<div className="flex items-center gap-2 text-sm text-muted-foreground animate-pulse">
+							<Loader className="h-4 w-4 animate-spin" />
+							<span className="capitalize">{status}... this may take a moment.</span>
 						</div>
 					)}
 				</div>
 
 				<DialogFooter>
-					<Button variant="outline" onClick={() => onOpenChange(false)} disabled={isUploading}>
+					<Button
+						variant="outline"
+						onClick={() => onOpenChange(false)}
+						disabled={status !== 'idle'}
+					>
 						Cancel
 					</Button>
 
-					<Button onClick={handleUpload} disabled={!file || isUploading}>
-						{isUploading ? (
-							<>
-								<Loader className="mr-2 h-4 w-4 animate-spin" />
-								Uploading...
-							</>
-						) : (
-							'Upload'
-						)}
+					<Button onClick={handleUploadAndProcess} disabled={!file || status !== 'idle'}>
+						{status === 'idle' ? 'Upload & Process' : 'Working...'}
 					</Button>
 				</DialogFooter>
 			</DialogContent>

@@ -28,13 +28,8 @@ export type SplitImportedFileOutput = z.infer<typeof SplitImportedFileOutputSche
 export async function splitImportedFile(
 	input: SplitImportedFileInput,
 ): Promise<SplitImportedFileOutput> {
-	// This is a background job, so we don't return the flow result directly.
-	splitImportedFileFlow(input)
-	return {
-		success: true,
-		message: 'File splitting initiated in the background.',
-		fileCount: 0,
-	}
+	// Await the flow to ensure it completes before returning (Synchronous for Quick Import)
+	return await splitImportedFileFlow(input)
 }
 
 /**

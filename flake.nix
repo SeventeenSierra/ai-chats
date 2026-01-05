@@ -30,7 +30,7 @@
             sqlite
 
             # Container runtime
-            podman
+            # podman (Use system podman to match machine/VM state)
             podman-compose
 
             # Code quality
@@ -62,7 +62,10 @@
             echo "Node: $(node --version)"
             echo "pnpm: $(pnpm --version)"
 
-            export DOCKER_HOST=unix://$XDG_RUNTIME_DIR/podman/podman.sock
+            echo "pnpm: $(pnpm --version)"
+
+            # DOCKER_HOST is not manually set to allow Podman to handle connection (especially on macOS)
+
 
             # Setup Python venv for pip packages (semgrep)
             if [ ! -d ".venv" ]; then

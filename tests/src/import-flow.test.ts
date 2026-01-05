@@ -1,5 +1,5 @@
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 import Database from 'better-sqlite3'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 // 1. Mock getDb BEFORE importing modules that use it
 const db = new Database(':memory:')
@@ -36,12 +36,17 @@ db.exec(schema)
 
 // Mock the module
 vi.mock('@ai-chat/backend/database', () => ({
-    getDb: () => db
+	getDb: () => db,
 }))
 
 // 2. Import functions AFTER mock setup
-import { saveConversation, getConversations } from '@ai-chat/backend/queries'
-import { splitConversationsXml, getConversationId, getConversationTitle, parseConversationTranscript } from '@ai-chat/backend/xml-parser'
+import { getConversations, saveConversation } from '@ai-chat/backend/queries'
+import {
+	getConversationId,
+	getConversationTitle,
+	parseConversationTranscript,
+	splitConversationsXml,
+} from '@ai-chat/backend/xml-parser'
 
 const TEST_XML = `
 <Conversation>
@@ -63,41 +68,41 @@ const TEST_XML = `
 `
 
 describe('Import Flow Integration (XML -> DB)', () => {
-    beforeEach(() => {
-        // Clear DB between tests
-        db.prepare('DELETE FROM conversations').run()
-    })
+	beforeEach(() => {
+		// Clear DB between tests
+		db.prepare('DELETE FROM conversations').run()
+	})
 
-    it('should parse XML and save to database successfully', async () => {
-        // 1. Simulate the "Upload/Import" logic found in the API route
-        const conversations = splitConversationsXml(TEST_XML)
-        expect(conversations).toHaveLength(1)
+	it('should parse XML and save to database successfully', async () => {
+		// 1. Simulate the "Upload/Import" logic found in the API route
+		const conversations = splitConversationsXml(TEST_XML)
+		expect(conversations).toHaveLength(1)
 
-        const xml = conversations[0]
-        const id = getConversationId(xml)
-        const title = getConversationTitle(xml)
-        const transcript = parseConversationTranscript(xml)
+		const xml = conversations[0]
+		const id = getConversationId(xml)
+		const title = getConversationTitle(xml)
+		const transcript = parseConversationTranscript(xml)
 
-        expect(id).toBe('c_import_test_1')
-        expect(title).toBe('Import Integration Test')
+		expect(id).toBe('c_import_test_1')
+		expect(title).toBe('Import Integration Test')
 
-        // 2. Call the DB save function
-        await saveConversation({
-            id: id!,
-            title: title!,
-            createdAt: new Date().toISOString(),
-            turnCount: transcript.length, // Logic from import route
-            storageFilename: 'test.xml',
-            status: 'processed'
-        })
+		// 2. Call the DB save function
+		await saveConversation({
+			id: id!,
+			title: title!,
+			createdAt: new Date().toISOString(),
+			turnCount: transcript.length, // Logic from import route
+			storageFilename: 'test.xml',
+			status: 'processed',
+		})
 
-        // 3. Verify Persistence
-        const savedConvos = await getConversations()
-        expect(savedConvos).toHaveLength(1)
-        expect(savedConvos[0].id).toBe('c_import_test_1')
-        expect(savedConvos[0].title).toBe('Import Integration Test')
+		// 3. Verify Persistence
+		const savedConvos = await getConversations()
+		expect(savedConvos).toHaveLength(1)
+		expect(savedConvos[0].id).toBe('c_import_test_1')
+		expect(savedConvos[0].title).toBe('Import Integration Test')
 
-        // Verify default fields logic
-        expect(savedConvos[0].status).toBe('processed')
-    })
+		// Verify default fields logic
+		expect(savedConvos[0].status).toBe('processed')
+	})
 })

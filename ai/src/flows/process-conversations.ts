@@ -28,13 +28,8 @@ export type ProcessConversationsOutput = z.infer<typeof ProcessConversationsOutp
 export async function processConversations(
 	input: ProcessConversationsInput,
 ): Promise<ProcessConversationsOutput> {
-	// This is a background job, so we don't return the flow result directly.
-	processConversationsFlow(input)
-	return {
-		success: true,
-		message: 'Conversation processing initiated in the background.',
-		processedCount: 0,
-	}
+	// Await the flow to ensure it completes before returning (Synchronous for Quick Import)
+	return await processConversationsFlow(input)
 }
 
 /**

@@ -65,10 +65,11 @@ try {
 
 		// Match placeholder URLs: http://googleusercontent.com/immersive_entry_chip/0
 		const placeholderRegex = /http:\/\/googleusercontent\.com\/immersive_entry_chip\/(\d+)/g
-		let match
+
 		const seenIndices = new Set()
 
-		while ((match = placeholderRegex.exec(decodedBlock)) !== null) {
+		let match = placeholderRegex.exec(decodedBlock)
+		while (match !== null) {
 			const index = match[1]
 			// Only add unique indices per conversation? actually duplicate indices typically mean same chip cited multiple times?
 			// Or distinct chips? The index '0', '1' implies distinct.
@@ -85,6 +86,7 @@ try {
 					index: index,
 				})
 			}
+			match = placeholderRegex.exec(decodedBlock)
 		}
 
 		// Also check for deep_research_confirmation_content if it appears as placeholder?

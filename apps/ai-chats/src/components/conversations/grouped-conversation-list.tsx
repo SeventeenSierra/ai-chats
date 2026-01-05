@@ -203,7 +203,7 @@ export function GroupedConversationList({
 					<EmptyState />
 				) : (
 					<Accordion type="multiple" className="w-full p-2" defaultValue={[defaultOpenValue]}>
-						{groupedConversations.map((group, _index) => {
+						{groupedConversations.map((group, index) => {
 							// If a group has no conversations left after filtering on the page level, don't render it.
 							if (group.conversations.length === 0) {
 								return null
@@ -212,7 +212,7 @@ export function GroupedConversationList({
 							return (
 								// biome-ignore lint/suspicious/noArrayIndexKey: group index needed for accordion value stability
 								<AccordionItem
-									value={`group-${group.name}`}
+									value={`group-${index}`}
 									key={group.name}
 									className={cn(
 										'border-b rounded-lg transition-colors',

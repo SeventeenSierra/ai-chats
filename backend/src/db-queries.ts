@@ -120,13 +120,14 @@ export async function saveConversation(
     INSERT INTO conversations (
       id, title, created_at, status, has_rich_content,
       first_prompt, first_response, turn_count, char_count,
-      storage_filename, category, is_deep_research
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      storage_filename, category, is_deep_research, transcript
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     ON CONFLICT(id) DO UPDATE SET
       title = excluded.title,
       category = excluded.category,
       summary = excluded.summary,
-      is_deep_research = excluded.is_deep_research
+      is_deep_research = excluded.is_deep_research,
+      transcript = COALESCE(excluded.transcript, conversations.transcript)
   `)
 
 	stmt.run(
@@ -142,6 +143,7 @@ export async function saveConversation(
 		conversation.storageFilename || null,
 		conversation.category || null,
 		conversation.isDeepResearch ? 1 : 0,
+		conversation.transcript ? JSON.stringify(conversation.transcript) : null,
 	)
 }
 
@@ -270,4 +272,39 @@ export async function getQuarantinedCount(): Promise<number> {
 		.prepare(`SELECT COUNT(*) as count FROM conversations WHERE status = 'quarantined'`)
 		.get() as { count: number }
 	return result.count
+}
+
+export async function getConversationById(id: string): Promise<Conversation | null> {
+	try {
+		const stmt = getDb().prepare(`
+      SELECT 
+        id, title, created_at as "createdAt", status, 
+        has_rich_content as "hasRichContent", 
+        first_prompt as "firstPrompt",
+        first_response as "firstResponse",
+        turn_count as "turnCount", 
+        char_count as "charCount",
+        storage_filename as "storageFilename",
+        category, summary,
+        summarized_at as "summarizedAt",
+        categorized_at as "categorizedAt",
+        backlinked_at as "backlinkedAt",
+        is_deep_research as "isDeepResearch",
+        transcript
+      FROM conversations 
+      WHERE id = ?
+    `)
+		const row = stmt.get(id) as any
+		if (!row) return null
+
+		return {
+			...row,
+			hasRichContent: Boolean(row.hasRichContent),
+			isDeepResearch: Boolean(row.isDeepResearch),
+			transcript: row.transcript ? JSON.parse(row.transcript) : undefined,
+		}
+	} catch (error) {
+		console.error('Error fetching conversation by ID:', error)
+		return null
+	}
 }

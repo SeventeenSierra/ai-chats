@@ -103,6 +103,12 @@ RULES:
 			return { category }
 		} catch (err) {
 			lastError = err instanceof Error ? err : new Error(String(err))
+			// Check for connection refusal (Ollama not running)
+			if (lastError.message.includes('ECONNREFUSED') || lastError.message.includes('FetchError')) {
+				console.warn('⚠️ AI Service Unavailable (Ollama). Skipping categorization.')
+				return { category: 'Unprocessed' }
+			}
+
 			console.warn('Attempt %d failed:', attempt + 1, lastError.message)
 			if (attempt < maxRetries - 1) {
 				await new Promise((resolve) => setTimeout(resolve, 1000 * (attempt + 1)))
@@ -111,5 +117,6 @@ RULES:
 	}
 
 	console.error('AI categorization failed after retries.', lastError)
-	throw new Error('AI categorization failed to return valid output.')
+	// Fallback instead of exploding
+	return { category: 'Unprocessed' }
 }

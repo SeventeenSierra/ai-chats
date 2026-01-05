@@ -62,4 +62,6 @@ seed-data/*
 # Generated data and fixtures
 data/
 tests/fixtures/
+!tests/fixtures/seeds/
+test-results/
 test_upload.xml

@@ -46,8 +46,22 @@ const schema = `
   );
 
   CREATE INDEX IF NOT EXISTS idx_conversations_created_at ON conversations(created_at DESC);
+  CREATE INDEX IF NOT EXISTS idx_conversations_created_at ON conversations(created_at DESC);
   CREATE INDEX IF NOT EXISTS idx_conversations_category ON conversations(category);
   CREATE INDEX IF NOT EXISTS idx_conversations_status ON conversations(status);
+
+  CREATE TABLE IF NOT EXISTS import_jobs (
+    id TEXT PRIMARY KEY,
+    status TEXT,
+    filename TEXT,
+    message TEXT,
+    total INTEGER DEFAULT 0,
+    processed INTEGER DEFAULT 0,
+    progress INTEGER DEFAULT 0,
+    error TEXT,
+    created_at TEXT DEFAULT (datetime('now')),
+    updated_at TEXT DEFAULT (datetime('now'))
+  );
 `
 
 try {
